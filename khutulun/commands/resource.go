@@ -1,0 +1,26 @@
+package commands
+
+import (
+	clientpkg "github.com/tliron/khutulun/client"
+	formatpkg "github.com/tliron/kutil/format"
+	"github.com/tliron/kutil/terminal"
+	"github.com/tliron/kutil/util"
+)
+
+func listResources(type_ string, args []string) {
+	client, err := clientpkg.NewClient(configurationPath, clusterName)
+	util.FailOnError(err)
+	util.OnExitError(client.Close)
+
+	var service string
+	if len(args) > 0 {
+		service = args[0]
+	}
+
+	resources, err := client.ListResources(namespace, service, type_)
+	util.FailOnError(err)
+	if len(resources) > 0 {
+		err = formatpkg.Print(resources, format, terminal.Stdout, strict, pretty)
+		util.FailOnError(err)
+	}
+}

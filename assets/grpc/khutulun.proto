@@ -1,0 +1,94 @@
+syntax = "proto3";
+
+import "google/protobuf/struct.proto";
+
+option go_package = "github.com/tliron/khutulun/api";
+
+package khutulun;
+
+service Conductor {
+    rpc getVersion(Empty) returns (Version);
+
+    rpc listNamespaces(Empty) returns (stream Namespace);
+
+    rpc listArtifacts(ListArtifacts) returns (stream ArtifactIdentifier);
+    rpc getArtifact(ArtifactIdentifier) returns (stream ArtifactContent);
+    rpc setArtifact(stream ArtifactContent) returns (Empty);
+    rpc removeArtifact(ArtifactIdentifier) returns (Empty);
+
+    rpc deployService(DeployService) returns (Empty);
+
+    rpc listResources(ListResources) returns (stream ResourceIdentifier);
+    rpc interactRunnable(stream Interaction) returns (stream Interaction);
+}
+
+service Plugin {
+    rpc Instantiate(Config) returns (Empty);
+}
+
+message Empty {}
+
+message Config {
+    google.protobuf.Struct config = 1;
+}
+
+message Version {
+    string version = 1;
+}
+
+message Namespace {
+    string name = 1;
+}
+
+message ArtifactType {
+    string name = 1;
+}
+
+message ArtifactIdentifier {
+    ArtifactType type = 1;
+    string namespace = 2;
+    string name = 3;
+}
+
+message ArtifactContent {
+    oneof content {
+        ArtifactIdentifier identifier = 1;
+        bytes bytes = 2;
+    }
+}
+
+message ServiceIdentifier {
+    string namespace = 1;
+    string name = 2;
+}
+
+message ListArtifacts {
+    ArtifactType type = 1;
+    string namespace = 2;
+}
+
+message ListServices {
+    string namespace = 1;
+}
+
+message DeployService {
+    ArtifactIdentifier template = 1;
+    ServiceIdentifier service = 2;
+}
+
+message ListResources {
+    ServiceIdentifier service = 1;
+    string type = 2;
+}
+
+message ResourceIdentifier {
+    ServiceIdentifier service = 1;
+    string type = 2;
+    string name = 3;
+}
+
+message Interaction {
+    ResourceIdentifier resource = 1;
+    string stream = 2;
+    bytes bytes = 3;
+}

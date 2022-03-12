@@ -1,0 +1,74 @@
+
+builds:
+
+- id: puccini-tosca
+  main: ./puccini-tosca
+  binary: puccini-tosca
+  goarch:
+  - amd64
+  - wasm
+  goos:
+  - linux
+  - darwin
+  - windows
+  - js
+  ldflags:
+  - -X 'github.com/tliron/kutil/version.GitVersion={{.Env.VERSION}}'
+  - -X 'github.com/tliron/kutil/version.GitRevision={{.Env.REVISION}}'
+  - -X 'github.com/tliron/kutil/version.Timestamp={{.Env.TIMESTAMP}}'
+
+- id: puccini-clout
+  main: ./puccini-clout
+  binary: puccini-clout
+  goarch:
+  - amd64
+  - wasm
+  goos:
+  - linux
+  - darwin
+  - windows
+  - js
+  ldflags:
+  - -X 'github.com/tliron/kutil/version.GitVersion={{.Env.VERSION}}'
+  - -X 'github.com/tliron/kutil/version.GitRevision={{.Env.REVISION}}'
+  - -X 'github.com/tliron/kutil/version.Timestamp={{.Env.TIMESTAMP}}'
+
+nfpms:
+
+- formats:
+  - rpm
+  - deb
+  homepage: https://github.com/tliron/puccini
+  maintainer: Tal Liron <tal.liron@gmail.com>
+  description: Deliberately stateless cloud topology management and deployment tools based on TOSCA.
+  license: Apache 2.0
+  contents:
+  - src: puccini-csar
+    dst: /usr/local/bin/puccini-csar
+
+archives:
+
+- files:
+  - README.md
+  - LICENSE
+  - NOTICE
+  - puccini-csar
+  - assets/tosca/**/*
+  - examples/**/*
+
+  format_overrides:
+  - goos: windows
+    format: zip
+
+checksum:
+
+  name_template: checksums.txt
+
+release:
+
+  #disable: true
+  #prerelease: true
+
+  github:
+    owner: tliron
+    name: puccini

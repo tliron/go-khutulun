@@ -1,0 +1,10 @@
+#!/bin/bash
+set -e
+
+HERE=$(dirname "$(readlink --canonicalize "$BASH_SOURCE")")
+. "$HERE/_env"
+
+khutulun plugin register runnable podman "$GOPATH/bin/khutulun-plugin-runnable-podman" --namespace=common
+khutulun profile register khutulun "$ROOT/assets/tosca/profiles/khutulun/profile.yaml" --namespace=common
+khutulun template register hello "$ROOT/examples/hello-world/hello-world.yaml"
+#khutulun service deploy hello

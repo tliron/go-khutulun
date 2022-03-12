@@ -1,0 +1,9 @@
+#!/bin/bash
+set -e
+
+HERE=$(dirname "$(readlink --canonicalize "$BASH_SOURCE")")
+. "$HERE/_env"
+
+rm -rf ~/.config/systemd/user/*
+systemctl --user daemon-reload
+podman kill --all

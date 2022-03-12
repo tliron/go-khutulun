@@ -1,0 +1,23 @@
+#!/bin/bash
+set -e
+
+HERE=$(dirname "$(readlink --canonicalize "$BASH_SOURCE")")
+. "$HERE/_env"
+
+git_version
+
+function build () {
+	local TOOL=$1
+	pushd "$ROOT/$TOOL" > /dev/null
+	go install \
+		-ldflags " \
+			-X 'github.com/tliron/kutil/version.GitVersion=$VERSION' \
+			-X 'github.com/tliron/kutil/version.GitRevision=$REVISION' \
+			-X 'github.com/tliron/kutil/version.Timestamp=$TIMESTAMP'"
+	popd > /dev/null
+	m "built $GOPATH/bin/$TOOL"
+}
+
+build khutulun
+build khutulun-conductor
+build khutulun-plugin-runnable-podman

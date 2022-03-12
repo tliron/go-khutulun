@@ -1,0 +1,33 @@
+package client
+
+import (
+	"io"
+
+	"github.com/tliron/khutulun/api"
+)
+
+func (self *Client) ListNamespaces() ([]string, error) {
+	context, cancel := self.newContext()
+	defer cancel()
+
+	if client, err := self.client.ListNamespaces(context, new(api.Empty)); err == nil {
+		var namespaces []string
+
+		for {
+			namespace, err := client.Recv()
+			if err != nil {
+				if err == io.EOF {
+					break
+				} else {
+					return nil, err
+				}
+			}
+
+			namespaces = append(namespaces, namespace.Name)
+		}
+
+		return namespaces, nil
+	} else {
+		return nil, err
+	}
+}

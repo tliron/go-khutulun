@@ -1,0 +1,11 @@
+#!/bin/bash
+set -e
+
+HERE=$(dirname "$(readlink --canonicalize "$BASH_SOURCE")")
+. "$HERE/_env"
+
+go install github.com/rakyll/statik@latest
+
+statik -src="$ROOT/assets/web" -dest="$ROOT" -p=web -f
+
+go fmt "$ROOT/web"

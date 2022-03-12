@@ -1,0 +1,53 @@
+
+#header {
+    padding: 16px;
+    background-color: rgb(110, 110, 110);
+    color: white;
+}
+
+#header .title {
+    font-weight: bold;
+    font-size: 20px;
+    margin-right: 40px;
+}
+
+.hstack div {
+    margin-left: 6px;
+    margin-right: 6px;
+}
+
+#tab {
+    background-color: rgb(60, 60, 60);
+}
+
+#tab i {
+    display: block;
+    color: white;
+    margin: 12px;
+}
+
+#tab .section {
+    color: rgb(110, 110, 110);
+    font-size: 14px;
+    font-weight: bold;
+    text-align: center;
+    padding: 10px 10px;
+    border-top: 1px solid rgb(110, 110, 110);
+}
+
+#tab .nav-link {
+    color: white;
+    border-radius: 0px;
+}
+
+#tab .nav-link.active {
+    background-color: rgb(110, 110, 110);
+}
+
+#tab-content {
+    padding: 14px;
+}
+
+.hide-first-column th:nth-child(1), .hide-first-column td:nth-child(1) {
+    display: none;
+}
