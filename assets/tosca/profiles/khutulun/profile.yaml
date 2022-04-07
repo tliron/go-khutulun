@@ -26,20 +26,43 @@ data_types:
 
   ContainerImage:
     properties:
-      name:
+      reference:
+        # See: https://github.com/distribution/distribution/blob/main/reference/reference.go
         description: >-
-          If not provided will use name.
+          [host[:port]/][repository/]image[:tag][@digest-algorithm:digest-hex]
+          If not provided a ContainerImage artifact would have to be attached instead.
         type: string
         required: false
-      source:
-        description: >-
-          Image registry pseudo-URI. If not provided a ContainerImage artifact would have to be attached instead.
+      host:
         type: string
         required: false
-      create-arguments:
-        type: list
-        entry_schema: string
+      port:
+        type: integer
         required: false
+      repository:
+        type: string
+        required: false
+      image:
+        type: string
+        required: false
+      tag:
+        type: string
+        required: false
+      digest-algorithm:
+        type: string
+        required: false
+      digest-hex:
+        type: string
+        required: false
+
+  ContainerPort:
+    properties:
+      external:
+        type: integer
+      internal:
+        type: integer
+      protocol:
+        type: string
 
 capability_types:
 
@@ -98,8 +121,21 @@ capability_types:
     properties:
       runner:
         default: podman
+      name:
+        description: >-
+          If not provided will use the node's name.
+        type: string
+        required: false
       image:
         type: ContainerImage
+        required: false
+      create-arguments:
+        type: list
+        entry_schema: string
+        required: false
+      ports:
+        type: list
+        entry_schema: ContainerPort
         required: false
 
   PristineContainer:
@@ -205,7 +241,7 @@ node_types:
         properties:
           image:
             default:
-              source: docker.io/nginx:1.21.6
+              reference: docker.io/nginx:1.21.6
     # TODO: attach an artifact that sets up loadbalancing
 
   VirtualMachine:

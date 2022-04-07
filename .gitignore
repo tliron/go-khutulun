@@ -1,6 +1,8 @@
 .project
 .pydevproject
 .vscode
+.terraform
+.terraform.lock.hcl
 
 go.work
 go.work.sum

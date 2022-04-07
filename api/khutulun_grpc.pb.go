@@ -11,6 +11,7 @@ import (
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
+	emptypb "google.golang.org/protobuf/types/known/emptypb"
 )
 
 // This is a compile-time assertion to ensure that this generated file
@@ -22,15 +23,16 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type ConductorClient interface {
-	GetVersion(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*Version, error)
-	ListNamespaces(ctx context.Context, in *Empty, opts ...grpc.CallOption) (Conductor_ListNamespacesClient, error)
+	GetVersion(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*Version, error)
+	ListHosts(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (Conductor_ListHostsClient, error)
+	ListNamespaces(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (Conductor_ListNamespacesClient, error)
 	ListArtifacts(ctx context.Context, in *ListArtifacts, opts ...grpc.CallOption) (Conductor_ListArtifactsClient, error)
 	GetArtifact(ctx context.Context, in *ArtifactIdentifier, opts ...grpc.CallOption) (Conductor_GetArtifactClient, error)
 	SetArtifact(ctx context.Context, opts ...grpc.CallOption) (Conductor_SetArtifactClient, error)
-	RemoveArtifact(ctx context.Context, in *ArtifactIdentifier, opts ...grpc.CallOption) (*Empty, error)
-	DeployService(ctx context.Context, in *DeployService, opts ...grpc.CallOption) (*Empty, error)
+	RemoveArtifact(ctx context.Context, in *ArtifactIdentifier, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	DeployService(ctx context.Context, in *DeployService, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	ListResources(ctx context.Context, in *ListResources, opts ...grpc.CallOption) (Conductor_ListResourcesClient, error)
-	InteractRunnable(ctx context.Context, opts ...grpc.CallOption) (Conductor_InteractRunnableClient, error)
+	Interact(ctx context.Context, opts ...grpc.CallOption) (Conductor_InteractClient, error)
 }
 
 type conductorClient struct {
@@ -41,7 +43,7 @@ func NewConductorClient(cc grpc.ClientConnInterface) ConductorClient {
 	return &conductorClient{cc}
 }
 
-func (c *conductorClient) GetVersion(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*Version, error) {
+func (c *conductorClient) GetVersion(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*Version, error) {
 	out := new(Version)
 	err := c.cc.Invoke(ctx, "/khutulun.Conductor/getVersion", in, out, opts...)
 	if err != nil {
@@ -50,8 +52,40 @@ func (c *conductorClient) GetVersion(ctx context.Context, in *Empty, opts ...grp
 	return out, nil
 }
 
-func (c *conductorClient) ListNamespaces(ctx context.Context, in *Empty, opts ...grpc.CallOption) (Conductor_ListNamespacesClient, error) {
-	stream, err := c.cc.NewStream(ctx, &Conductor_ServiceDesc.Streams[0], "/khutulun.Conductor/listNamespaces", opts...)
+func (c *conductorClient) ListHosts(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (Conductor_ListHostsClient, error) {
+	stream, err := c.cc.NewStream(ctx, &Conductor_ServiceDesc.Streams[0], "/khutulun.Conductor/listHosts", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &conductorListHostsClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type Conductor_ListHostsClient interface {
+	Recv() (*HostIdentifier, error)
+	grpc.ClientStream
+}
+
+type conductorListHostsClient struct {
+	grpc.ClientStream
+}
+
+func (x *conductorListHostsClient) Recv() (*HostIdentifier, error) {
+	m := new(HostIdentifier)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+func (c *conductorClient) ListNamespaces(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (Conductor_ListNamespacesClient, error) {
+	stream, err := c.cc.NewStream(ctx, &Conductor_ServiceDesc.Streams[1], "/khutulun.Conductor/listNamespaces", opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -83,7 +117,7 @@ func (x *conductorListNamespacesClient) Recv() (*Namespace, error) {
 }
 
 func (c *conductorClient) ListArtifacts(ctx context.Context, in *ListArtifacts, opts ...grpc.CallOption) (Conductor_ListArtifactsClient, error) {
-	stream, err := c.cc.NewStream(ctx, &Conductor_ServiceDesc.Streams[1], "/khutulun.Conductor/listArtifacts", opts...)
+	stream, err := c.cc.NewStream(ctx, &Conductor_ServiceDesc.Streams[2], "/khutulun.Conductor/listArtifacts", opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -115,7 +149,7 @@ func (x *conductorListArtifactsClient) Recv() (*ArtifactIdentifier, error) {
 }
 
 func (c *conductorClient) GetArtifact(ctx context.Context, in *ArtifactIdentifier, opts ...grpc.CallOption) (Conductor_GetArtifactClient, error) {
-	stream, err := c.cc.NewStream(ctx, &Conductor_ServiceDesc.Streams[2], "/khutulun.Conductor/getArtifact", opts...)
+	stream, err := c.cc.NewStream(ctx, &Conductor_ServiceDesc.Streams[3], "/khutulun.Conductor/getArtifact", opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -147,7 +181,7 @@ func (x *conductorGetArtifactClient) Recv() (*ArtifactContent, error) {
 }
 
 func (c *conductorClient) SetArtifact(ctx context.Context, opts ...grpc.CallOption) (Conductor_SetArtifactClient, error) {
-	stream, err := c.cc.NewStream(ctx, &Conductor_ServiceDesc.Streams[3], "/khutulun.Conductor/setArtifact", opts...)
+	stream, err := c.cc.NewStream(ctx, &Conductor_ServiceDesc.Streams[4], "/khutulun.Conductor/setArtifact", opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -157,7 +191,7 @@ func (c *conductorClient) SetArtifact(ctx context.Context, opts ...grpc.CallOpti
 
 type Conductor_SetArtifactClient interface {
 	Send(*ArtifactContent) error
-	CloseAndRecv() (*Empty, error)
+	CloseAndRecv() (*emptypb.Empty, error)
 	grpc.ClientStream
 }
 
@@ -169,19 +203,19 @@ func (x *conductorSetArtifactClient) Send(m *ArtifactContent) error {
 	return x.ClientStream.SendMsg(m)
 }
 
-func (x *conductorSetArtifactClient) CloseAndRecv() (*Empty, error) {
+func (x *conductorSetArtifactClient) CloseAndRecv() (*emptypb.Empty, error) {
 	if err := x.ClientStream.CloseSend(); err != nil {
 		return nil, err
 	}
-	m := new(Empty)
+	m := new(emptypb.Empty)
 	if err := x.ClientStream.RecvMsg(m); err != nil {
 		return nil, err
 	}
 	return m, nil
 }
 
-func (c *conductorClient) RemoveArtifact(ctx context.Context, in *ArtifactIdentifier, opts ...grpc.CallOption) (*Empty, error) {
-	out := new(Empty)
+func (c *conductorClient) RemoveArtifact(ctx context.Context, in *ArtifactIdentifier, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
 	err := c.cc.Invoke(ctx, "/khutulun.Conductor/removeArtifact", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -189,8 +223,8 @@ func (c *conductorClient) RemoveArtifact(ctx context.Context, in *ArtifactIdenti
 	return out, nil
 }
 
-func (c *conductorClient) DeployService(ctx context.Context, in *DeployService, opts ...grpc.CallOption) (*Empty, error) {
-	out := new(Empty)
+func (c *conductorClient) DeployService(ctx context.Context, in *DeployService, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
 	err := c.cc.Invoke(ctx, "/khutulun.Conductor/deployService", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -199,7 +233,7 @@ func (c *conductorClient) DeployService(ctx context.Context, in *DeployService, 
 }
 
 func (c *conductorClient) ListResources(ctx context.Context, in *ListResources, opts ...grpc.CallOption) (Conductor_ListResourcesClient, error) {
-	stream, err := c.cc.NewStream(ctx, &Conductor_ServiceDesc.Streams[4], "/khutulun.Conductor/listResources", opts...)
+	stream, err := c.cc.NewStream(ctx, &Conductor_ServiceDesc.Streams[5], "/khutulun.Conductor/listResources", opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -230,30 +264,30 @@ func (x *conductorListResourcesClient) Recv() (*ResourceIdentifier, error) {
 	return m, nil
 }
 
-func (c *conductorClient) InteractRunnable(ctx context.Context, opts ...grpc.CallOption) (Conductor_InteractRunnableClient, error) {
-	stream, err := c.cc.NewStream(ctx, &Conductor_ServiceDesc.Streams[5], "/khutulun.Conductor/interactRunnable", opts...)
+func (c *conductorClient) Interact(ctx context.Context, opts ...grpc.CallOption) (Conductor_InteractClient, error) {
+	stream, err := c.cc.NewStream(ctx, &Conductor_ServiceDesc.Streams[6], "/khutulun.Conductor/interact", opts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &conductorInteractRunnableClient{stream}
+	x := &conductorInteractClient{stream}
 	return x, nil
 }
 
-type Conductor_InteractRunnableClient interface {
+type Conductor_InteractClient interface {
 	Send(*Interaction) error
 	Recv() (*Interaction, error)
 	grpc.ClientStream
 }
 
-type conductorInteractRunnableClient struct {
+type conductorInteractClient struct {
 	grpc.ClientStream
 }
 
-func (x *conductorInteractRunnableClient) Send(m *Interaction) error {
+func (x *conductorInteractClient) Send(m *Interaction) error {
 	return x.ClientStream.SendMsg(m)
 }
 
-func (x *conductorInteractRunnableClient) Recv() (*Interaction, error) {
+func (x *conductorInteractClient) Recv() (*Interaction, error) {
 	m := new(Interaction)
 	if err := x.ClientStream.RecvMsg(m); err != nil {
 		return nil, err
@@ -265,15 +299,16 @@ func (x *conductorInteractRunnableClient) Recv() (*Interaction, error) {
 // All implementations must embed UnimplementedConductorServer
 // for forward compatibility
 type ConductorServer interface {
-	GetVersion(context.Context, *Empty) (*Version, error)
-	ListNamespaces(*Empty, Conductor_ListNamespacesServer) error
+	GetVersion(context.Context, *emptypb.Empty) (*Version, error)
+	ListHosts(*emptypb.Empty, Conductor_ListHostsServer) error
+	ListNamespaces(*emptypb.Empty, Conductor_ListNamespacesServer) error
 	ListArtifacts(*ListArtifacts, Conductor_ListArtifactsServer) error
 	GetArtifact(*ArtifactIdentifier, Conductor_GetArtifactServer) error
 	SetArtifact(Conductor_SetArtifactServer) error
-	RemoveArtifact(context.Context, *ArtifactIdentifier) (*Empty, error)
-	DeployService(context.Context, *DeployService) (*Empty, error)
+	RemoveArtifact(context.Context, *ArtifactIdentifier) (*emptypb.Empty, error)
+	DeployService(context.Context, *DeployService) (*emptypb.Empty, error)
 	ListResources(*ListResources, Conductor_ListResourcesServer) error
-	InteractRunnable(Conductor_InteractRunnableServer) error
+	Interact(Conductor_InteractServer) error
 	mustEmbedUnimplementedConductorServer()
 }
 
@@ -281,10 +316,13 @@ type ConductorServer interface {
 type UnimplementedConductorServer struct {
 }
 
-func (UnimplementedConductorServer) GetVersion(context.Context, *Empty) (*Version, error) {
+func (UnimplementedConductorServer) GetVersion(context.Context, *emptypb.Empty) (*Version, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetVersion not implemented")
 }
-func (UnimplementedConductorServer) ListNamespaces(*Empty, Conductor_ListNamespacesServer) error {
+func (UnimplementedConductorServer) ListHosts(*emptypb.Empty, Conductor_ListHostsServer) error {
+	return status.Errorf(codes.Unimplemented, "method ListHosts not implemented")
+}
+func (UnimplementedConductorServer) ListNamespaces(*emptypb.Empty, Conductor_ListNamespacesServer) error {
 	return status.Errorf(codes.Unimplemented, "method ListNamespaces not implemented")
 }
 func (UnimplementedConductorServer) ListArtifacts(*ListArtifacts, Conductor_ListArtifactsServer) error {
@@ -296,17 +334,17 @@ func (UnimplementedConductorServer) GetArtifact(*ArtifactIdentifier, Conductor_G
 func (UnimplementedConductorServer) SetArtifact(Conductor_SetArtifactServer) error {
 	return status.Errorf(codes.Unimplemented, "method SetArtifact not implemented")
 }
-func (UnimplementedConductorServer) RemoveArtifact(context.Context, *ArtifactIdentifier) (*Empty, error) {
+func (UnimplementedConductorServer) RemoveArtifact(context.Context, *ArtifactIdentifier) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RemoveArtifact not implemented")
 }
-func (UnimplementedConductorServer) DeployService(context.Context, *DeployService) (*Empty, error) {
+func (UnimplementedConductorServer) DeployService(context.Context, *DeployService) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeployService not implemented")
 }
 func (UnimplementedConductorServer) ListResources(*ListResources, Conductor_ListResourcesServer) error {
 	return status.Errorf(codes.Unimplemented, "method ListResources not implemented")
 }
-func (UnimplementedConductorServer) InteractRunnable(Conductor_InteractRunnableServer) error {
-	return status.Errorf(codes.Unimplemented, "method InteractRunnable not implemented")
+func (UnimplementedConductorServer) Interact(Conductor_InteractServer) error {
+	return status.Errorf(codes.Unimplemented, "method Interact not implemented")
 }
 func (UnimplementedConductorServer) mustEmbedUnimplementedConductorServer() {}
 
@@ -322,7 +360,7 @@ func RegisterConductorServer(s grpc.ServiceRegistrar, srv ConductorServer) {
 }
 
 func _Conductor_GetVersion_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Empty)
+	in := new(emptypb.Empty)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -334,13 +372,34 @@ func _Conductor_GetVersion_Handler(srv interface{}, ctx context.Context, dec fun
 		FullMethod: "/khutulun.Conductor/getVersion",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ConductorServer).GetVersion(ctx, req.(*Empty))
+		return srv.(ConductorServer).GetVersion(ctx, req.(*emptypb.Empty))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Conductor_ListHosts_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(emptypb.Empty)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(ConductorServer).ListHosts(m, &conductorListHostsServer{stream})
+}
+
+type Conductor_ListHostsServer interface {
+	Send(*HostIdentifier) error
+	grpc.ServerStream
+}
+
+type conductorListHostsServer struct {
+	grpc.ServerStream
+}
+
+func (x *conductorListHostsServer) Send(m *HostIdentifier) error {
+	return x.ServerStream.SendMsg(m)
+}
+
 func _Conductor_ListNamespaces_Handler(srv interface{}, stream grpc.ServerStream) error {
-	m := new(Empty)
+	m := new(emptypb.Empty)
 	if err := stream.RecvMsg(m); err != nil {
 		return err
 	}
@@ -407,7 +466,7 @@ func _Conductor_SetArtifact_Handler(srv interface{}, stream grpc.ServerStream) e
 }
 
 type Conductor_SetArtifactServer interface {
-	SendAndClose(*Empty) error
+	SendAndClose(*emptypb.Empty) error
 	Recv() (*ArtifactContent, error)
 	grpc.ServerStream
 }
@@ -416,7 +475,7 @@ type conductorSetArtifactServer struct {
 	grpc.ServerStream
 }
 
-func (x *conductorSetArtifactServer) SendAndClose(m *Empty) error {
+func (x *conductorSetArtifactServer) SendAndClose(m *emptypb.Empty) error {
 	return x.ServerStream.SendMsg(m)
 }
 
@@ -485,25 +544,25 @@ func (x *conductorListResourcesServer) Send(m *ResourceIdentifier) error {
 	return x.ServerStream.SendMsg(m)
 }
 
-func _Conductor_InteractRunnable_Handler(srv interface{}, stream grpc.ServerStream) error {
-	return srv.(ConductorServer).InteractRunnable(&conductorInteractRunnableServer{stream})
+func _Conductor_Interact_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(ConductorServer).Interact(&conductorInteractServer{stream})
 }
 
-type Conductor_InteractRunnableServer interface {
+type Conductor_InteractServer interface {
 	Send(*Interaction) error
 	Recv() (*Interaction, error)
 	grpc.ServerStream
 }
 
-type conductorInteractRunnableServer struct {
+type conductorInteractServer struct {
 	grpc.ServerStream
 }
 
-func (x *conductorInteractRunnableServer) Send(m *Interaction) error {
+func (x *conductorInteractServer) Send(m *Interaction) error {
 	return x.ServerStream.SendMsg(m)
 }
 
-func (x *conductorInteractRunnableServer) Recv() (*Interaction, error) {
+func (x *conductorInteractServer) Recv() (*Interaction, error) {
 	m := new(Interaction)
 	if err := x.ServerStream.RecvMsg(m); err != nil {
 		return nil, err
@@ -533,6 +592,11 @@ var Conductor_ServiceDesc = grpc.ServiceDesc{
 	},
 	Streams: []grpc.StreamDesc{
 		{
+			StreamName:    "listHosts",
+			Handler:       _Conductor_ListHosts_Handler,
+			ServerStreams: true,
+		},
+		{
 			StreamName:    "listNamespaces",
 			Handler:       _Conductor_ListNamespaces_Handler,
 			ServerStreams: true,
@@ -558,8 +622,8 @@ var Conductor_ServiceDesc = grpc.ServiceDesc{
 			ServerStreams: true,
 		},
 		{
-			StreamName:    "interactRunnable",
-			Handler:       _Conductor_InteractRunnable_Handler,
+			StreamName:    "interact",
+			Handler:       _Conductor_Interact_Handler,
 			ServerStreams: true,
 			ClientStreams: true,
 		},
@@ -571,7 +635,7 @@ var Conductor_ServiceDesc = grpc.ServiceDesc{
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type PluginClient interface {
-	Instantiate(ctx context.Context, in *Config, opts ...grpc.CallOption) (*Empty, error)
+	Instantiate(ctx context.Context, in *Config, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
 type pluginClient struct {
@@ -582,8 +646,8 @@ func NewPluginClient(cc grpc.ClientConnInterface) PluginClient {
 	return &pluginClient{cc}
 }
 
-func (c *pluginClient) Instantiate(ctx context.Context, in *Config, opts ...grpc.CallOption) (*Empty, error) {
-	out := new(Empty)
+func (c *pluginClient) Instantiate(ctx context.Context, in *Config, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
 	err := c.cc.Invoke(ctx, "/khutulun.Plugin/Instantiate", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -595,7 +659,7 @@ func (c *pluginClient) Instantiate(ctx context.Context, in *Config, opts ...grpc
 // All implementations must embed UnimplementedPluginServer
 // for forward compatibility
 type PluginServer interface {
-	Instantiate(context.Context, *Config) (*Empty, error)
+	Instantiate(context.Context, *Config) (*emptypb.Empty, error)
 	mustEmbedUnimplementedPluginServer()
 }
 
@@ -603,7 +667,7 @@ type PluginServer interface {
 type UnimplementedPluginServer struct {
 }
 
-func (UnimplementedPluginServer) Instantiate(context.Context, *Config) (*Empty, error) {
+func (UnimplementedPluginServer) Instantiate(context.Context, *Config) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Instantiate not implemented")
 }
 func (UnimplementedPluginServer) mustEmbedUnimplementedPluginServer() {}

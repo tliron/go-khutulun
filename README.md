@@ -50,14 +50,14 @@ Clusters
 --------
 
 Cluster formation is emergent and based on the [SWIM gossip protocol](https://ieeexplore.ieee.org/document/1028914).
-At the minimum you need just one "seed" member to bootstrap it, but because all members are "masters"
-the cluster can survive with as little as one arbitrary member.
+At the minimum you need just one "seed" host to bootstrap it, but because all hosts are "masters"
+the cluster can survive with as little as one arbitrary host.
 
-Khutulun doesn't distribute its management state among members. Instead it simply requires that all
-members have access to the same shared filesystem. A simple NFS share should be enough even for large
-clusters.
+Khutulun doesn't distribute its management state among hosts. Instead it simply requires that all
+hosts have access to the same shared filesystem. A simple NFS share should be enough even for large
+clusters. Coordination is handled via [flock](https://man7.org/linux/man-pages/man2/flock.2.html).
 
-What about setting up the cluster members? Bare metal tasks like partitioning drives, installing
+What about setting up the cluster hosts? Bare metal tasks like partitioning drives, installing
 operating systems, and configuring networking and other essential services? Or cloud tasks like
 provisioning virtual machines, virtual storage, and virtual networks? Simply put, it's out of the
 scope of Khutulun. Use a dedicated infrastructure manager instead. Khutulun can interact with such
@@ -109,7 +109,7 @@ worlds.
 
 ### Why not use a distributed key-value store like [etcd](https://etcd.io/) for management state?
 
-What's wrong with just having a filesystem shared among all members? Seriously, why make things more
+What's wrong with just having a filesystem shared among all hosts? Seriously, why make things more
 complicated than they have to be?
 
 Also note that etcd has strict limits on the size of documents, which is an obstacle for sharing large,

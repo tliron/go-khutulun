@@ -5,12 +5,12 @@ import (
 )
 
 func init() {
-	memberCommand.AddCommand(memberAddCommand)
+	hostCommand.AddCommand(hostAddCommand)
 }
 
-var memberAddCommand = &cobra.Command{
+var hostAddCommand = &cobra.Command{
 	Use:   "add",
-	Short: "Add a member to a cluster",
+	Short: "Add a host to a cluster",
 	Run: func(cmd *cobra.Command, args []string) {
 		// install conductor as a systemd service
 	},

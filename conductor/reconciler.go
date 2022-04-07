@@ -4,7 +4,6 @@ import (
 	"time"
 
 	"github.com/tliron/khutulun/plugin"
-	"github.com/tliron/kutil/ard"
 	cloutpkg "github.com/tliron/puccini/clout"
 )
 
@@ -50,28 +49,6 @@ func (self *Conductor) Reconcile() {
 	}
 }
 
-func (self *Conductor) getResources(clout *cloutpkg.Clout, type_ string) []Container {
-	var containers []Container
-	for _, vertex := range clout.Vertexes {
-		if capabilities, ok := ard.NewNode(vertex.Properties).Get("capabilities").StringMap(false); ok {
-			for _, capability := range capabilities {
-				if types, ok := ard.NewNode(capability).Get("types").StringMap(false); ok {
-					if _, ok := types["cloud.puccini.khutulun::Container"]; ok {
-						var container Container
-						if container.name, ok = ard.NewNode(capability).Get("properties").Get("image").Get("name").String(false); !ok {
-							container.name, _ = ard.NewNode(vertex.Properties).Get("name").String(false)
-						}
-						container.source, _ = ard.NewNode(capability).Get("properties").Get("image").Get("source").String(false)
-						container.createArguments, _ = ard.NewNode(capability).Get("properties").Get("image").Get("create-arguments").StringList(false)
-						containers = append(containers, container)
-					}
-				}
-			}
-		}
-	}
-	return containers
-}
-
 func (self *Conductor) reconcileRunnables(clout *cloutpkg.Clout) {
 	containers := self.getResources(clout, "runnable")
 	if len(containers) == 0 {
@@ -85,11 +62,10 @@ func (self *Conductor) reconcileRunnables(clout *cloutpkg.Clout) {
 		client := plugin.NewRunnableClient(name, command)
 		defer client.Close()
 
-		if run, err := client.Runnable(); err == nil {
+		if runnable, err := client.Runnable(); err == nil {
 			for _, container := range containers {
-				if err := run.Instantiate(container.ToConfig()); err != nil {
+				if err := runnable.Instantiate(container); err != nil {
 					log.Errorf("instantiate error: %s", err.Error())
-					return
 				}
 			}
 		} else {
@@ -98,22 +74,10 @@ func (self *Conductor) reconcileRunnables(clout *cloutpkg.Clout) {
 	}()
 }
 
-type Container struct {
-	name            string
-	source          string
-	createArguments []string
-	ports           []Port
-}
-
-type Port struct {
-	external int64
-	internal int64
-}
-
-func (self Container) ToConfig() ard.StringMap {
-	return ard.StringMap{
-		"name":            self.name,
-		"source":          self.source,
-		"createArguments": self.createArguments,
+func (self *Conductor) getResources(clout *cloutpkg.Clout, type_ string) []plugin.Container {
+	var containers []plugin.Container
+	for _, vertex := range clout.Vertexes {
+		containers = append(containers, GetContainers(vertex.Properties)...)
 	}
+	return containers
 }

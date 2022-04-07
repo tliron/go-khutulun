@@ -31,7 +31,11 @@ topology_template:
         runnable:
           properties:
             image:
-              source: docker.io/nginx:1.21.6
+              reference: docker.io/nginx:1.21.6
+            ports:
+            - external: 8080
+              internal: 80
+              protocol: tcp
       requirements:
       - connection:
           node: database
@@ -44,8 +48,8 @@ topology_template:
         runnable:
           properties:
             image:
-              source: docker.io/postgres:14.2
-              create-arguments: [ -e, POSTGRES_PASSWORD=postgres ]
+              reference: docker.io/postgres:14.2
+            create-arguments: [ --env=POSTGRES_PASSWORD=postgres ]
       requirements:
       - storage: directory
 

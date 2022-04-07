@@ -1,11 +1,15 @@
 package plugin
 
 import (
-	"net/rpc"
+	contextpkg "context"
 	"os/exec"
 
 	"github.com/hashicorp/go-plugin"
+	"github.com/tliron/khutulun/api"
 	"github.com/tliron/kutil/logging/sink"
+	"github.com/tliron/kutil/protobuf"
+	"google.golang.org/grpc"
+	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 //
@@ -13,42 +17,49 @@ import (
 //
 
 type Runnable interface {
-	Instantiate(config map[string]any) error
+	Instantiate(config any) error
 }
 
 //
-// RunnableRPCServer
+// RunnableGRPCServer
 //
 
-type RunnableRPCServer struct {
+type RunnableGRPCServer struct {
+	api.UnimplementedPluginServer
+
 	implementation Runnable
 }
 
-func NewRunnableRPCServer(implementation Runnable) *RunnableRPCServer {
-	return &RunnableRPCServer{implementation: implementation}
+func NewRunnableGRPCServer(implementation Runnable) *RunnableGRPCServer {
+	return &RunnableGRPCServer{implementation: implementation}
 }
 
-// net/rpc signature
-func (s *RunnableRPCServer) Instantiate(request *map[string]any, response *struct{}) error {
-	return s.implementation.Instantiate(*request)
+// api.PluginServer interface
+func (self *RunnableGRPCServer) Instantiate(context contextpkg.Context, config *api.Config) (*emptypb.Empty, error) {
+	return new(emptypb.Empty), self.implementation.Instantiate(config.Config.AsMap())
 }
 
 //
-// RunnableRPCClient
+// RunnableGRPCClient
 //
 
-type RunnableRPCClient struct {
-	client *rpc.Client
+type RunnableGRPCClient struct {
+	context contextpkg.Context
+	client  api.PluginClient
 }
 
-func NewRunRPCClient(client *rpc.Client) *RunnableRPCClient {
-	return &RunnableRPCClient{client}
+func NewRunnableGRPCClient(context contextpkg.Context, client api.PluginClient) *RunnableGRPCClient {
+	return &RunnableGRPCClient{context: context, client: client}
 }
 
 // Runnable interface
-func (self *RunnableRPCClient) Instantiate(config map[string]any) error {
-	var r struct{}
-	return self.client.Call("Plugin.Instantiate", &config, &r)
+func (self *RunnableGRPCClient) Instantiate(config any) error {
+	if config_, err := protobuf.NewStruct(config); err == nil {
+		_, err := self.client.Instantiate(self.context, &api.Config{Config: config_})
+		return err
+	} else {
+		return err
+	}
 }
 
 //
@@ -56,17 +67,20 @@ func (self *RunnableRPCClient) Instantiate(config map[string]any) error {
 //
 
 type RunnablePlugin struct {
-	implementation Runnable
+	plugin.Plugin
+
+	implementation Runnable // only for servers
 }
 
-// plugin.Plugin interface
-func (self *RunnablePlugin) Server(broker *plugin.MuxBroker) (any, error) {
-	return NewRunnableRPCServer(self.implementation), nil
+// plugin.GRPCPlugin interface
+func (self *RunnablePlugin) GRPCServer(broker *plugin.GRPCBroker, server *grpc.Server) error {
+	api.RegisterPluginServer(server, NewRunnableGRPCServer(self.implementation))
+	return nil
 }
 
-// plugin.Plugin interface
-func (self *RunnablePlugin) Client(broker *plugin.MuxBroker, client *rpc.Client) (any, error) {
-	return NewRunRPCClient(client), nil
+// plugin.GRPCPlugin interface
+func (p *RunnablePlugin) GRPCClient(context contextpkg.Context, broker *plugin.GRPCBroker, client *grpc.ClientConn) (any, error) {
+	return NewRunnableGRPCClient(context, api.NewPluginClient(client)), nil
 }
 
 //
@@ -80,10 +94,10 @@ type RunnableClient struct {
 func NewRunnableClient(name string, command string) *RunnableClient {
 	var config = plugin.ClientConfig{
 		Plugins: map[string]plugin.Plugin{
-			"run": new(RunnablePlugin),
+			"runnable": new(RunnablePlugin),
 		},
 		Cmd:              exec.Command(command),
-		AllowedProtocols: []plugin.Protocol{plugin.ProtocolNetRPC, plugin.ProtocolGRPC},
+		AllowedProtocols: []plugin.Protocol{plugin.ProtocolGRPC},
 		HandshakeConfig:  handshakeConfig,
 		Logger:           sink.NewHCLogger("khutulun.plugin."+name, nil),
 	}
@@ -99,9 +113,10 @@ func (self *RunnableClient) Close() {
 
 func (self *RunnableClient) Runnable() (Runnable, error) {
 	if protocol, err := self.client.Client(); err == nil {
-		if r, err := protocol.Dispense("run"); err == nil {
-			return r.(Runnable), nil
+		if runnable, err := protocol.Dispense("runnable"); err == nil {
+			return runnable.(Runnable), nil
 		} else {
+			protocol.Close()
 			return nil, err
 		}
 	} else {
@@ -114,7 +129,7 @@ func (self *RunnableClient) Runnable() (Runnable, error) {
 //
 
 type RunnableServer struct {
-	plugin *RunnablePlugin
+	plugin plugin.Plugin
 }
 
 func NewRunnableServer(implementation Runnable) *RunnableServer {
@@ -126,8 +141,9 @@ func NewRunnableServer(implementation Runnable) *RunnableServer {
 func (self *RunnableServer) Start() {
 	var config = plugin.ServeConfig{
 		Plugins: map[string]plugin.Plugin{
-			"run": self.plugin,
+			"runnable": self.plugin,
 		},
+		GRPCServer:      plugin.DefaultGRPCServer,
 		HandshakeConfig: handshakeConfig,
 		Logger:          sink.NewHCLogger("khutulun.plugin.server", nil),
 	}

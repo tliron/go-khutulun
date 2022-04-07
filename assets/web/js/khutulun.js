@@ -58,7 +58,7 @@ function syncTable(tab, url) {
         let identifier = identifiers[i];
         if (!find(identifier, exists)) {
           let namespace_ = identifier.namespace == '_' ? '(default)' : identifier.namespace;
-          let tr = $(`<tr><td>` + escapeContent(namespace_) + `</td><td>` + escapeContent(identifier.name) + `</td></tr>`);
+          let tr = $(`<tr><td>` + escapeContent(namespace_) + `</td><td>` + escapeContent(identifier.name) + `</td><td></td></tr>`);
           tr.data('identifier', identifier);
           tbody.append(tr);
         }

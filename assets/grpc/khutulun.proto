@@ -1,5 +1,6 @@
 syntax = "proto3";
 
+import "google/protobuf/empty.proto";
 import "google/protobuf/struct.proto";
 
 option go_package = "github.com/tliron/khutulun/api";
@@ -7,26 +8,27 @@ option go_package = "github.com/tliron/khutulun/api";
 package khutulun;
 
 service Conductor {
-    rpc getVersion(Empty) returns (Version);
+    rpc getVersion(google.protobuf.Empty) returns (Version);
 
-    rpc listNamespaces(Empty) returns (stream Namespace);
+    rpc listHosts(google.protobuf.Empty) returns (stream HostIdentifier);
+
+    rpc listNamespaces(google.protobuf.Empty) returns (stream Namespace);
 
     rpc listArtifacts(ListArtifacts) returns (stream ArtifactIdentifier);
     rpc getArtifact(ArtifactIdentifier) returns (stream ArtifactContent);
-    rpc setArtifact(stream ArtifactContent) returns (Empty);
-    rpc removeArtifact(ArtifactIdentifier) returns (Empty);
+    rpc setArtifact(stream ArtifactContent) returns (google.protobuf.Empty);
+    rpc removeArtifact(ArtifactIdentifier) returns (google.protobuf.Empty);
 
-    rpc deployService(DeployService) returns (Empty);
+    rpc deployService(DeployService) returns (google.protobuf.Empty);
 
     rpc listResources(ListResources) returns (stream ResourceIdentifier);
-    rpc interactRunnable(stream Interaction) returns (stream Interaction);
+
+    rpc interact(stream Interaction) returns (stream Interaction);
 }
 
 service Plugin {
-    rpc Instantiate(Config) returns (Empty);
+    rpc Instantiate(Config) returns (google.protobuf.Empty);
 }
-
-message Empty {}
 
 message Config {
     google.protobuf.Struct config = 1;
@@ -37,6 +39,10 @@ message Version {
 }
 
 message Namespace {
+    string name = 1;
+}
+
+message HostIdentifier {
     string name = 1;
 }
 
@@ -57,14 +63,14 @@ message ArtifactContent {
     }
 }
 
-message ServiceIdentifier {
-    string namespace = 1;
-    string name = 2;
-}
-
 message ListArtifacts {
     ArtifactType type = 1;
     string namespace = 2;
+}
+
+message ServiceIdentifier {
+    string namespace = 1;
+    string name = 2;
 }
 
 message ListServices {
@@ -76,19 +82,25 @@ message DeployService {
     ServiceIdentifier service = 2;
 }
 
-message ListResources {
-    ServiceIdentifier service = 1;
-    string type = 2;
-}
-
 message ResourceIdentifier {
     ServiceIdentifier service = 1;
     string type = 2;
     string name = 3;
 }
 
+message ListResources {
+    ServiceIdentifier service = 1;
+    string type = 2;
+}
+
 message Interaction {
-    ResourceIdentifier resource = 1;
+    message Start {
+        repeated string identifier = 1;
+        repeated string command = 2;
+        bool pseudoTerminal = 3;
+    }
+
+    Start start = 1;
     string stream = 2;
     bytes bytes = 3;
 }

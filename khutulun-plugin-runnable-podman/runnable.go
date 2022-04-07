@@ -6,9 +6,11 @@ import (
 	"os/exec"
 	userpkg "os/user"
 	"path/filepath"
+	"strings"
 
 	"github.com/pkg/errors"
-	"github.com/tliron/kutil/ard"
+	"github.com/tliron/khutulun/plugin"
+	"github.com/tliron/kutil/protobuf"
 )
 
 const servicePrefix = "khutulun"
@@ -23,14 +25,13 @@ type Runnable struct{}
 // https://superuser.com/a/1461905
 
 // plugin.Runnable interface
-func (self *Runnable) Instantiate(config map[string]any) error {
-	var config_ *Config
-	var err error
-	if config_, err = NewConfig(config); err != nil {
+func (self *Runnable) Instantiate(config any) error {
+	var container plugin.Container
+	if err := protobuf.UnpackStringMap(config, &container); err != nil {
 		return err
 	}
 
-	serviceName := fmt.Sprintf("%s-%s.service", servicePrefix, config_.name)
+	serviceName := fmt.Sprintf("%s-%s.service", servicePrefix, container.Name)
 
 	user, err := userpkg.Current()
 	if err != nil {
@@ -45,14 +46,14 @@ func (self *Runnable) Instantiate(config map[string]any) error {
 		return nil
 	}
 
-	args := []string{"create", "--name=" + config_.name, "--replace"} // --tty
-	for _, port := range config_.ports {
-		args = append(args, fmt.Sprintf("--publish=%d:%d/tcp", port.external, port.internal))
+	args := []string{"create", "--name=" + container.Name, "--replace"} // --tty?
+	args = append(args, container.CreateArguments...)
+	for _, port := range container.Ports {
+		args = append(args, fmt.Sprintf("--publish=%d:%d/tcp", port.External, port.Internal))
 	}
-	args = append(args, config_.source)
-	args = append(args, config_.createArguments...)
+	args = append(args, container.Reference)
 
-	log.Infof("podman create %q", config_.name)
+	log.Infof("podman %s", strings.Join(args, " "))
 	command := exec.Command("podman", args...)
 	if err := command.Run(); err != nil {
 		return errors.Wrap(err, "podman create")
@@ -64,8 +65,9 @@ func (self *Runnable) Instantiate(config map[string]any) error {
 	}
 	defer file.Close()
 
-	log.Infof("podman generate systemd %q", path)
-	command = exec.Command("podman", "generate", "systemd", "--new", "--name", "--container-prefix="+servicePrefix, "--restart-policy=always", config_.name)
+	args = []string{"generate", "systemd", "--new", "--name", "--container-prefix=" + servicePrefix, "--restart-policy=always", container.Name}
+	log.Infof("podman %s", strings.Join(args, " "))
+	command = exec.Command("podman", args...)
 	command.Stdout = file
 	if err := command.Run(); err != nil {
 		return errors.Wrap(err, "podman generate systemd")
@@ -76,13 +78,13 @@ func (self *Runnable) Instantiate(config map[string]any) error {
 		return errors.Wrap(err, "systemctl daemon-reload")
 	}
 
-	log.Infof("systemctl enable %q", serviceName)
+	log.Infof("systemctl enable %s", serviceName)
 	command = exec.Command("systemctl", "--user", "enable", serviceName)
 	if err := command.Run(); err != nil {
 		return errors.Wrap(err, "systemctl enable")
 	}
 
-	log.Infof("systemctl restart %q", serviceName)
+	log.Infof("systemctl restart %s", serviceName)
 	command = exec.Command("systemctl", "--user", "--no-block", "restart", serviceName)
 	if err := command.Run(); err != nil {
 		return errors.Wrap(err, "systemctl start")
@@ -95,44 +97,4 @@ func (self *Runnable) Instantiate(config map[string]any) error {
 	}
 
 	return nil
-}
-
-type Config struct {
-	name            string
-	source          string
-	createArguments []string
-	ports           []Port
-}
-
-type Port struct {
-	external int64
-	internal int64
-}
-
-func NewConfig(config map[string]any) (*Config, error) {
-	var self Config
-
-	config_ := ard.NewNode(config)
-	var ok bool
-	if self.name, ok = config_.Get("name").String(false); !ok {
-		return nil, errors.New("\"name\" not provided")
-	}
-	if self.source, ok = config_.Get("source").String(false); !ok {
-		return nil, errors.New("\"source\" not provided")
-	}
-	self.createArguments, _ = config_.Get("createArguments").StringList(false)
-	if ports, ok := config_.Get("ports").List(false); ok {
-		for _, port := range ports {
-			var port_ Port
-			port__ := ard.NewNode(port)
-			if port_.external, ok = port__.Get("external").Integer(false); !ok {
-				return nil, errors.New("\"port.external\" not provided")
-			}
-			if port_.internal, ok = port__.Get("internal").Integer(false); !ok {
-				return nil, errors.New("\"port.internal\" not provided")
-			}
-		}
-	}
-
-	return &self, nil
 }

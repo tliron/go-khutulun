@@ -3,14 +3,14 @@ package client
 import (
 	"io"
 
-	"github.com/tliron/khutulun/api"
+	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 func (self *Client) ListNamespaces() ([]string, error) {
 	context, cancel := self.newContext()
 	defer cancel()
 
-	if client, err := self.client.ListNamespaces(context, new(api.Empty)); err == nil {
+	if client, err := self.client.ListNamespaces(context, new(emptypb.Empty)); err == nil {
 		var namespaces []string
 
 		for {

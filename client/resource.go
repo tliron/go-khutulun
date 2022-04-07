@@ -1,7 +1,6 @@
 package client
 
 import (
-	contextpkg "context"
 	"io"
 
 	"github.com/tliron/khutulun/api"
@@ -53,19 +52,14 @@ func (self *Client) ListResources(namespace string, serviceName string, type_ st
 	}
 }
 
-func (self *Client) InteractRunnable(namespace string, serviceName string, resourceName string, stdin io.Reader, stdout io.Writer, stderr io.Writer) error {
-	if client, err := self.client.InteractRunnable(contextpkg.Background()); err == nil {
-		identifier := api.ResourceIdentifier{
-			Service: &api.ServiceIdentifier{
-				Namespace: namespace,
-				Name:      serviceName,
-			},
-			Type: "runnable",
-			Name: resourceName,
-		}
-
+func (self *Client) Interact(identifier []string, stdin io.Reader, stdout io.Writer, stderr io.Writer, pseudoTerminal bool, command ...string) error {
+	if client, err := self.client.Interact(self.context); err == nil {
 		if err := client.Send(&api.Interaction{
-			Resource: &identifier,
+			Start: &api.Interaction_Start{
+				Identifier:     identifier,
+				Command:        command,
+				PseudoTerminal: pseudoTerminal,
+			},
 		}); err != nil {
 			return err
 		}
@@ -75,9 +69,8 @@ func (self *Client) InteractRunnable(namespace string, serviceName string, resou
 			for {
 				if _, err := stdin.Read(buffer); err == nil {
 					if err := client.Send(&api.Interaction{
-						Resource: &identifier,
-						Stream:   "stdin",
-						Bytes:    buffer,
+						Stream: "stdin",
+						Bytes:  buffer,
 					}); err != nil {
 						log.Errorf("%s", err.Error())
 						return
