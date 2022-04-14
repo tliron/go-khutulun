@@ -25,6 +25,7 @@ const _ = grpc.SupportPackageIsVersion7
 type ConductorClient interface {
 	GetVersion(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*Version, error)
 	ListHosts(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (Conductor_ListHostsClient, error)
+	AddHost(ctx context.Context, in *HostIdentifier, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	ListNamespaces(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (Conductor_ListNamespacesClient, error)
 	ListArtifacts(ctx context.Context, in *ListArtifacts, opts ...grpc.CallOption) (Conductor_ListArtifactsClient, error)
 	GetArtifact(ctx context.Context, in *ArtifactIdentifier, opts ...grpc.CallOption) (Conductor_GetArtifactClient, error)
@@ -82,6 +83,15 @@ func (x *conductorListHostsClient) Recv() (*HostIdentifier, error) {
 		return nil, err
 	}
 	return m, nil
+}
+
+func (c *conductorClient) AddHost(ctx context.Context, in *HostIdentifier, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, "/khutulun.Conductor/addHost", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 func (c *conductorClient) ListNamespaces(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (Conductor_ListNamespacesClient, error) {
@@ -301,6 +311,7 @@ func (x *conductorInteractClient) Recv() (*Interaction, error) {
 type ConductorServer interface {
 	GetVersion(context.Context, *emptypb.Empty) (*Version, error)
 	ListHosts(*emptypb.Empty, Conductor_ListHostsServer) error
+	AddHost(context.Context, *HostIdentifier) (*emptypb.Empty, error)
 	ListNamespaces(*emptypb.Empty, Conductor_ListNamespacesServer) error
 	ListArtifacts(*ListArtifacts, Conductor_ListArtifactsServer) error
 	GetArtifact(*ArtifactIdentifier, Conductor_GetArtifactServer) error
@@ -321,6 +332,9 @@ func (UnimplementedConductorServer) GetVersion(context.Context, *emptypb.Empty) 
 }
 func (UnimplementedConductorServer) ListHosts(*emptypb.Empty, Conductor_ListHostsServer) error {
 	return status.Errorf(codes.Unimplemented, "method ListHosts not implemented")
+}
+func (UnimplementedConductorServer) AddHost(context.Context, *HostIdentifier) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AddHost not implemented")
 }
 func (UnimplementedConductorServer) ListNamespaces(*emptypb.Empty, Conductor_ListNamespacesServer) error {
 	return status.Errorf(codes.Unimplemented, "method ListNamespaces not implemented")
@@ -396,6 +410,24 @@ type conductorListHostsServer struct {
 
 func (x *conductorListHostsServer) Send(m *HostIdentifier) error {
 	return x.ServerStream.SendMsg(m)
+}
+
+func _Conductor_AddHost_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(HostIdentifier)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConductorServer).AddHost(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/khutulun.Conductor/addHost",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConductorServer).AddHost(ctx, req.(*HostIdentifier))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 func _Conductor_ListNamespaces_Handler(srv interface{}, stream grpc.ServerStream) error {
@@ -580,6 +612,10 @@ var Conductor_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "getVersion",
 			Handler:    _Conductor_GetVersion_Handler,
+		},
+		{
+			MethodName: "addHost",
+			Handler:    _Conductor_AddHost_Handler,
 		},
 		{
 			MethodName: "removeArtifact",

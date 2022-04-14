@@ -1,9 +1,13 @@
 package conductor
 
 import (
+	contextpkg "context"
+	"net"
 	"net/http"
+	"time"
 
 	fspkg "github.com/rakyll/statik/fs"
+	_ "github.com/tliron/khutulun/web"
 	"github.com/tliron/kutil/format"
 )
 
@@ -12,8 +16,9 @@ import (
 //
 
 type HTTP struct {
-	conductor *Conductor
-	handler   *http.ServeMux
+	conductor  *Conductor
+	httpServer *http.Server
+	handler    *http.ServeMux
 }
 
 func NewHTTP(conductor *Conductor) (*HTTP, error) {
@@ -32,7 +37,36 @@ func NewHTTP(conductor *Conductor) (*HTTP, error) {
 	self.handler.HandleFunc("/api/artifact/list", self.listArtifacts)
 	self.handler.HandleFunc("/api/resource/list", self.listResources)
 
+	self.httpServer = &http.Server{
+		Handler: self.handler,
+	}
+
 	return &self, nil
+}
+
+func (self *HTTP) Start() error {
+	if listener, err := net.Listen("tcp", ":8182"); err == nil {
+		httpLog.Noticef("starting server on: %s", listener.Addr().String())
+		go func() {
+			if err := self.httpServer.Serve(listener); err != nil {
+				if err == http.ErrServerClosed {
+					httpLog.Info("server closed")
+				} else {
+					httpLog.Errorf("%s", err.Error())
+				}
+			}
+		}()
+		return nil
+	} else {
+		return err
+	}
+}
+
+func (self *HTTP) Stop() error {
+	context, cancel := contextpkg.WithTimeout(contextpkg.Background(), 5*time.Second)
+	defer cancel()
+
+	return self.httpServer.Shutdown(context)
 }
 
 func (self *HTTP) listNamespaces(writer http.ResponseWriter, request *http.Request) {

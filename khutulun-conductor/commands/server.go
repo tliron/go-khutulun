@@ -10,7 +10,7 @@ var statePath string
 
 func init() {
 	rootCommand.AddCommand(serverCommand)
-	serverCommand.Flags().StringVarP(&statePath, "state-path", "s", "/tmp/khutulun", "state path")
+	serverCommand.Flags().StringVarP(&statePath, "state-path", "s", "/mnt/khutulun", "state path")
 }
 
 var serverCommand = &cobra.Command{

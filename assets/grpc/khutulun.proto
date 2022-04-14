@@ -9,8 +9,8 @@ package khutulun;
 
 service Conductor {
     rpc getVersion(google.protobuf.Empty) returns (Version);
-
     rpc listHosts(google.protobuf.Empty) returns (stream HostIdentifier);
+    rpc addHost(HostIdentifier) returns (google.protobuf.Empty);
 
     rpc listNamespaces(google.protobuf.Empty) returns (stream Namespace);
 
@@ -44,6 +44,7 @@ message Namespace {
 
 message HostIdentifier {
     string name = 1;
+    string address = 2;
 }
 
 message ArtifactType {

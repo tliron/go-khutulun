@@ -1,0 +1,20 @@
+#!/bin/bash
+set -e
+
+HERE=$(dirname "$(readlink --canonicalize "$BASH_SOURCE")")
+. "$HERE/_env"
+
+HOST=lab1
+
+ssh "$HOST" systemctl --user stop khutulun-conductor.service || true
+# Note: copying the file over NFS could involve a delay leading to a "text file busy" error when trying to run it,
+# so we will copy over rsync/ssh
+rsync "$GOPATH/bin/khutulun-conductor" "$HOST:/mnt/khutulun/"
+ssh "$HOST" mkdir --parents .config/systemd/user/
+rsync "$ROOT/assets/systemd/khutulun-conductor.service" "$HOST:.config/systemd/user/"
+ssh "$HOST" systemctl --user daemon-reload
+ssh "$HOST" systemctl --user start khutulun-conductor.service
+ssh "$HOST" systemctl --user enable khutulun-conductor.service
+ssh "$HOST" loginctl enable-linger
+
+khutulun host add "$HOST" "$HOST"

@@ -6,7 +6,7 @@ import (
 	"github.com/tliron/khutulun/api"
 )
 
-const BUFFER_SIZE = 4096
+const BUFFER_SIZE = 65536
 
 type Artifact struct {
 	Namespace string `json:"namespace" yaml:"namespace"`

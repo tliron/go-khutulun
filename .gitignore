@@ -1,8 +1,6 @@
 .project
 .pydevproject
 .vscode
-.terraform
-.terraform.lock.hcl
 
 go.work
 go.work.sum
@@ -12,3 +10,9 @@ docs/html/
 work/
 
 __pycache__/
+
+.terraform
+.terraform.*
+terraform.tfstate
+terraform.tfstate.*
+

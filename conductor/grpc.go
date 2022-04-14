@@ -4,9 +4,11 @@ import (
 	contextpkg "context"
 	"errors"
 	"io"
+	"net"
 
 	"github.com/danjacques/gofslock/fslock"
 	"github.com/tliron/khutulun/api"
+	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	statuspkg "google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
@@ -23,11 +25,39 @@ var version = api.Version{Version: "0.1.0"}
 type GRPC struct {
 	api.UnimplementedConductorServer
 
-	conductor *Conductor
+	grpcServer *grpc.Server
+	conductor  *Conductor
+	cluster    *Cluster
 }
 
-func NewGRPC(conductor *Conductor) *GRPC {
-	return &GRPC{conductor: conductor}
+func NewGRPC(conductor *Conductor, cluster *Cluster) *GRPC {
+	return &GRPC{
+		conductor: conductor,
+		cluster:   cluster,
+	}
+}
+
+func (self *GRPC) Start() error {
+	self.grpcServer = grpc.NewServer()
+	api.RegisterConductorServer(self.grpcServer, self)
+
+	if listener, err := net.Listen("tcp", ":8181"); err == nil {
+		grpcLog.Noticef("starting server on: %s", listener.Addr().String())
+		go func() {
+			if err := self.grpcServer.Serve(listener); err != nil {
+				grpcLog.Errorf("%s", err.Error())
+			}
+		}()
+		return nil
+	} else {
+		return err
+	}
+}
+
+func (self *GRPC) Stop() {
+	if self.grpcServer != nil {
+		self.grpcServer.Stop()
+	}
 }
 
 // api.ConductorServer interface
@@ -36,10 +66,26 @@ func (self *GRPC) GetVersion(context contextpkg.Context, empty *emptypb.Empty) (
 	return &version, nil
 }
 
-// api.ConductorServer interface*emptypb.Empty,
+// api.ConductorServer interface
 func (self *GRPC) ListHosts(empty *emptypb.Empty, server api.Conductor_ListHostsServer) error {
 	grpcLog.Info("listHosts")
+	if self.cluster != nil {
+		for _, member := range self.cluster.ListMembers() {
+			server.Send(&api.HostIdentifier{
+				Name:    member.name,
+				Address: member.address,
+			})
+		}
+	}
 	return nil
+}
+
+// api.ConductorServer interface
+func (self *GRPC) AddHost(context contextpkg.Context, identifier *api.HostIdentifier) (*emptypb.Empty, error) {
+	if self.cluster != nil {
+		return new(emptypb.Empty), self.cluster.AddMembers([]string{identifier.Address})
+	}
+	return new(emptypb.Empty), nil
 }
 
 // api.ConductorServer interface

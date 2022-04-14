@@ -1,0 +1,9 @@
+[Unit]
+Description=Khutulun Conductor
+
+[Service]
+ExecStart=/mnt/khutulun/khutulun-conductor server -v
+WorkingDirectory=/mnt/khutulun
+
+[Install]
+WantedBy=default.target
