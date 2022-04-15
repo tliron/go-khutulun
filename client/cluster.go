@@ -8,7 +8,7 @@ import (
 )
 
 func (self *Client) GetVersion() (string, error) {
-	context, cancel := self.newContext()
+	context, cancel := self.newContextWithTimeout()
 	defer cancel()
 
 	if r, err := self.client.GetVersion(context, new(emptypb.Empty)); err == nil {
@@ -24,7 +24,7 @@ type Host struct {
 }
 
 func (self *Client) ListHosts() ([]Host, error) {
-	context, cancel := self.newContext()
+	context, cancel := self.newContextWithTimeout()
 	defer cancel()
 
 	if client, err := self.client.ListHosts(context, new(emptypb.Empty)); err == nil {
@@ -53,7 +53,7 @@ func (self *Client) ListHosts() ([]Host, error) {
 }
 
 func (self *Client) AddHost(name string, address string) error {
-	context, cancel := self.newContext()
+	context, cancel := self.newContextWithTimeout()
 	defer cancel()
 
 	identifier := api.HostIdentifier{

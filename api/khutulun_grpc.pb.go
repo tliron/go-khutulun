@@ -672,6 +672,7 @@ var Conductor_ServiceDesc = grpc.ServiceDesc{
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type PluginClient interface {
 	Instantiate(ctx context.Context, in *Config, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	Interact(ctx context.Context, opts ...grpc.CallOption) (Plugin_InteractClient, error)
 }
 
 type pluginClient struct {
@@ -684,11 +685,42 @@ func NewPluginClient(cc grpc.ClientConnInterface) PluginClient {
 
 func (c *pluginClient) Instantiate(ctx context.Context, in *Config, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	out := new(emptypb.Empty)
-	err := c.cc.Invoke(ctx, "/khutulun.Plugin/Instantiate", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/khutulun.Plugin/instantiate", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
+}
+
+func (c *pluginClient) Interact(ctx context.Context, opts ...grpc.CallOption) (Plugin_InteractClient, error) {
+	stream, err := c.cc.NewStream(ctx, &Plugin_ServiceDesc.Streams[0], "/khutulun.Plugin/interact", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &pluginInteractClient{stream}
+	return x, nil
+}
+
+type Plugin_InteractClient interface {
+	Send(*Interaction) error
+	Recv() (*Interaction, error)
+	grpc.ClientStream
+}
+
+type pluginInteractClient struct {
+	grpc.ClientStream
+}
+
+func (x *pluginInteractClient) Send(m *Interaction) error {
+	return x.ClientStream.SendMsg(m)
+}
+
+func (x *pluginInteractClient) Recv() (*Interaction, error) {
+	m := new(Interaction)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
 }
 
 // PluginServer is the server API for Plugin service.
@@ -696,6 +728,7 @@ func (c *pluginClient) Instantiate(ctx context.Context, in *Config, opts ...grpc
 // for forward compatibility
 type PluginServer interface {
 	Instantiate(context.Context, *Config) (*emptypb.Empty, error)
+	Interact(Plugin_InteractServer) error
 	mustEmbedUnimplementedPluginServer()
 }
 
@@ -705,6 +738,9 @@ type UnimplementedPluginServer struct {
 
 func (UnimplementedPluginServer) Instantiate(context.Context, *Config) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Instantiate not implemented")
+}
+func (UnimplementedPluginServer) Interact(Plugin_InteractServer) error {
+	return status.Errorf(codes.Unimplemented, "method Interact not implemented")
 }
 func (UnimplementedPluginServer) mustEmbedUnimplementedPluginServer() {}
 
@@ -729,12 +765,38 @@ func _Plugin_Instantiate_Handler(srv interface{}, ctx context.Context, dec func(
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/khutulun.Plugin/Instantiate",
+		FullMethod: "/khutulun.Plugin/instantiate",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(PluginServer).Instantiate(ctx, req.(*Config))
 	}
 	return interceptor(ctx, in, info, handler)
+}
+
+func _Plugin_Interact_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(PluginServer).Interact(&pluginInteractServer{stream})
+}
+
+type Plugin_InteractServer interface {
+	Send(*Interaction) error
+	Recv() (*Interaction, error)
+	grpc.ServerStream
+}
+
+type pluginInteractServer struct {
+	grpc.ServerStream
+}
+
+func (x *pluginInteractServer) Send(m *Interaction) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+func (x *pluginInteractServer) Recv() (*Interaction, error) {
+	m := new(Interaction)
+	if err := x.ServerStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
 }
 
 // Plugin_ServiceDesc is the grpc.ServiceDesc for Plugin service.
@@ -745,10 +807,17 @@ var Plugin_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*PluginServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "Instantiate",
+			MethodName: "instantiate",
 			Handler:    _Plugin_Instantiate_Handler,
 		},
 	},
-	Streams:  []grpc.StreamDesc{},
+	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "interact",
+			Handler:       _Plugin_Interact_Handler,
+			ServerStreams: true,
+			ClientStreams: true,
+		},
+	},
 	Metadata: "khutulun.proto",
 }

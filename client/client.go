@@ -23,19 +23,11 @@ type Client struct {
 	context contextpkg.Context
 }
 
-func NewClient(configurationPath string, clusterName string) (*Client, error) {
+func NewClientFromConfiguration(configurationPath string, clusterName string) (*Client, error) {
 	if client, err := configuration.LoadOrNewClient(configurationPath); err == nil {
 		if cluster := client.GetCluster(clusterName); cluster != nil {
 			target := fmt.Sprintf("%s:%d", cluster.IP, cluster.Port)
-			if conn, err := grpc.Dial(target, grpc.WithInsecure()); err == nil {
-				return &Client{
-					conn:    conn,
-					client:  api.NewConductorClient(conn),
-					context: contextpkg.Background(),
-				}, nil
-			} else {
-				return nil, err
-			}
+			return NewClient(target)
 		} else {
 			if clusterName == "" {
 				return nil, errors.New("no cluster specified")
@@ -48,10 +40,26 @@ func NewClient(configurationPath string, clusterName string) (*Client, error) {
 	}
 }
 
+func NewClient(target string) (*Client, error) {
+	if conn, err := grpc.Dial(target, grpc.WithInsecure()); err == nil {
+		return &Client{
+			conn:    conn,
+			client:  api.NewConductorClient(conn),
+			context: contextpkg.Background(),
+		}, nil
+	} else {
+		return nil, err
+	}
+}
+
 func (self *Client) Close() error {
 	return self.conn.Close()
 }
 
-func (self *Client) newContext() (contextpkg.Context, contextpkg.CancelFunc) {
+func (self *Client) newContextWithTimeout() (contextpkg.Context, contextpkg.CancelFunc) {
 	return contextpkg.WithTimeout(self.context, TIMEOUT)
+}
+
+func (self *Client) newContextWithCancel() (contextpkg.Context, contextpkg.CancelFunc) {
+	return contextpkg.WithCancel(self.context)
 }

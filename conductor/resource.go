@@ -1,11 +1,10 @@
 package conductor
 
 import (
-	"errors"
-	"fmt"
 	"os"
 
-	"github.com/tliron/kutil/exec"
+	"github.com/tliron/khutulun/plugin"
+	cloutpkg "github.com/tliron/puccini/clout"
 )
 
 type ResourceIdentifier struct {
@@ -54,52 +53,10 @@ func (self *Conductor) ListResources(namespace string, serviceName string, type_
 	return resources, nil
 }
 
-// Caller has to close stdin, otherwise there will be a goroutine leak!
-func (self *Conductor) Interact(identifier []string, pseudoTerminal bool, done chan error, command ...string) (chan struct{}, chan []byte, chan []byte, chan []byte, error) {
-	if len(identifier) == 0 {
-		return nil, nil, nil, nil, errors.New("no identifier")
+func (self *Conductor) getResources(clout *cloutpkg.Clout, type_ string) []plugin.Container {
+	var containers []plugin.Container
+	for _, vertex := range clout.Vertexes {
+		containers = append(containers, GetContainers(vertex.Properties)...)
 	}
-	type_ := identifier[0]
-
-	if len(command) == 0 {
-		command = []string{"/bin/bash"}
-		if pseudoTerminal {
-			// We need to force interactive mode for bash
-			command = append(command, "-i")
-		}
-	}
-
-	var name string
-	var args []string
-
-	switch type_ {
-	case "host":
-		name = command[0]
-		if len(command) > 1 {
-			args = command[1:]
-		}
-
-	case "runnable":
-		if len(identifier) != 4 {
-			return nil, nil, nil, nil, fmt.Errorf("malformed identifier for runnable: %s", identifier)
-		}
-
-		//namespace := identifier[1]
-		//serviceName := identifier[2]
-		resourceName := identifier[3]
-
-		name = "podman"
-		args = []string{"exec"}
-		if pseudoTerminal {
-			args = append(args, "--interactive", "--tty")
-			pseudoTerminal = false // no need to nest a pseudo-terminal
-		}
-		args = append(args, resourceName)
-		args = append(args, command...)
-
-	default:
-		return nil, nil, nil, nil, fmt.Errorf("unsupported identifier type: %s", type_)
-	}
-
-	return exec.ExecInteractive(pseudoTerminal, done, name, args...)
+	return containers
 }

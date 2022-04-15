@@ -17,7 +17,7 @@ func (self *Client) DeployService(serviceNamespace string, serviceName string, t
 		},
 	}
 
-	context, cancel := self.newContext()
+	context, cancel := self.newContextWithTimeout()
 	defer cancel()
 
 	_, err := self.client.DeployService(context, &args)

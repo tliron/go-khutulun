@@ -15,7 +15,7 @@ type Artifact struct {
 }
 
 func (self *Client) ListArtifacts(namespace string, type_ string) ([]Artifact, error) {
-	context, cancel := self.newContext()
+	context, cancel := self.newContextWithTimeout()
 	defer cancel()
 
 	listArtifacts := api.ListArtifacts{
@@ -50,7 +50,7 @@ func (self *Client) ListArtifacts(namespace string, type_ string) ([]Artifact, e
 }
 
 func (self *Client) GetArtifact(namespace string, type_ string, name string, writer io.Writer) error {
-	context, cancel := self.newContext()
+	context, cancel := self.newContextWithTimeout()
 	defer cancel()
 
 	identifier := api.ArtifactIdentifier{
@@ -85,7 +85,7 @@ func (self *Client) GetArtifact(namespace string, type_ string, name string, wri
 }
 
 func (self *Client) SetArtifact(namespace string, type_ string, name string, reader io.Reader) error {
-	context, cancel := self.newContext()
+	context, cancel := self.newContextWithTimeout()
 	defer cancel()
 
 	if client, err := self.client.SetArtifact(context); err == nil {
@@ -127,7 +127,7 @@ func (self *Client) SetArtifact(namespace string, type_ string, name string, rea
 }
 
 func (self *Client) RemoveArtifact(namespace string, type_ string, name string) error {
-	context, cancel := self.newContext()
+	context, cancel := self.newContextWithTimeout()
 	defer cancel()
 
 	identifier := api.ArtifactIdentifier{

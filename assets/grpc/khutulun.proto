@@ -1,11 +1,11 @@
 syntax = "proto3";
 
+package khutulun;
+
 import "google/protobuf/empty.proto";
 import "google/protobuf/struct.proto";
 
 option go_package = "github.com/tliron/khutulun/api";
-
-package khutulun;
 
 service Conductor {
     rpc getVersion(google.protobuf.Empty) returns (Version);
@@ -27,7 +27,8 @@ service Conductor {
 }
 
 service Plugin {
-    rpc Instantiate(Config) returns (google.protobuf.Empty);
+    rpc instantiate(Config) returns (google.protobuf.Empty);
+    rpc interact(stream Interaction) returns (stream Interaction);
 }
 
 message Config {
@@ -95,13 +96,24 @@ message ListResources {
 }
 
 message Interaction {
+    enum Stream {
+        NONE = 0;
+        STDIN = 1;
+        STDOUT = 2;
+        STDERR = 3;
+        SIZE = 4;
+    }
+
     message Start {
         repeated string identifier = 1;
         repeated string command = 2;
-        bool pseudoTerminal = 3;
+        map<string, string> environment = 3;
+        bool pseudoTerminal = 4;
     }
 
     Start start = 1;
-    string stream = 2;
+    Stream stream = 2;
     bytes bytes = 3;
+    uint32 width = 4;
+    uint32 height = 5;
 }

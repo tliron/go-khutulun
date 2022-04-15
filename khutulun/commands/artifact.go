@@ -10,7 +10,7 @@ import (
 )
 
 func listArtifacts(namespace string, type_ string) {
-	client, err := clientpkg.NewClient(configurationPath, clusterName)
+	client, err := clientpkg.NewClientFromConfiguration(configurationPath, clusterName)
 	util.FailOnError(err)
 	util.OnExitError(client.Close)
 
@@ -25,7 +25,7 @@ func listArtifacts(namespace string, type_ string) {
 func registerArtifact(namespace string, type_ string, args []string) {
 	name := args[0]
 
-	client, err := clientpkg.NewClient(configurationPath, clusterName)
+	client, err := clientpkg.NewClientFromConfiguration(configurationPath, clusterName)
 	util.FailOnError(err)
 	util.OnExitError(client.Close)
 
@@ -46,7 +46,7 @@ func registerArtifact(namespace string, type_ string, args []string) {
 func fetchArtifact(namespace string, type_ string, args []string) {
 	name := args[0]
 
-	client, err := clientpkg.NewClient(configurationPath, clusterName)
+	client, err := clientpkg.NewClientFromConfiguration(configurationPath, clusterName)
 	util.FailOnError(err)
 	util.OnExitError(client.Close)
 
@@ -57,7 +57,7 @@ func fetchArtifact(namespace string, type_ string, args []string) {
 func delist(namespace string, type_ string, args []string) {
 	name := args[0]
 
-	client, err := clientpkg.NewClient(configurationPath, clusterName)
+	client, err := clientpkg.NewClientFromConfiguration(configurationPath, clusterName)
 	util.FailOnError(err)
 	util.OnExitError(client.Close)
 

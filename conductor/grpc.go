@@ -2,12 +2,15 @@ package conductor
 
 import (
 	contextpkg "context"
-	"errors"
+	"fmt"
 	"io"
 	"net"
 
 	"github.com/danjacques/gofslock/fslock"
 	"github.com/tliron/khutulun/api"
+	clientpkg "github.com/tliron/khutulun/client"
+	"github.com/tliron/khutulun/plugin"
+	"github.com/tliron/khutulun/util"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	statuspkg "google.golang.org/grpc/status"
@@ -63,12 +66,14 @@ func (self *GRPC) Stop() {
 // api.ConductorServer interface
 func (self *GRPC) GetVersion(context contextpkg.Context, empty *emptypb.Empty) (*api.Version, error) {
 	grpcLog.Info("getVersion")
+
 	return &version, nil
 }
 
 // api.ConductorServer interface
 func (self *GRPC) ListHosts(empty *emptypb.Empty, server api.Conductor_ListHostsServer) error {
 	grpcLog.Info("listHosts")
+
 	if self.cluster != nil {
 		for _, member := range self.cluster.ListMembers() {
 			server.Send(&api.HostIdentifier{
@@ -76,16 +81,25 @@ func (self *GRPC) ListHosts(empty *emptypb.Empty, server api.Conductor_ListHosts
 				Address: member.address,
 			})
 		}
+		return nil
+	} else {
+		return statuspkg.Error(codes.Aborted, "cluster not enabled")
 	}
-	return nil
 }
 
 // api.ConductorServer interface
 func (self *GRPC) AddHost(context contextpkg.Context, identifier *api.HostIdentifier) (*emptypb.Empty, error) {
+	grpcLog.Info("addHost")
+
 	if self.cluster != nil {
-		return new(emptypb.Empty), self.cluster.AddMembers([]string{identifier.Address})
+		if err := self.cluster.AddMembers([]string{identifier.Address}); err == nil {
+			return new(emptypb.Empty), nil
+		} else {
+			return new(emptypb.Empty), statuspkg.Errorf(codes.Aborted, "%s", err.Error())
+		}
+	} else {
+		return new(emptypb.Empty), statuspkg.Error(codes.Aborted, "cluster not enabled")
 	}
-	return new(emptypb.Empty), nil
 }
 
 // api.ConductorServer interface
@@ -95,12 +109,12 @@ func (self *GRPC) ListNamespaces(empty *emptypb.Empty, server api.Conductor_List
 	if namespaces, err := self.conductor.ListNamespaces(); err == nil {
 		for _, namespace := range namespaces {
 			if err := server.Send(&api.Namespace{Name: namespace}); err != nil {
-				return err
+				return statuspkg.Errorf(codes.Aborted, "%s", err.Error())
 			}
 		}
 		return nil
 	} else {
-		return err
+		return statuspkg.Errorf(codes.Aborted, "%s", err.Error())
 	}
 }
 
@@ -117,11 +131,11 @@ func (self *GRPC) ListArtifacts(listArtifacts *api.ListArtifacts, server api.Con
 			}
 
 			if err := server.Send(&identifier_); err != nil {
-				return err
+				return statuspkg.Errorf(codes.Aborted, "%s", err.Error())
 			}
 		}
 	} else {
-		return err
+		return statuspkg.Errorf(codes.Aborted, "%s", err.Error())
 	}
 
 	return nil
@@ -139,18 +153,18 @@ func (self *GRPC) GetArtifact(identifier *api.ArtifactIdentifier, server api.Con
 			if count, err := reader.Read(buffer); err == nil {
 				content := api.ArtifactContent{Content: &api.ArtifactContent_Bytes{Bytes: buffer[:count]}}
 				if err := server.Send(&content); err != nil {
-					return err
+					return statuspkg.Errorf(codes.Aborted, "%s", err.Error())
 				}
 			} else {
 				if err == io.EOF {
 					break
 				} else {
-					return err
+					return statuspkg.Errorf(codes.Aborted, "%s", err.Error())
 				}
 			}
 		}
 	} else {
-		return err
+		return statuspkg.Errorf(codes.Aborted, "%s", err.Error())
 	}
 
 	return nil
@@ -177,16 +191,16 @@ func (self *GRPC) SetArtifact(server api.Conductor_SetArtifactServer) error {
 					defer lock.Unlock()
 					defer writer.Close()
 				} else {
-					return err
+					return statuspkg.Errorf(codes.Aborted, "%s", err.Error())
 				}
 
 			case *api.ArtifactContent_Bytes:
 				if writer != nil {
 					if _, err := writer.Write(content_.Bytes); err != nil {
-						return err
+						return statuspkg.Errorf(codes.Aborted, "%s", err.Error())
 					}
 				} else {
-					// TODO: bytes arrived before an identifier?
+					return statuspkg.Errorf(codes.InvalidArgument, "first message must be \"identifier\"")
 				}
 			}
 		} else {
@@ -195,13 +209,13 @@ func (self *GRPC) SetArtifact(server api.Conductor_SetArtifactServer) error {
 			} else {
 				if writer != nil {
 					if err := writer.Close(); err != nil {
-						grpcLog.Errorf("close writer error: %s", err.Error())
+						grpcLog.Errorf("close writer: %s", err.Error())
 					}
 					if err := self.conductor.DeleteArtifact(namespace, type_, name); err != nil {
-						grpcLog.Errorf("delete artifact error: %s", err.Error())
+						grpcLog.Errorf("delete artifact: %s", err.Error())
 					}
 				}
-				return err
+				return statuspkg.Errorf(codes.Aborted, "%s", err.Error())
 			}
 		}
 	}
@@ -212,19 +226,29 @@ func (self *GRPC) SetArtifact(server api.Conductor_SetArtifactServer) error {
 // api.ConductorServer interface
 func (self *GRPC) RemoveArtifact(context contextpkg.Context, artifactIdentifer *api.ArtifactIdentifier) (*emptypb.Empty, error) {
 	grpcLog.Info("removeArtifact")
-	err := self.conductor.DeleteArtifact(artifactIdentifer.Namespace, artifactIdentifer.Type.Name, artifactIdentifer.Name)
-	return new(emptypb.Empty), err
+
+	if err := self.conductor.DeleteArtifact(artifactIdentifer.Namespace, artifactIdentifer.Type.Name, artifactIdentifer.Name); err == nil {
+		return new(emptypb.Empty), nil
+	} else {
+		return new(emptypb.Empty), statuspkg.Errorf(codes.Aborted, "%s", err.Error())
+	}
 }
 
 // api.ConductorServer interface
 func (self *GRPC) DeployService(context contextpkg.Context, deployService *api.DeployService) (*emptypb.Empty, error) {
 	grpcLog.Infof("deployService(%q, %q)", deployService.Service.Name, deployService.Template.Name)
-	err := self.conductor.DeployService(deployService.Template.Namespace, deployService.Template.Name, deployService.Service.Namespace, deployService.Service.Name)
-	return new(emptypb.Empty), err
+
+	if err := self.conductor.DeployService(deployService.Template.Namespace, deployService.Template.Name, deployService.Service.Namespace, deployService.Service.Name); err == nil {
+		return new(emptypb.Empty), nil
+	} else {
+		return new(emptypb.Empty), statuspkg.Errorf(codes.Aborted, "%s", err.Error())
+	}
 }
 
 // api.ConductorServer interface
 func (self *GRPC) ListResources(listResources *api.ListResources, server api.Conductor_ListResourcesServer) error {
+	grpcLog.Info("listResources")
+
 	if identifiers, err := self.conductor.ListResources(listResources.Service.Namespace, listResources.Service.Name, listResources.Type); err == nil {
 		for _, identifier := range identifiers {
 			identifier_ := api.ResourceIdentifier{
@@ -237,11 +261,11 @@ func (self *GRPC) ListResources(listResources *api.ListResources, server api.Con
 			}
 
 			if err := server.Send(&identifier_); err != nil {
-				return err
+				return statuspkg.Errorf(codes.Aborted, "%s", err.Error())
 			}
 		}
 	} else {
-		return err
+		return statuspkg.Errorf(codes.Aborted, "%s", err.Error())
 	}
 
 	return nil
@@ -249,90 +273,63 @@ func (self *GRPC) ListResources(listResources *api.ListResources, server api.Con
 
 // api.ConductorServer interface
 func (self *GRPC) Interact(server api.Conductor_InteractServer) error {
-	grpcLog.Info("interactRun")
+	grpcLog.Info("interact")
 
-	done := make(chan error)
-	var kill chan struct{}
-	var stdin chan []byte
-	var stdout chan []byte
-	var stderr chan []byte
-
-	start := func() {
-		for {
-			select {
-			case buffer := <-stdout:
-				if buffer == nil {
-					grpcLog.Info("stdout closed")
-					return
-				}
-				grpcLog.Debugf("stdout: %q", buffer)
-				server.Send(&api.Interaction{
-					Stream: "stdout",
-					Bytes:  buffer,
-				})
-
-			case buffer := <-stderr:
-				if buffer == nil {
-					grpcLog.Info("stderr closed")
-					return
-				}
-				grpcLog.Debugf("stderr: %q", buffer)
-				server.Send(&api.Interaction{
-					Stream: "stderr",
-					Bytes:  buffer,
-				})
+	return util.Interact(server, map[string]util.InteractFunc{
+		"host": func(first *api.Interaction) error {
+			if len(first.Start.Identifier) != 2 {
+				return statuspkg.Errorf(codes.InvalidArgument, "malformed identifier for host: %s", first.Start.Identifier)
 			}
-		}
-	}
 
-	go func() {
-		for {
-			if interaction, err := server.Recv(); err == nil {
-				if stdin == nil {
-					if interaction.Start != nil {
-						if kill, stdin, stdout, stderr, err = self.conductor.Interact(interaction.Start.Identifier, interaction.Start.PseudoTerminal, done, interaction.Start.Command...); err == nil {
-							grpcLog.Info("interaction started")
-							go start()
-						} else {
-							done <- err
-							return
-						}
-					} else {
-						done <- errors.New("first message must contain \"start\"")
-						return
-					}
+			host := first.Start.Identifier[1]
+
+			command := util.NewCommand(first, grpcLog)
+
+			var relay string
+			if self.cluster != nil {
+				if self.cluster.cluster.LocalNode().Name != host {
+					relay = fmt.Sprintf("%s:%d", host, 8181)
 				}
+			}
 
-				switch interaction.Stream {
-				case "stdin":
-					grpcLog.Debugf("stdin: %q", interaction.Bytes)
-					stdin <- interaction.Bytes
+			if relay == "" {
+				return util.StartCommand(command, server, grpcLog)
+			} else {
+				client, err := clientpkg.NewClient(relay)
+				if err != nil {
+					return err
+				}
+				defer client.Close()
+
+				grpcLog.Infof("relay interaction to %s", relay)
+				err = client.InteractRelay(server, first)
+				grpcLog.Info("interaction ended")
+				if err == nil {
+					return nil
+				} else {
+					return statuspkg.Errorf(codes.Aborted, "%s", err.Error())
+				}
+			}
+		},
+
+		"runnable": func(first *api.Interaction) error {
+			// TODO: find host for runnable and relay if necessary
+
+			name := "runnable.podman"
+			command := self.conductor.getArtifactFile("common", "plugin", name)
+
+			client := plugin.NewRunnableClient(name, command)
+			defer client.Close()
+
+			if runnable, err := client.Runnable(); err == nil {
+				if err := runnable.Interact(server, first); err == nil {
+					return nil
+				} else {
+					return statuspkg.Errorf(codes.Aborted, "%s", err.Error())
 				}
 			} else {
-				if err == io.EOF {
-					grpcLog.Info("client closed")
-					err = nil
-					return
-				} else {
-					if status, ok := statuspkg.FromError(err); ok {
-						if status.Code() == codes.Canceled {
-							// We're OK with canceling
-							grpcLog.Infof("client canceled")
-							err = nil
-						}
-					}
-				}
-				kill <- struct{}{}
-				done <- err
-				return
+				return statuspkg.Errorf(codes.Aborted, "%s", err.Error())
 			}
-		}
-	}()
-
-	err := <-done
-	if stdin != nil {
-		close(stdin)
-	}
-	grpcLog.Info("interaction ended")
-	return err
+		},
+	})
 }

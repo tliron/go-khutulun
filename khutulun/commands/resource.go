@@ -8,7 +8,7 @@ import (
 )
 
 func listResources(type_ string, args []string) {
-	client, err := clientpkg.NewClient(configurationPath, clusterName)
+	client, err := clientpkg.NewClientFromConfiguration(configurationPath, clusterName)
 	util.FailOnError(err)
 	util.OnExitError(client.Close)
 

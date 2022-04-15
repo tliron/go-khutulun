@@ -2,8 +2,7 @@
 Description=Khutulun Conductor
 
 [Service]
-ExecStart=/mnt/khutulun/khutulun-conductor server -v
-WorkingDirectory=/mnt/khutulun
+ExecStart=/mnt/khutulun/common/plugin/conductor/conductor server -vv
 
 [Install]
 WantedBy=default.target

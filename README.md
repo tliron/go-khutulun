@@ -44,7 +44,7 @@ Some included resource types and plugins:
 * Local or networked directory storage
 
 Plugins can optionally wrap resources in usermode systemd units. This provides a unified admin
-experience as well as better resilience in the case of failures and restarts.
+experience as well as resilience in the case of failures and restarts.
 
 Clusters
 --------

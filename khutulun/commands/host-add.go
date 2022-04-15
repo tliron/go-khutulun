@@ -18,7 +18,7 @@ var hostAddCommand = &cobra.Command{
 		name := args[0]
 		address := args[1]
 
-		client, err := clientpkg.NewClient(configurationPath, clusterName)
+		client, err := clientpkg.NewClientFromConfiguration(configurationPath, clusterName)
 		util.FailOnError(err)
 		util.OnExitError(client.Close)
 

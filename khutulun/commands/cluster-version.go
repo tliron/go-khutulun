@@ -17,7 +17,7 @@ var clusterVersionCommand = &cobra.Command{
 	Short: "Get a cluster's version",
 	Args:  cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		client, err := clientpkg.NewClient(configurationPath, clusterName)
+		client, err := clientpkg.NewClientFromConfiguration(configurationPath, clusterName)
 		util.FailOnError(err)
 		util.OnExitError(client.Close)
 

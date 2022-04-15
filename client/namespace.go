@@ -7,7 +7,7 @@ import (
 )
 
 func (self *Client) ListNamespaces() ([]string, error) {
-	context, cancel := self.newContext()
+	context, cancel := self.newContextWithTimeout()
 	defer cancel()
 
 	if client, err := self.client.ListNamespaces(context, new(emptypb.Empty)); err == nil {

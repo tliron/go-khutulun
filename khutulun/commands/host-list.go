@@ -16,7 +16,7 @@ var hostListCommand = &cobra.Command{
 	Use:   "list",
 	Short: "List hosts in a cluster",
 	Run: func(cmd *cobra.Command, args []string) {
-		client, err := clientpkg.NewClient(configurationPath, clusterName)
+		client, err := clientpkg.NewClientFromConfiguration(configurationPath, clusterName)
 		util.FailOnError(err)
 		util.OnExitError(client.Close)
 

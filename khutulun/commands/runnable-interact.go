@@ -5,9 +5,9 @@ import (
 
 	"github.com/spf13/cobra"
 	clientpkg "github.com/tliron/khutulun/client"
+	"github.com/tliron/kutil/exec"
 	"github.com/tliron/kutil/terminal"
 	"github.com/tliron/kutil/util"
-	"golang.org/x/term"
 )
 
 func init() {
@@ -28,27 +28,20 @@ var runnableInteractCommand = &cobra.Command{
 			command = args[2:]
 		}
 
-		client, err := clientpkg.NewClient(configurationPath, clusterName)
+		client, err := clientpkg.NewClientFromConfiguration(configurationPath, clusterName)
 		util.FailOnError(err)
 		util.OnExitError(client.Close)
 
+		var terminal_ *exec.Terminal
 		if pseudoTerminal {
-			// See: https://stackoverflow.com/a/54423725
-			/*exec.Command("/usr/bin/stty", "-F", "/dev/tty", "cbreak", "min", "1").Run()
-			exec.Command("/usr/bin/stty", "-F", "/dev/tty", "-echo").Run()
-			util.OnExit(func() {
-				exec.Command("/usr/bin/stty", "-F", "/dev/tty", "echo").Run()
-			})*/
-
-			termState, err := term.MakeRaw(int(os.Stdin.Fd()))
+			terminal_, err = exec.NewTerminal()
 			util.FailOnError(err)
-			util.OnExitError(func() error {
-				return term.Restore(int(os.Stdin.Fd()), termState)
-			})
+			util.OnExitError(terminal_.Close)
 		}
 
 		identifier := []string{"runnable", namespace, serviceName, resourceName}
-		err = client.Interact(identifier, os.Stdin, terminal.Stdout, terminal.Stderr, pseudoTerminal, command...)
+		environment := map[string]string{"TERM": os.Getenv("TERM")}
+		err = client.Interact(identifier, os.Stdin, terminal.Stdout, terminal.Stderr, terminal_, environment, command...)
 		util.FailOnError(err)
 	},
 }

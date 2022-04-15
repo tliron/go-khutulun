@@ -6,9 +6,12 @@ import (
 
 	"github.com/hashicorp/go-plugin"
 	"github.com/tliron/khutulun/api"
+	"github.com/tliron/khutulun/util"
 	"github.com/tliron/kutil/logging/sink"
 	"github.com/tliron/kutil/protobuf"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	statuspkg "google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
@@ -18,6 +21,7 @@ import (
 
 type Runnable interface {
 	Instantiate(config any) error
+	Interact(server util.Interactor, first *api.Interaction) error
 }
 
 //
@@ -36,7 +40,20 @@ func NewRunnableGRPCServer(implementation Runnable) *RunnableGRPCServer {
 
 // api.PluginServer interface
 func (self *RunnableGRPCServer) Instantiate(context contextpkg.Context, config *api.Config) (*emptypb.Empty, error) {
-	return new(emptypb.Empty), self.implementation.Instantiate(config.Config.AsMap())
+	if err := self.implementation.Instantiate(config.Config.AsMap()); err == nil {
+		return new(emptypb.Empty), nil
+	} else {
+		return new(emptypb.Empty), statuspkg.Errorf(codes.Aborted, "%s", err.Error())
+	}
+}
+
+// api.PluginServer interface
+func (self *RunnableGRPCServer) Interact(server api.Plugin_InteractServer) error {
+	return util.Interact(server, map[string]util.InteractFunc{
+		"runnable": func(first *api.Interaction) error {
+			return self.implementation.Interact(server, first)
+		},
+	})
 }
 
 //
@@ -57,6 +74,15 @@ func (self *RunnableGRPCClient) Instantiate(config any) error {
 	if config_, err := protobuf.NewStruct(config); err == nil {
 		_, err := self.client.Instantiate(self.context, &api.Config{Config: config_})
 		return err
+	} else {
+		return err
+	}
+}
+
+// Runnable interface
+func (self *RunnableGRPCClient) Interact(server util.Interactor, first *api.Interaction) error {
+	if client, err := self.client.Interact(self.context); err == nil {
+		return util.InteractRelay(server, client, first, log)
 	} else {
 		return err
 	}

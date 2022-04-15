@@ -15,7 +15,7 @@ var serviceDeleteCommand = &cobra.Command{
 	Short: "Delete a service",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		client, err := clientpkg.NewClient(configurationPath, clusterName)
+		client, err := clientpkg.NewClientFromConfiguration(configurationPath, clusterName)
 		util.FailOnError(err)
 		util.OnExitError(client.Close)
 

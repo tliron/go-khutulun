@@ -73,11 +73,3 @@ func (self *Conductor) reconcileRunnables(clout *cloutpkg.Clout) {
 		}
 	}()
 }
-
-func (self *Conductor) getResources(clout *cloutpkg.Clout, type_ string) []plugin.Container {
-	var containers []plugin.Container
-	for _, vertex := range clout.Vertexes {
-		containers = append(containers, GetContainers(vertex.Properties)...)
-	}
-	return containers
-}
