@@ -12,6 +12,6 @@ var serviceListCommand = &cobra.Command{
 	Use:   "list",
 	Short: "List services",
 	Run: func(cmd *cobra.Command, args []string) {
-		listArtifacts(namespace, "clout")
+		listBundles(namespace, "clout")
 	},
 }

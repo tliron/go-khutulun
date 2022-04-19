@@ -13,6 +13,6 @@ var profileRegisterCommand = &cobra.Command{
 	Short: "Register a profile",
 	Args:  cobra.RangeArgs(1, 2),
 	Run: func(cmd *cobra.Command, args []string) {
-		registerArtifact(namespace, "profile", args)
+		registerBundle(namespace, "profile", args)
 	},
 }

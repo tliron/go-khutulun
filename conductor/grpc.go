@@ -4,9 +4,11 @@ import (
 	contextpkg "context"
 	"fmt"
 	"io"
+	"io/fs"
 	"net"
+	"os"
+	"path/filepath"
 
-	"github.com/danjacques/gofslock/fslock"
 	"github.com/tliron/khutulun/api"
 	clientpkg "github.com/tliron/khutulun/client"
 	"github.com/tliron/khutulun/plugin"
@@ -17,7 +19,7 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
-const BUFFER_SIZE = 4096
+const BUFFER_SIZE = 65536
 
 var version = api.Version{Version: "0.1.0"}
 
@@ -28,15 +30,15 @@ var version = api.Version{Version: "0.1.0"}
 type GRPC struct {
 	api.UnimplementedConductorServer
 
+	port       int
 	grpcServer *grpc.Server
 	conductor  *Conductor
-	cluster    *Cluster
 }
 
-func NewGRPC(conductor *Conductor, cluster *Cluster) *GRPC {
+func NewGRPC(conductor *Conductor) *GRPC {
 	return &GRPC{
+		port:      8181,
 		conductor: conductor,
-		cluster:   cluster,
 	}
 }
 
@@ -44,7 +46,7 @@ func (self *GRPC) Start() error {
 	self.grpcServer = grpc.NewServer()
 	api.RegisterConductorServer(self.grpcServer, self)
 
-	if listener, err := net.Listen("tcp", ":8181"); err == nil {
+	if listener, err := net.Listen("tcp", fmt.Sprintf(":%d", self.port)); err == nil {
 		grpcLog.Noticef("starting server on: %s", listener.Addr().String())
 		go func() {
 			if err := self.grpcServer.Serve(listener); err != nil {
@@ -74,8 +76,8 @@ func (self *GRPC) GetVersion(context contextpkg.Context, empty *emptypb.Empty) (
 func (self *GRPC) ListHosts(empty *emptypb.Empty, server api.Conductor_ListHostsServer) error {
 	grpcLog.Info("listHosts")
 
-	if self.cluster != nil {
-		for _, member := range self.cluster.ListMembers() {
+	if self.conductor.cluster != nil {
+		for _, member := range self.conductor.cluster.ListMembers() {
 			server.Send(&api.HostIdentifier{
 				Name:    member.name,
 				Address: member.address,
@@ -91,8 +93,8 @@ func (self *GRPC) ListHosts(empty *emptypb.Empty, server api.Conductor_ListHosts
 func (self *GRPC) AddHost(context contextpkg.Context, identifier *api.HostIdentifier) (*emptypb.Empty, error) {
 	grpcLog.Info("addHost")
 
-	if self.cluster != nil {
-		if err := self.cluster.AddMembers([]string{identifier.Address}); err == nil {
+	if self.conductor.cluster != nil {
+		if err := self.conductor.cluster.AddMembers([]string{identifier.Address}); err == nil {
 			return new(emptypb.Empty), nil
 		} else {
 			return new(emptypb.Empty), statuspkg.Errorf(codes.Aborted, "%s", err.Error())
@@ -119,14 +121,14 @@ func (self *GRPC) ListNamespaces(empty *emptypb.Empty, server api.Conductor_List
 }
 
 // api.ConductorServer interface
-func (self *GRPC) ListArtifacts(listArtifacts *api.ListArtifacts, server api.Conductor_ListArtifactsServer) error {
-	grpcLog.Info("listArtifact")
+func (self *GRPC) ListBundles(listBundles *api.ListBundles, server api.Conductor_ListBundlesServer) error {
+	grpcLog.Info("listBundle")
 
-	if identifiers, err := self.conductor.ListArtifacts(listArtifacts.Namespace, listArtifacts.Type.Name); err == nil {
+	if identifiers, err := self.conductor.ListBundles(listBundles.Namespace, listBundles.Type.Name); err == nil {
 		for _, identifier := range identifiers {
-			identifier_ := api.ArtifactIdentifier{
+			identifier_ := api.BundleIdentifier{
 				Namespace: identifier.Namespace,
-				Type:      &api.ArtifactType{Name: identifier.Type},
+				Type:      &api.BundleType{Name: identifier.Type},
 				Name:      identifier.Name,
 			}
 
@@ -142,25 +144,16 @@ func (self *GRPC) ListArtifacts(listArtifacts *api.ListArtifacts, server api.Con
 }
 
 // api.ConductorServer interface
-func (self *GRPC) GetArtifact(identifier *api.ArtifactIdentifier, server api.Conductor_GetArtifactServer) error {
-	grpcLog.Info("getArtifact")
+func (self *GRPC) ListBundleFiles(identifier *api.BundleIdentifier, server api.Conductor_ListBundleFilesServer) error {
+	grpcLog.Info("listBundleFiles")
 
-	if lock, reader, err := self.conductor.ReadArtifact(identifier.Namespace, identifier.Type.Name, identifier.Name); err == nil {
-		defer lock.Unlock()
-		defer reader.Close()
-		buffer := make([]byte, BUFFER_SIZE)
-		for {
-			if count, err := reader.Read(buffer); err == nil {
-				content := api.ArtifactContent{Content: &api.ArtifactContent_Bytes{Bytes: buffer[:count]}}
-				if err := server.Send(&content); err != nil {
-					return statuspkg.Errorf(codes.Aborted, "%s", err.Error())
-				}
-			} else {
-				if err == io.EOF {
-					break
-				} else {
-					return statuspkg.Errorf(codes.Aborted, "%s", err.Error())
-				}
+	if bundleFiles, err := self.conductor.ListBundleFiles(identifier.Namespace, identifier.Type.Name, identifier.Name); err == nil {
+		for _, bundleFile := range bundleFiles {
+			if err := server.Send(&api.BundleFile{
+				Path:       bundleFile.Path,
+				Executable: bundleFile.Executable,
+			}); err != nil {
+				return statuspkg.Errorf(codes.Aborted, "%s", err.Error())
 			}
 		}
 	} else {
@@ -171,63 +164,148 @@ func (self *GRPC) GetArtifact(identifier *api.ArtifactIdentifier, server api.Con
 }
 
 // api.ConductorServer interface
-func (self *GRPC) SetArtifact(server api.Conductor_SetArtifactServer) error {
-	grpcLog.Info("setArtifact")
+func (self *GRPC) GetBundleFiles(getBundleFiles *api.GetBundleFiles, server api.Conductor_GetBundleFilesServer) error {
+	grpcLog.Info("getBundleFiles")
 
-	var namespace string
-	var type_ string
-	var name string
-	var writer io.WriteCloser
-	for {
-		if content, err := server.Recv(); err == nil {
-			switch content_ := content.Content.(type) {
-			case *api.ArtifactContent_Identifier:
-				namespace = content_.Identifier.Namespace
-				type_ = content_.Identifier.Type.Name
-				name = content_.Identifier.Name
-				var lock fslock.Handle
-				var err error
-				if lock, writer, err = self.conductor.WriteArtifact(namespace, type_, name); err == nil {
-					defer lock.Unlock()
-					defer writer.Close()
-				} else {
-					return statuspkg.Errorf(codes.Aborted, "%s", err.Error())
-				}
-
-			case *api.ArtifactContent_Bytes:
-				if writer != nil {
-					if _, err := writer.Write(content_.Bytes); err != nil {
-						return statuspkg.Errorf(codes.Aborted, "%s", err.Error())
-					}
-				} else {
-					return statuspkg.Errorf(codes.InvalidArgument, "first message must be \"identifier\"")
-				}
+	if lock, err := self.conductor.lockBundle(getBundleFiles.Identifier.Namespace, getBundleFiles.Identifier.Type.Name, getBundleFiles.Identifier.Name, false); err == nil {
+		defer func() {
+			if err := lock.Unlock(); err != nil {
+				grpcLog.Errorf("unlock: %s", err.Error())
 			}
-		} else {
-			if err == io.EOF {
-				break
-			} else {
-				if writer != nil {
-					if err := writer.Close(); err != nil {
-						grpcLog.Errorf("close writer: %s", err.Error())
-					}
-					if err := self.conductor.DeleteArtifact(namespace, type_, name); err != nil {
-						grpcLog.Errorf("delete artifact: %s", err.Error())
+		}()
+
+		buffer := make([]byte, BUFFER_SIZE)
+		dir := self.conductor.getBundleDir(getBundleFiles.Identifier.Namespace, getBundleFiles.Identifier.Type.Name, getBundleFiles.Identifier.Name)
+
+		for _, path := range getBundleFiles.Paths {
+			if file, err := os.Open(filepath.Join(dir, path)); err == nil {
+				for {
+					if count, err := file.Read(buffer); err == nil {
+						content := api.BundleContent{Bytes: buffer[:count]}
+						if err := server.Send(&content); err != nil {
+							if err := file.Close(); err != nil {
+								grpcLog.Errorf("file close: %s", err.Error())
+							}
+							return statuspkg.Errorf(codes.Aborted, "%s", err.Error())
+						}
+					} else {
+						if err == io.EOF {
+							break
+						} else {
+							if err := file.Close(); err != nil {
+								grpcLog.Errorf("file close: %s", err.Error())
+							}
+							return statuspkg.Errorf(codes.Aborted, "%s", err.Error())
+						}
 					}
 				}
+
+				if err := file.Close(); err != nil {
+					grpcLog.Errorf("file close: %s", err.Error())
+				}
+			} else {
 				return statuspkg.Errorf(codes.Aborted, "%s", err.Error())
 			}
 		}
-	}
 
-	return nil
+		return nil
+	} else {
+		return statuspkg.Errorf(codes.Aborted, "%s", err.Error())
+	}
 }
 
 // api.ConductorServer interface
-func (self *GRPC) RemoveArtifact(context contextpkg.Context, artifactIdentifer *api.ArtifactIdentifier) (*emptypb.Empty, error) {
-	grpcLog.Info("removeArtifact")
+func (self *GRPC) SetBundleFiles(server api.Conductor_SetBundleFilesServer) error {
+	grpcLog.Info("setBundleFiles")
 
-	if err := self.conductor.DeleteArtifact(artifactIdentifer.Namespace, artifactIdentifer.Type.Name, artifactIdentifer.Name); err == nil {
+	if first, err := server.Recv(); err == nil {
+		if first.Start != nil {
+			namespace := first.Start.Identifier.Namespace
+			type_ := first.Start.Identifier.Type.Name
+			name := first.Start.Identifier.Name
+			if lock, err := self.conductor.lockBundle(namespace, type_, name, true); err == nil {
+				defer func() {
+					if err := lock.Unlock(); err != nil {
+						grpcLog.Errorf("unlock: %s", err.Error())
+					}
+				}()
+
+				var file *os.File
+				for {
+					if content, err := server.Recv(); err == nil {
+						if content.Start != nil {
+							if file != nil {
+								if err := file.Close(); err != nil {
+									grpcLog.Errorf("file close: %s", err.Error())
+								}
+							}
+							return statuspkg.Error(codes.InvalidArgument, "received more than one message with \"start\"")
+						}
+
+						if content.File != nil {
+							// TODO: don't overwrite .lock file
+							if file != nil {
+								if err := file.Close(); err != nil {
+									return statuspkg.Errorf(codes.Aborted, "%s", err.Error())
+								}
+							}
+							path := filepath.Join(self.conductor.getBundleDir(namespace, type_, name), content.File.Path)
+							if err := os.MkdirAll(filepath.Dir(path), 0777); err != nil {
+								return statuspkg.Errorf(codes.Aborted, "%s", err.Error())
+							}
+
+							var mode fs.FileMode = 0666
+							if content.File.Executable {
+								mode = 0777
+							}
+
+							if file, err = os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, mode); err != nil {
+								return statuspkg.Errorf(codes.Aborted, "%s", err.Error())
+							}
+						}
+
+						if file == nil {
+							return statuspkg.Errorf(codes.Aborted, "message must container \"fileStart\"")
+						}
+
+						if _, err := file.Write(content.Bytes); err != nil {
+							if err := file.Close(); err != nil {
+								grpcLog.Errorf("file close: %s", err.Error())
+							}
+							return statuspkg.Errorf(codes.Aborted, "%s", err.Error())
+						}
+					} else {
+						if err == io.EOF {
+							break
+						} else {
+							if file != nil {
+								file.Close()
+							}
+							return statuspkg.Errorf(codes.Aborted, "%s", err.Error())
+						}
+					}
+				}
+
+				if file != nil {
+					file.Close()
+				}
+				return nil
+			} else {
+				return statuspkg.Errorf(codes.Aborted, "%s", err.Error())
+			}
+		} else {
+			return statuspkg.Error(codes.InvalidArgument, "first message must contain \"start\"")
+		}
+	} else {
+		return statuspkg.Errorf(codes.Aborted, "%s", err.Error())
+	}
+}
+
+// api.ConductorServer interface
+func (self *GRPC) RemoveBundle(context contextpkg.Context, bundleIdentifer *api.BundleIdentifier) (*emptypb.Empty, error) {
+	grpcLog.Info("removeBundle")
+
+	if err := self.conductor.DeleteBundle(bundleIdentifer.Namespace, bundleIdentifer.Type.Name, bundleIdentifer.Name); err == nil {
 		return new(emptypb.Empty), nil
 	} else {
 		return new(emptypb.Empty), statuspkg.Errorf(codes.Aborted, "%s", err.Error())
@@ -276,18 +354,18 @@ func (self *GRPC) Interact(server api.Conductor_InteractServer) error {
 	grpcLog.Info("interact")
 
 	return util.Interact(server, map[string]util.InteractFunc{
-		"host": func(first *api.Interaction) error {
-			if len(first.Start.Identifier) != 2 {
-				return statuspkg.Errorf(codes.InvalidArgument, "malformed identifier for host: %s", first.Start.Identifier)
+		"host": func(start *api.Interaction_Start) error {
+			if len(start.Identifier) != 2 {
+				return statuspkg.Errorf(codes.InvalidArgument, "malformed identifier for host: %s", start.Identifier)
 			}
 
-			host := first.Start.Identifier[1]
+			host := start.Identifier[1]
 
-			command := util.NewCommand(first, grpcLog)
+			command := util.NewCommand(start, grpcLog)
 
 			var relay string
-			if self.cluster != nil {
-				if self.cluster.cluster.LocalNode().Name != host {
+			if self.conductor.cluster != nil {
+				if self.conductor.cluster.cluster.LocalNode().Name != host {
 					relay = fmt.Sprintf("%s:%d", host, 8181)
 				}
 			}
@@ -302,7 +380,7 @@ func (self *GRPC) Interact(server api.Conductor_InteractServer) error {
 				defer client.Close()
 
 				grpcLog.Infof("relay interaction to %s", relay)
-				err = client.InteractRelay(server, first)
+				err = client.InteractRelay(server, start)
 				grpcLog.Info("interaction ended")
 				if err == nil {
 					return nil
@@ -312,17 +390,17 @@ func (self *GRPC) Interact(server api.Conductor_InteractServer) error {
 			}
 		},
 
-		"runnable": func(first *api.Interaction) error {
+		"runnable": func(start *api.Interaction_Start) error {
 			// TODO: find host for runnable and relay if necessary
 
 			name := "runnable.podman"
-			command := self.conductor.getArtifactFile("common", "plugin", name)
+			command := self.conductor.getBundleMainFile("common", "plugin", name)
 
 			client := plugin.NewRunnableClient(name, command)
 			defer client.Close()
 
 			if runnable, err := client.Runnable(); err == nil {
-				if err := runnable.Interact(server, first); err == nil {
+				if err := runnable.Interact(server, start); err == nil {
 					return nil
 				} else {
 					return statuspkg.Errorf(codes.Aborted, "%s", err.Error())

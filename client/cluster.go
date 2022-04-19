@@ -4,6 +4,7 @@ import (
 	"io"
 
 	"github.com/tliron/khutulun/api"
+	"github.com/tliron/khutulun/util"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
@@ -64,6 +65,6 @@ func (self *Client) AddHost(name string, address string) error {
 	if _, err := self.client.AddHost(context, &identifier); err == nil {
 		return nil
 	} else {
-		return err
+		return util.UnpackError(err)
 	}
 }

@@ -11,8 +11,8 @@ func init() {
 var serviceFetchCommand = &cobra.Command{
 	Use:   "fetch [SERVICE NAME]",
 	Short: "Fetch a service's Clout content",
-	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		fetchArtifact(namespace, "clout", args)
+		args = append(args, "clout.yaml")
+		fetchBundle(namespace, "clout", args)
 	},
 }

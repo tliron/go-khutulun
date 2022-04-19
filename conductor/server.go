@@ -1,34 +1,39 @@
 package conductor
 
+import (
+	"time"
+)
+
+const TICKER_FREQUENCY = 10 * time.Second
+
 //
 // Server
 //
 
 type Server struct {
-	conductor  *Conductor
-	grpc       *GRPC
-	cluster    *Cluster
-	http       *HTTP
-	reconciler *Reconciler
+	conductor *Conductor
+	grpc      *GRPC
+	http      *HTTP
+	ticker    *Ticker
 }
 
 func NewServer(conductor *Conductor) *Server {
 	return &Server{conductor: conductor}
 }
 
-func (self *Server) Start(cluster bool, grpc bool, http bool, reconciler bool) error {
+func (self *Server) Start(cluster bool, grpc bool, http bool, reconcile bool) error {
 	if cluster {
-		self.cluster = NewCluster()
-		if err := self.cluster.Start(); err != nil {
+		self.conductor.cluster = NewCluster()
+		if err := self.conductor.cluster.Start(); err != nil {
 			return err
 		}
 	}
 
 	if grpc {
-		self.grpc = NewGRPC(self.conductor, self.cluster)
+		self.grpc = NewGRPC(self.conductor)
 		if err := self.grpc.Start(); err != nil {
-			if self.cluster != nil {
-				self.cluster.Stop()
+			if self.conductor.cluster != nil {
+				self.conductor.cluster.Stop()
 			}
 			return err
 		}
@@ -41,8 +46,8 @@ func (self *Server) Start(cluster bool, grpc bool, http bool, reconciler bool) e
 				if self.grpc != nil {
 					self.grpc.Stop()
 				}
-				if self.cluster != nil {
-					self.cluster.Stop()
+				if self.conductor.cluster != nil {
+					self.conductor.cluster.Stop()
 				}
 				return err
 			}
@@ -51,9 +56,12 @@ func (self *Server) Start(cluster bool, grpc bool, http bool, reconciler bool) e
 		}
 	}
 
-	if reconciler {
-		self.reconciler = NewReconciler(self.conductor)
-		self.reconciler.Start()
+	if reconcile {
+		self.ticker = NewTicker(TICKER_FREQUENCY, func() {
+			self.conductor.Schedule()
+			self.conductor.Reconcile()
+		})
+		self.ticker.Start()
 	}
 
 	return nil
@@ -62,8 +70,8 @@ func (self *Server) Start(cluster bool, grpc bool, http bool, reconciler bool) e
 func (self *Server) Stop() error {
 	var err error
 
-	if self.reconciler != nil {
-		self.reconciler.Stop()
+	if self.ticker != nil {
+		self.ticker.Stop()
 	}
 
 	if self.http != nil {
@@ -76,8 +84,8 @@ func (self *Server) Stop() error {
 		self.grpc.Stop()
 	}
 
-	if self.cluster != nil {
-		if err_ := self.cluster.Stop(); err_ != nil {
+	if self.conductor.cluster != nil {
+		if err_ := self.conductor.cluster.Stop(); err_ != nil {
 			err = err_
 		}
 	}

@@ -1,8 +1,6 @@
 package conductor
 
 import (
-	"sync"
-
 	urlpkg "github.com/tliron/kutil/url"
 )
 
@@ -13,7 +11,7 @@ import (
 type Conductor struct {
 	statePath  string
 	urlContext *urlpkg.Context
-	lock       sync.Mutex
+	cluster    *Cluster
 }
 
 func NewConductor(statePath string) *Conductor {

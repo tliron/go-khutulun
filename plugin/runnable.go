@@ -21,7 +21,7 @@ import (
 
 type Runnable interface {
 	Instantiate(config any) error
-	Interact(server util.Interactor, first *api.Interaction) error
+	Interact(server util.Interactor, start *api.Interaction_Start) error
 }
 
 //
@@ -50,8 +50,8 @@ func (self *RunnableGRPCServer) Instantiate(context contextpkg.Context, config *
 // api.PluginServer interface
 func (self *RunnableGRPCServer) Interact(server api.Plugin_InteractServer) error {
 	return util.Interact(server, map[string]util.InteractFunc{
-		"runnable": func(first *api.Interaction) error {
-			return self.implementation.Interact(server, first)
+		"runnable": func(start *api.Interaction_Start) error {
+			return self.implementation.Interact(server, start)
 		},
 	})
 }
@@ -80,9 +80,9 @@ func (self *RunnableGRPCClient) Instantiate(config any) error {
 }
 
 // Runnable interface
-func (self *RunnableGRPCClient) Interact(server util.Interactor, first *api.Interaction) error {
+func (self *RunnableGRPCClient) Interact(server util.Interactor, start *api.Interaction_Start) error {
 	if client, err := self.client.Interact(self.context); err == nil {
-		return util.InteractRelay(server, client, first, log)
+		return util.InteractRelay(server, client, start, log)
 	} else {
 		return err
 	}

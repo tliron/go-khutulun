@@ -2,13 +2,14 @@ package client
 
 import (
 	"github.com/tliron/khutulun/api"
+	"github.com/tliron/khutulun/util"
 )
 
 func (self *Client) DeployService(serviceNamespace string, serviceName string, templateNamespace string, templateName string, inputs map[string]any) error {
 	args := api.DeployService{
-		Template: &api.ArtifactIdentifier{
+		Template: &api.BundleIdentifier{
 			Namespace: templateNamespace,
-			Type:      &api.ArtifactType{Name: "template"},
+			Type:      &api.BundleType{Name: "template"},
 			Name:      templateName,
 		},
 		Service: &api.ServiceIdentifier{
@@ -21,5 +22,5 @@ func (self *Client) DeployService(serviceNamespace string, serviceName string, t
 	defer cancel()
 
 	_, err := self.client.DeployService(context, &args)
-	return err
+	return util.UnpackError(err)
 }

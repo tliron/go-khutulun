@@ -114,16 +114,16 @@ func (self *Runnable) Instantiate(config any) error {
 }
 
 // plugin.Runnable interface
-func (self *Runnable) Interact(server util.Interactor, first *api.Interaction) error {
-	if len(first.Start.Identifier) != 4 {
-		return statuspkg.Errorf(codes.InvalidArgument, "malformed identifier for runnable: %s", first.Start.Identifier)
+func (self *Runnable) Interact(server util.Interactor, start *api.Interaction_Start) error {
+	if len(start.Identifier) != 4 {
+		return statuspkg.Errorf(codes.InvalidArgument, "malformed identifier for runnable: %s", start.Identifier)
 	}
 
 	//namespace := interaction.Start.Identifier[1]
 	//serviceName := interaction.Start.Identifier[2]
-	resourceName := first.Start.Identifier[3]
+	resourceName := start.Identifier[3]
 
-	command := util.NewCommand(first, log)
+	command := util.NewCommand(start, log)
 	args := append([]string{command.Name}, command.Args...)
 	command.Name = "/usr/bin/podman"
 	command.Args = []string{"exec"}

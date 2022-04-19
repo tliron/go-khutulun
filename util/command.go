@@ -12,19 +12,19 @@ import (
 	statuspkg "google.golang.org/grpc/status"
 )
 
-func NewCommand(interaction *api.Interaction, log logging.Logger) *exec.Command {
+func NewCommand(start *api.Interaction_Start, log logging.Logger) *exec.Command {
 	command := exec.NewCommand()
 
-	if interaction.Start.PseudoTerminal {
+	if start.PseudoTerminal {
 		command.PseudoTerminal = new(exec.Size)
-		if interaction.Stream == api.Interaction_SIZE {
-			log.Debugf("pseudo-terminal size: %d, %d", interaction.Width, interaction.Height)
-			command.PseudoTerminal.Width = uint(interaction.Width)
-			command.PseudoTerminal.Height = uint(interaction.Height)
+		if start.InitialSize != nil {
+			log.Debugf("pseudo-terminal size: %d, %d", start.InitialSize.Width, start.InitialSize.Height)
+			command.PseudoTerminal.Width = uint(start.InitialSize.Width)
+			command.PseudoTerminal.Height = uint(start.InitialSize.Height)
 		}
 	}
 
-	cmd := interaction.Start.Command
+	cmd := start.Command
 	if len(cmd) == 0 {
 		// Default to bash
 		cmd = []string{"/bin/bash"}
@@ -38,7 +38,7 @@ func NewCommand(interaction *api.Interaction, log logging.Logger) *exec.Command 
 	if len(cmd) > 1 {
 		command.Args = cmd[1:]
 	}
-	command.Environment = interaction.Start.Environment
+	command.Environment = start.Environment
 
 	return command
 }
@@ -84,18 +84,22 @@ func StartCommand(command *exec.Command, server Interactor, log logging.Logger) 
 		for {
 			if interaction, err := server.Recv(); err == nil {
 				if interaction.Start != nil {
-					command.Stop(errors.New("received more than one \"start\" message"))
+					command.Stop(errors.New("received more than one message with \"start\""))
 					return
 				}
 
 				switch interaction.Stream {
 				case api.Interaction_STDIN:
-					log.Debugf("stdin: %q", interaction.Bytes)
-					process.Stdin(interaction.Bytes)
+					if interaction.Bytes != nil {
+						log.Debugf("stdin: %q", interaction.Bytes)
+						process.Stdin(interaction.Bytes)
+					}
 
 				case api.Interaction_SIZE:
-					log.Debugf("size: %d, %d", interaction.Width, interaction.Height)
-					process.Resize(uint(interaction.Width), uint(interaction.Height))
+					if interaction.Size != nil {
+						log.Debugf("size: %d, %d", interaction.Size.Width, interaction.Size.Height)
+						process.Resize(uint(interaction.Size.Width), uint(interaction.Size.Height))
+					}
 
 				default:
 					command.Stop(fmt.Errorf("unsupported stream: %d", interaction.Stream))

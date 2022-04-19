@@ -14,10 +14,11 @@ service Conductor {
 
     rpc listNamespaces(google.protobuf.Empty) returns (stream Namespace);
 
-    rpc listArtifacts(ListArtifacts) returns (stream ArtifactIdentifier);
-    rpc getArtifact(ArtifactIdentifier) returns (stream ArtifactContent);
-    rpc setArtifact(stream ArtifactContent) returns (google.protobuf.Empty);
-    rpc removeArtifact(ArtifactIdentifier) returns (google.protobuf.Empty);
+    rpc listBundles(ListBundles) returns (stream BundleIdentifier);
+    rpc listBundleFiles(BundleIdentifier) returns (stream BundleFile);
+    rpc getBundleFiles(GetBundleFiles) returns (stream BundleContent);
+    rpc setBundleFiles(stream BundleContent) returns (google.protobuf.Empty);
+    rpc removeBundle(BundleIdentifier) returns (google.protobuf.Empty);
 
     rpc deployService(DeployService) returns (google.protobuf.Empty);
 
@@ -48,26 +49,39 @@ message HostIdentifier {
     string address = 2;
 }
 
-message ArtifactType {
+message BundleType {
     string name = 1;
 }
 
-message ArtifactIdentifier {
-    ArtifactType type = 1;
+message BundleIdentifier {
+    BundleType type = 1;
     string namespace = 2;
     string name = 3;
 }
 
-message ArtifactContent {
-    oneof content {
-        ArtifactIdentifier identifier = 1;
-        bytes bytes = 2;
-    }
+message ListBundles {
+    BundleType type = 1;
+    string namespace = 2;
 }
 
-message ListArtifacts {
-    ArtifactType type = 1;
-    string namespace = 2;
+message GetBundleFiles {
+    BundleIdentifier identifier = 1;
+    repeated string paths = 3;
+}
+
+message BundleFile {
+    string path = 1;
+    bool executable = 2;
+}
+
+message BundleContent {
+    message Start {
+        BundleIdentifier identifier = 1;
+    }
+
+    Start start = 1;
+    BundleFile file = 2;
+    bytes bytes = 3;
 }
 
 message ServiceIdentifier {
@@ -80,7 +94,7 @@ message ListServices {
 }
 
 message DeployService {
-    ArtifactIdentifier template = 1;
+    BundleIdentifier template = 1;
     ServiceIdentifier service = 2;
 }
 
@@ -104,16 +118,21 @@ message Interaction {
         SIZE = 4;
     }
 
+    message Size {
+        uint32 width = 5;
+        uint32 height = 6;
+    }
+
     message Start {
         repeated string identifier = 1;
         repeated string command = 2;
         map<string, string> environment = 3;
         bool pseudoTerminal = 4;
+        Size initialSize = 5;
     }
 
     Start start = 1;
     Stream stream = 2;
     bytes bytes = 3;
-    uint32 width = 4;
-    uint32 height = 5;
+    Size size = 4;
 }

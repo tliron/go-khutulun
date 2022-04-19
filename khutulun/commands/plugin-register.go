@@ -13,6 +13,6 @@ var pluginRegisterCommand = &cobra.Command{
 	Short: "Register a plugin",
 	Args:  cobra.RangeArgs(2, 3),
 	Run: func(cmd *cobra.Command, args []string) {
-		registerArtifact(namespace, "plugin", getPluginArgs(args))
+		registerBundle(namespace, "plugin", getPluginArgs(args))
 	},
 }

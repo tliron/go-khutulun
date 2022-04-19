@@ -2,6 +2,7 @@ package conductor
 
 import (
 	contextpkg "context"
+	"fmt"
 	"net"
 	"net/http"
 	"time"
@@ -16,36 +17,38 @@ import (
 //
 
 type HTTP struct {
-	conductor  *Conductor
+	port       int
 	httpServer *http.Server
-	handler    *http.ServeMux
+	mux        *http.ServeMux
+	conductor  *Conductor
 }
 
 func NewHTTP(conductor *Conductor) (*HTTP, error) {
 	self := HTTP{
+		port:      8182,
+		mux:       http.NewServeMux(),
 		conductor: conductor,
-		handler:   http.NewServeMux(),
 	}
 
 	if fs, err := fspkg.New(); err == nil {
-		self.handler.Handle("/", http.FileServer(fs))
+		self.mux.Handle("/", http.FileServer(fs))
 	} else {
 		return nil, err
 	}
 
-	self.handler.HandleFunc("/api/namespace/list", self.listNamespaces)
-	self.handler.HandleFunc("/api/artifact/list", self.listArtifacts)
-	self.handler.HandleFunc("/api/resource/list", self.listResources)
+	self.mux.HandleFunc("/api/namespace/list", self.listNamespaces)
+	self.mux.HandleFunc("/api/bundle/list", self.listBundles)
+	self.mux.HandleFunc("/api/resource/list", self.listResources)
 
 	self.httpServer = &http.Server{
-		Handler: self.handler,
+		Handler: self.mux,
 	}
 
 	return &self, nil
 }
 
 func (self *HTTP) Start() error {
-	if listener, err := net.Listen("tcp", ":8182"); err == nil {
+	if listener, err := net.Listen("tcp", fmt.Sprintf(":%d", self.port)); err == nil {
 		httpLog.Noticef("starting server on: %s", listener.Addr().String())
 		go func() {
 			if err := self.httpServer.Serve(listener); err != nil {
@@ -77,12 +80,12 @@ func (self *HTTP) listNamespaces(writer http.ResponseWriter, request *http.Reque
 	}
 }
 
-func (self *HTTP) listArtifacts(writer http.ResponseWriter, request *http.Request) {
+func (self *HTTP) listBundles(writer http.ResponseWriter, request *http.Request) {
 	namespace := request.URL.Query().Get("namespace")
 	type_ := request.URL.Query().Get("type")
 	if type_ != "" {
-		if artifacts, err := self.conductor.ListArtifacts(namespace, type_); err == nil {
-			format.WriteJSON(artifacts, writer, "")
+		if bundles, err := self.conductor.ListBundles(namespace, type_); err == nil {
+			format.WriteJSON(bundles, writer, "")
 		} else {
 			writer.WriteHeader(500)
 		}

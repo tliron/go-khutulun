@@ -12,6 +12,6 @@ var profileListCommand = &cobra.Command{
 	Use:   "list",
 	Short: "List registered profiles",
 	Run: func(cmd *cobra.Command, args []string) {
-		listArtifacts(namespace, "profile")
+		listBundles(namespace, "profile")
 	},
 }

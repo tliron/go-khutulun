@@ -12,6 +12,6 @@ var pluginListCommand = &cobra.Command{
 	Use:   "list",
 	Short: "List registered plugins",
 	Run: func(cmd *cobra.Command, args []string) {
-		listArtifacts(namespace, "plugin")
+		listBundles(namespace, "plugin")
 	},
 }

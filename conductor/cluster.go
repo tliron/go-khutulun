@@ -2,7 +2,6 @@ package conductor
 
 import (
 	"fmt"
-	"os"
 	"time"
 
 	"github.com/hashicorp/memberlist"
@@ -14,25 +13,27 @@ import (
 //
 
 type Cluster struct {
+	port         int
 	cluster      *memberlist.Memberlist
 	clusterQueue *memberlist.TransmitLimitedQueue
 }
 
 func NewCluster() *Cluster {
-	return new(Cluster)
+	return &Cluster{
+		port: 7946,
+	}
 }
 
 func (self *Cluster) Start() error {
 	config := memberlist.DefaultLocalConfig()
-	var err error
-	if config.Name, err = os.Hostname(); err != nil {
-		return err
-	}
+	config.BindPort = self.port
+	config.AdvertisePort = self.port
 	config.Delegate = self
 	config.Events = sink.NewMemberlistEventLog(clusterLog)
 	//config.Logger =
 
 	clusterLog.Notice("starting memberlist")
+	var err error
 	if self.cluster, err = memberlist.Create(config); err == nil {
 		self.clusterQueue = &memberlist.TransmitLimitedQueue{
 			NumNodes: func() int {
@@ -61,14 +62,14 @@ type Member struct {
 }
 
 func (self *Cluster) ListMembers() []Member {
-	var identifiers []Member
+	var members []Member
 	for _, node := range self.cluster.Members() {
-		identifiers = append(identifiers, Member{
+		members = append(members, Member{
 			name:    node.Name,
 			address: fmt.Sprintf("%s:%d", node.Addr.String(), node.Port),
 		})
 	}
-	return identifiers
+	return members
 }
 
 func (self *Cluster) AddMembers(hosts []string) error {

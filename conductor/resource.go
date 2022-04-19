@@ -17,14 +17,14 @@ type ResourceIdentifier struct {
 func (self *Conductor) ListResources(namespace string, serviceName string, type_ string) ([]ResourceIdentifier, error) {
 	var resources []ResourceIdentifier
 
-	var artifacts []ArtifactIdentifier
+	var bundles []BundleIdentifier
 	if serviceName == "" {
 		var err error
-		if artifacts, err = self.ListArtifacts(namespace, "clout"); err != nil {
+		if bundles, err = self.ListBundles(namespace, "clout"); err != nil {
 			return nil, err
 		}
 	} else {
-		artifacts = []ArtifactIdentifier{
+		bundles = []BundleIdentifier{
 			{
 				Namespace: namespace,
 				Type:      "clout",
@@ -33,12 +33,12 @@ func (self *Conductor) ListResources(namespace string, serviceName string, type_
 		}
 	}
 
-	for _, artifact := range artifacts {
-		if clout, err := self.GetClout(artifact.Namespace, artifact.Name, true); err == nil {
+	for _, bundle := range bundles {
+		if clout, err := self.GetClout(bundle.Namespace, bundle.Name, true); err == nil {
 			for _, resource := range self.getResources(clout, type_) {
 				resources = append(resources, ResourceIdentifier{
-					Namespace: artifact.Namespace,
-					Service:   artifact.Name,
+					Namespace: bundle.Namespace,
+					Service:   bundle.Name,
 					Type:      type_,
 					Name:      resource.Name,
 				})

@@ -1,0 +1,96 @@
+tosca_definitions_version: tosca_2_0
+
+imports:
+
+- capabilities.yaml
+- relationships.yaml
+- interfaces.yaml
+
+node_types:
+
+  Redundant:
+    properties:
+      count:
+        type: integer
+        default: 1
+
+  # Runnable
+
+  Process:
+    derived_from: Redundant
+    interfaces:
+      events:
+        type: Events
+    capabilities:
+      runnable:
+        type: Process
+      connectible: Exposable
+    requirements:
+    - connection:
+        capability: Connectible
+        relationship: Connection
+    - storage:
+        capability: Storage
+        relationship: Storage
+
+  Container:
+    derived_from: Redundant
+    interfaces:
+      events:
+        type: Events
+    capabilities:
+      runnable: Container
+      connectible: Exposable
+    requirements:
+    - connection:
+        capability: Connectible
+        relationship: Connection
+    - storage:
+        capability: Storage
+        relationship: Storage
+
+  PristineContainer:
+    derived_from: Container
+    capabilities:
+      runnable: PristineContainer
+
+  SystemContainer:
+    derived_from: Container
+    capabilities:
+      runnable: SystemContainer
+
+  LoadBalancer:
+    derived_from: Container
+    capabilities:
+      runnable:
+        type: Container
+        properties:
+          image:
+            default:
+              reference: docker.io/nginx:1.21.6
+    # TODO: attach an artifact that sets up loadbalancing
+
+  VirtualMachine:
+    derived_from: Redundant
+    interfaces:
+      events:
+        type: Events
+    capabilities:
+      runnable: VirtualMachine
+      connectible: Connectible
+    requirements:
+    - connection:
+        capability: Connectible
+        relationship: Connection
+    - storage:
+        capability: Storage
+        relationship: Storage
+
+  # Storage
+
+  LocalDirectory:
+    interfaces:
+      events:
+        type: Events
+    capabilities:
+      storage: LocalDirectory

@@ -9,10 +9,10 @@ func init() {
 }
 
 var profileFetchCommand = &cobra.Command{
-	Use:   "fetch [PROFILE NAME]",
-	Short: "Fetch a profile's content",
-	Args:  cobra.ExactArgs(1),
+	Use:   "fetch [PROFILE NAME] [[PATH]]",
+	Short: "List or fetch a profile's content",
+	Args:  cobra.RangeArgs(1, 2),
 	Run: func(cmd *cobra.Command, args []string) {
-		fetchArtifact(namespace, "profile", args)
+		fetchBundle(namespace, "profile", args)
 	},
 }

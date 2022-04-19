@@ -9,10 +9,10 @@ func init() {
 }
 
 var templateFetchCommand = &cobra.Command{
-	Use:   "fetch [TEMPLATE NAME]",
-	Short: "Fetch a template's content",
-	Args:  cobra.ExactArgs(1),
+	Use:   "fetch [TEMPLATE NAME] [[PATH]]",
+	Short: "List or fetch a template's content",
+	Args:  cobra.RangeArgs(1, 2),
 	Run: func(cmd *cobra.Command, args []string) {
-		fetchArtifact(namespace, "template", args)
+		fetchBundle(namespace, "template", args)
 	},
 }

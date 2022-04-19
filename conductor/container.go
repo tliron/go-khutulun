@@ -5,8 +5,13 @@ import (
 	"github.com/tliron/kutil/ard"
 )
 
-func GetContainer(vertexProperties any, capabilityProperties any) plugin.Container {
+func GetContainer(vertexProperties any, capability any) plugin.Container {
 	var self plugin.Container
+
+	capabilityProperties, _ := ard.NewNode(capability).Get("properties").StringMap()
+	capabilityAttributes, _ := ard.NewNode(capability).Get("attributes").StringMap()
+
+	self.Host, _ = ard.NewNode(capabilityAttributes).Get("host").String()
 	var ok bool
 	if self.Name, ok = ard.NewNode(capabilityProperties).Get("name").String(); !ok {
 		self.Name, _ = ard.NewNode(vertexProperties).Get("name").String()
@@ -25,6 +30,7 @@ func GetContainer(vertexProperties any, capabilityProperties any) plugin.Contain
 			})
 		}
 	}
+
 	return self
 }
 
@@ -34,8 +40,7 @@ func GetContainers(vertexProperties any) []plugin.Container {
 		for _, capability := range capabilities {
 			if types, ok := ard.NewNode(capability).Get("types").StringMap(); ok {
 				if _, ok := types["cloud.puccini.khutulun::Container"]; ok {
-					capabilityProperties, _ := ard.NewNode(capability).Get("properties").StringMap()
-					containers = append(containers, GetContainer(vertexProperties, capabilityProperties))
+					containers = append(containers, GetContainer(vertexProperties, capability))
 				}
 			}
 		}

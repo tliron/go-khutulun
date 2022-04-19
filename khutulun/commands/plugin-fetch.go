@@ -13,6 +13,6 @@ var pluginFetchCommand = &cobra.Command{
 	Short: "Fetch a plugin's content",
 	Args:  cobra.ExactArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
-		fetchArtifact(namespace, "plugin", getPluginArgs(args))
+		fetchBundle(namespace, "plugin", getPluginArgs(args))
 	},
 }

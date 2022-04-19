@@ -4,6 +4,7 @@ import (
 	"io"
 
 	"github.com/tliron/khutulun/api"
+	"github.com/tliron/khutulun/util"
 )
 
 type Resource struct {
@@ -29,25 +30,24 @@ func (self *Client) ListResources(namespace string, serviceName string, type_ st
 		var resources []Resource
 
 		for {
-			identifier, err := client.Recv()
-			if err != nil {
+			if identifier, err := client.Recv(); err == nil {
+				resources = append(resources, Resource{
+					Namespace: identifier.Service.Namespace,
+					Service:   identifier.Service.Name,
+					Type:      identifier.Type,
+					Name:      identifier.Name,
+				})
+			} else {
 				if err == io.EOF {
 					break
 				} else {
-					return nil, err
+					return nil, util.UnpackError(err)
 				}
 			}
-
-			resources = append(resources, Resource{
-				Namespace: identifier.Service.Namespace,
-				Service:   identifier.Service.Name,
-				Type:      identifier.Type,
-				Name:      identifier.Name,
-			})
 		}
 
 		return resources, nil
 	} else {
-		return nil, err
+		return nil, util.UnpackError(err)
 	}
 }

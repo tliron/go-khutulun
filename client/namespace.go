@@ -3,6 +3,7 @@ package client
 import (
 	"io"
 
+	"github.com/tliron/khutulun/util"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
@@ -19,7 +20,7 @@ func (self *Client) ListNamespaces() ([]string, error) {
 				if err == io.EOF {
 					break
 				} else {
-					return nil, err
+					return nil, util.UnpackError(err)
 				}
 			}
 
@@ -28,6 +29,6 @@ func (self *Client) ListNamespaces() ([]string, error) {
 
 		return namespaces, nil
 	} else {
-		return nil, err
+		return nil, util.UnpackError(err)
 	}
 }

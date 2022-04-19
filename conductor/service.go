@@ -5,10 +5,14 @@ import (
 )
 
 func (self *Conductor) GetServiceClout(namespace string, serviceName string) (*cloutpkg.Clout, error) {
-	if lock, err := self.lockArtifact(namespace, "clout", serviceName, false); err == nil {
-		defer lock.Unlock()
+	if lock, err := self.lockBundle(namespace, "clout", serviceName, false); err == nil {
+		defer func() {
+			if err := lock.Unlock(); err != nil {
+				grpcLog.Errorf("unlock: %s", err.Error())
+			}
+		}()
 
-		cloutPath := self.getArtifactFile(namespace, "clout", serviceName)
+		cloutPath := self.getBundleMainFile(namespace, "clout", serviceName)
 		return cloutpkg.Load(cloutPath, "yaml")
 	} else {
 		return nil, err

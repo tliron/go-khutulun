@@ -1,6 +1,7 @@
 package plugin
 
 type Container struct {
+	Host            string
 	Name            string
 	Reference       string
 	CreateArguments []string

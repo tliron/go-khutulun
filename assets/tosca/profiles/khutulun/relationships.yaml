@@ -1,0 +1,35 @@
+tosca_definitions_version: tosca_2_0
+
+imports:
+
+- interfaces.yaml
+
+relationship_types:
+
+  Connection:
+    metadata:
+      khutulun.plugin: connection
+    interfaces:
+      events:
+        type: Events
+
+  Storage:
+    metadata:
+      khutulun.plugin: storage
+    interfaces:
+      events:
+        type: Events
+
+  BlockStorage:
+    derived_from: Storage
+
+  Filesystem:
+    derived_from: Storage
+
+  IPPort:
+    derived_from: Connection
+    attributes:
+      ip:
+        type: string
+      port:
+        type: integer

@@ -41,6 +41,7 @@ topology_template:
           node: database
           relationship:
             type: kh:IPPort
+          # event: reconfigure
 
     database:
       type: kh:Container

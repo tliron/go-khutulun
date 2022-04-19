@@ -9,7 +9,7 @@ import (
 	statuspkg "google.golang.org/grpc/status"
 )
 
-type InteractFunc func(first *api.Interaction) error
+type InteractFunc func(start *api.Interaction_Start) error
 
 func Interact(server Interactor, interact map[string]InteractFunc) error {
 	if first, err := server.Recv(); err == nil {
@@ -20,20 +20,20 @@ func Interact(server Interactor, interact map[string]InteractFunc) error {
 			type_ := first.Start.Identifier[0]
 
 			if interact_, ok := interact[type_]; ok {
-				return interact_(first)
+				return interact_(first.Start)
 			} else {
 				return statuspkg.Errorf(codes.InvalidArgument, "malformed identifier: %s", first.Start.Identifier)
 			}
 		} else {
-			return statuspkg.Errorf(codes.InvalidArgument, "first message must contain \"start\"")
+			return statuspkg.Error(codes.InvalidArgument, "first message must contain \"start\"")
 		}
 	} else {
 		return statuspkg.Errorf(codes.Aborted, "%s", err.Error())
 	}
 }
 
-func InteractRelay(server Interactor, client Interactor, first *api.Interaction, log logging.Logger) error {
-	if err := client.Send(first); err != nil {
+func InteractRelay(server Interactor, client Interactor, start *api.Interaction_Start, log logging.Logger) error {
+	if err := client.Send(&api.Interaction{Start: start}); err != nil {
 		return err
 	}
 

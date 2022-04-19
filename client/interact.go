@@ -27,17 +27,20 @@ func (self *Client) Interact(identifier []string, stdin io.Reader, stdout io.Wri
 		if terminal != nil {
 			start.PseudoTerminal = true
 			if terminal.InitialSize != nil {
-				interaction.Stream = api.Interaction_SIZE
-				interaction.Width = uint32(terminal.InitialSize.Width)
-				interaction.Height = uint32(terminal.InitialSize.Height)
+				start.InitialSize = &api.Interaction_Size{
+					Width:  uint32(terminal.InitialSize.Width),
+					Height: uint32(terminal.InitialSize.Height),
+				}
 			}
 
 			go func() {
 				for size := range terminal.Resize {
 					if err := client.Send(&api.Interaction{
 						Stream: api.Interaction_SIZE,
-						Width:  uint32(size.Width),
-						Height: uint32(size.Height),
+						Size: &api.Interaction_Size{
+							Width:  uint32(size.Width),
+							Height: uint32(size.Height),
+						},
 					}); err != nil {
 						log.Errorf("client send: %s", err.Error())
 						return
@@ -48,7 +51,7 @@ func (self *Client) Interact(identifier []string, stdin io.Reader, stdout io.Wri
 		}
 
 		if err := client.Send(&interaction); err != nil {
-			return err
+			return util.UnpackError(err)
 		}
 
 		// Read and send stdin
@@ -73,44 +76,43 @@ func (self *Client) Interact(identifier []string, stdin io.Reader, stdout io.Wri
 		}()
 
 		for {
-			interaction, err := client.Recv()
-			if err != nil {
+			if interaction, err := client.Recv(); err == nil {
+				switch interaction.Stream {
+				case api.Interaction_STDOUT:
+					if _, err := stdout.Write(interaction.Bytes); err != nil {
+						return err
+					}
+
+				case api.Interaction_STDERR:
+					if _, err := stderr.Write(interaction.Bytes); err != nil {
+						return err
+					}
+
+				default:
+					return fmt.Errorf("unsupported stream: %d", interaction.Stream)
+				}
+			} else {
 				if err == io.EOF {
 					break
 				} else {
-					return err
+					return util.UnpackError(err)
 				}
-			}
-
-			switch interaction.Stream {
-			case api.Interaction_STDOUT:
-				if _, err := stdout.Write(interaction.Bytes); err != nil {
-					return err
-				}
-
-			case api.Interaction_STDERR:
-				if _, err := stderr.Write(interaction.Bytes); err != nil {
-					return err
-				}
-
-			default:
-				return fmt.Errorf("unsupported stream: %d", interaction.Stream)
 			}
 		}
 
 		return nil
 	} else {
-		return err
+		return util.UnpackError(err)
 	}
 }
 
-func (self *Client) InteractRelay(server api.Conductor_InteractServer, first *api.Interaction) error {
+func (self *Client) InteractRelay(server api.Conductor_InteractServer, start *api.Interaction_Start) error {
 	context, cancel := self.newContextWithCancel()
 	defer cancel()
 
 	if client, err := self.client.Interact(context); err == nil {
-		return util.InteractRelay(server, client, first, log)
+		return util.InteractRelay(server, client, start, log)
 	} else {
-		return err
+		return util.UnpackError(err)
 	}
 }

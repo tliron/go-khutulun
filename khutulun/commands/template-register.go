@@ -13,6 +13,6 @@ var templateRegisterCommand = &cobra.Command{
 	Short: "Register a template",
 	Args:  cobra.RangeArgs(1, 2),
 	Run: func(cmd *cobra.Command, args []string) {
-		registerArtifact(namespace, "template", args)
+		registerBundle(namespace, "template", args)
 	},
 }

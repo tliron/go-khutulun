@@ -27,10 +27,11 @@ type ConductorClient interface {
 	ListHosts(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (Conductor_ListHostsClient, error)
 	AddHost(ctx context.Context, in *HostIdentifier, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	ListNamespaces(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (Conductor_ListNamespacesClient, error)
-	ListArtifacts(ctx context.Context, in *ListArtifacts, opts ...grpc.CallOption) (Conductor_ListArtifactsClient, error)
-	GetArtifact(ctx context.Context, in *ArtifactIdentifier, opts ...grpc.CallOption) (Conductor_GetArtifactClient, error)
-	SetArtifact(ctx context.Context, opts ...grpc.CallOption) (Conductor_SetArtifactClient, error)
-	RemoveArtifact(ctx context.Context, in *ArtifactIdentifier, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	ListBundles(ctx context.Context, in *ListBundles, opts ...grpc.CallOption) (Conductor_ListBundlesClient, error)
+	ListBundleFiles(ctx context.Context, in *BundleIdentifier, opts ...grpc.CallOption) (Conductor_ListBundleFilesClient, error)
+	GetBundleFiles(ctx context.Context, in *GetBundleFiles, opts ...grpc.CallOption) (Conductor_GetBundleFilesClient, error)
+	SetBundleFiles(ctx context.Context, opts ...grpc.CallOption) (Conductor_SetBundleFilesClient, error)
+	RemoveBundle(ctx context.Context, in *BundleIdentifier, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	DeployService(ctx context.Context, in *DeployService, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	ListResources(ctx context.Context, in *ListResources, opts ...grpc.CallOption) (Conductor_ListResourcesClient, error)
 	Interact(ctx context.Context, opts ...grpc.CallOption) (Conductor_InteractClient, error)
@@ -126,12 +127,12 @@ func (x *conductorListNamespacesClient) Recv() (*Namespace, error) {
 	return m, nil
 }
 
-func (c *conductorClient) ListArtifacts(ctx context.Context, in *ListArtifacts, opts ...grpc.CallOption) (Conductor_ListArtifactsClient, error) {
-	stream, err := c.cc.NewStream(ctx, &Conductor_ServiceDesc.Streams[2], "/khutulun.Conductor/listArtifacts", opts...)
+func (c *conductorClient) ListBundles(ctx context.Context, in *ListBundles, opts ...grpc.CallOption) (Conductor_ListBundlesClient, error) {
+	stream, err := c.cc.NewStream(ctx, &Conductor_ServiceDesc.Streams[2], "/khutulun.Conductor/listBundles", opts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &conductorListArtifactsClient{stream}
+	x := &conductorListBundlesClient{stream}
 	if err := x.ClientStream.SendMsg(in); err != nil {
 		return nil, err
 	}
@@ -141,29 +142,29 @@ func (c *conductorClient) ListArtifacts(ctx context.Context, in *ListArtifacts, 
 	return x, nil
 }
 
-type Conductor_ListArtifactsClient interface {
-	Recv() (*ArtifactIdentifier, error)
+type Conductor_ListBundlesClient interface {
+	Recv() (*BundleIdentifier, error)
 	grpc.ClientStream
 }
 
-type conductorListArtifactsClient struct {
+type conductorListBundlesClient struct {
 	grpc.ClientStream
 }
 
-func (x *conductorListArtifactsClient) Recv() (*ArtifactIdentifier, error) {
-	m := new(ArtifactIdentifier)
+func (x *conductorListBundlesClient) Recv() (*BundleIdentifier, error) {
+	m := new(BundleIdentifier)
 	if err := x.ClientStream.RecvMsg(m); err != nil {
 		return nil, err
 	}
 	return m, nil
 }
 
-func (c *conductorClient) GetArtifact(ctx context.Context, in *ArtifactIdentifier, opts ...grpc.CallOption) (Conductor_GetArtifactClient, error) {
-	stream, err := c.cc.NewStream(ctx, &Conductor_ServiceDesc.Streams[3], "/khutulun.Conductor/getArtifact", opts...)
+func (c *conductorClient) ListBundleFiles(ctx context.Context, in *BundleIdentifier, opts ...grpc.CallOption) (Conductor_ListBundleFilesClient, error) {
+	stream, err := c.cc.NewStream(ctx, &Conductor_ServiceDesc.Streams[3], "/khutulun.Conductor/listBundleFiles", opts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &conductorGetArtifactClient{stream}
+	x := &conductorListBundleFilesClient{stream}
 	if err := x.ClientStream.SendMsg(in); err != nil {
 		return nil, err
 	}
@@ -173,47 +174,79 @@ func (c *conductorClient) GetArtifact(ctx context.Context, in *ArtifactIdentifie
 	return x, nil
 }
 
-type Conductor_GetArtifactClient interface {
-	Recv() (*ArtifactContent, error)
+type Conductor_ListBundleFilesClient interface {
+	Recv() (*BundleFile, error)
 	grpc.ClientStream
 }
 
-type conductorGetArtifactClient struct {
+type conductorListBundleFilesClient struct {
 	grpc.ClientStream
 }
 
-func (x *conductorGetArtifactClient) Recv() (*ArtifactContent, error) {
-	m := new(ArtifactContent)
+func (x *conductorListBundleFilesClient) Recv() (*BundleFile, error) {
+	m := new(BundleFile)
 	if err := x.ClientStream.RecvMsg(m); err != nil {
 		return nil, err
 	}
 	return m, nil
 }
 
-func (c *conductorClient) SetArtifact(ctx context.Context, opts ...grpc.CallOption) (Conductor_SetArtifactClient, error) {
-	stream, err := c.cc.NewStream(ctx, &Conductor_ServiceDesc.Streams[4], "/khutulun.Conductor/setArtifact", opts...)
+func (c *conductorClient) GetBundleFiles(ctx context.Context, in *GetBundleFiles, opts ...grpc.CallOption) (Conductor_GetBundleFilesClient, error) {
+	stream, err := c.cc.NewStream(ctx, &Conductor_ServiceDesc.Streams[4], "/khutulun.Conductor/getBundleFiles", opts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &conductorSetArtifactClient{stream}
+	x := &conductorGetBundleFilesClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
 	return x, nil
 }
 
-type Conductor_SetArtifactClient interface {
-	Send(*ArtifactContent) error
+type Conductor_GetBundleFilesClient interface {
+	Recv() (*BundleContent, error)
+	grpc.ClientStream
+}
+
+type conductorGetBundleFilesClient struct {
+	grpc.ClientStream
+}
+
+func (x *conductorGetBundleFilesClient) Recv() (*BundleContent, error) {
+	m := new(BundleContent)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+func (c *conductorClient) SetBundleFiles(ctx context.Context, opts ...grpc.CallOption) (Conductor_SetBundleFilesClient, error) {
+	stream, err := c.cc.NewStream(ctx, &Conductor_ServiceDesc.Streams[5], "/khutulun.Conductor/setBundleFiles", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &conductorSetBundleFilesClient{stream}
+	return x, nil
+}
+
+type Conductor_SetBundleFilesClient interface {
+	Send(*BundleContent) error
 	CloseAndRecv() (*emptypb.Empty, error)
 	grpc.ClientStream
 }
 
-type conductorSetArtifactClient struct {
+type conductorSetBundleFilesClient struct {
 	grpc.ClientStream
 }
 
-func (x *conductorSetArtifactClient) Send(m *ArtifactContent) error {
+func (x *conductorSetBundleFilesClient) Send(m *BundleContent) error {
 	return x.ClientStream.SendMsg(m)
 }
 
-func (x *conductorSetArtifactClient) CloseAndRecv() (*emptypb.Empty, error) {
+func (x *conductorSetBundleFilesClient) CloseAndRecv() (*emptypb.Empty, error) {
 	if err := x.ClientStream.CloseSend(); err != nil {
 		return nil, err
 	}
@@ -224,9 +257,9 @@ func (x *conductorSetArtifactClient) CloseAndRecv() (*emptypb.Empty, error) {
 	return m, nil
 }
 
-func (c *conductorClient) RemoveArtifact(ctx context.Context, in *ArtifactIdentifier, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+func (c *conductorClient) RemoveBundle(ctx context.Context, in *BundleIdentifier, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	out := new(emptypb.Empty)
-	err := c.cc.Invoke(ctx, "/khutulun.Conductor/removeArtifact", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/khutulun.Conductor/removeBundle", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -243,7 +276,7 @@ func (c *conductorClient) DeployService(ctx context.Context, in *DeployService, 
 }
 
 func (c *conductorClient) ListResources(ctx context.Context, in *ListResources, opts ...grpc.CallOption) (Conductor_ListResourcesClient, error) {
-	stream, err := c.cc.NewStream(ctx, &Conductor_ServiceDesc.Streams[5], "/khutulun.Conductor/listResources", opts...)
+	stream, err := c.cc.NewStream(ctx, &Conductor_ServiceDesc.Streams[6], "/khutulun.Conductor/listResources", opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -275,7 +308,7 @@ func (x *conductorListResourcesClient) Recv() (*ResourceIdentifier, error) {
 }
 
 func (c *conductorClient) Interact(ctx context.Context, opts ...grpc.CallOption) (Conductor_InteractClient, error) {
-	stream, err := c.cc.NewStream(ctx, &Conductor_ServiceDesc.Streams[6], "/khutulun.Conductor/interact", opts...)
+	stream, err := c.cc.NewStream(ctx, &Conductor_ServiceDesc.Streams[7], "/khutulun.Conductor/interact", opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -313,10 +346,11 @@ type ConductorServer interface {
 	ListHosts(*emptypb.Empty, Conductor_ListHostsServer) error
 	AddHost(context.Context, *HostIdentifier) (*emptypb.Empty, error)
 	ListNamespaces(*emptypb.Empty, Conductor_ListNamespacesServer) error
-	ListArtifacts(*ListArtifacts, Conductor_ListArtifactsServer) error
-	GetArtifact(*ArtifactIdentifier, Conductor_GetArtifactServer) error
-	SetArtifact(Conductor_SetArtifactServer) error
-	RemoveArtifact(context.Context, *ArtifactIdentifier) (*emptypb.Empty, error)
+	ListBundles(*ListBundles, Conductor_ListBundlesServer) error
+	ListBundleFiles(*BundleIdentifier, Conductor_ListBundleFilesServer) error
+	GetBundleFiles(*GetBundleFiles, Conductor_GetBundleFilesServer) error
+	SetBundleFiles(Conductor_SetBundleFilesServer) error
+	RemoveBundle(context.Context, *BundleIdentifier) (*emptypb.Empty, error)
 	DeployService(context.Context, *DeployService) (*emptypb.Empty, error)
 	ListResources(*ListResources, Conductor_ListResourcesServer) error
 	Interact(Conductor_InteractServer) error
@@ -339,17 +373,20 @@ func (UnimplementedConductorServer) AddHost(context.Context, *HostIdentifier) (*
 func (UnimplementedConductorServer) ListNamespaces(*emptypb.Empty, Conductor_ListNamespacesServer) error {
 	return status.Errorf(codes.Unimplemented, "method ListNamespaces not implemented")
 }
-func (UnimplementedConductorServer) ListArtifacts(*ListArtifacts, Conductor_ListArtifactsServer) error {
-	return status.Errorf(codes.Unimplemented, "method ListArtifacts not implemented")
+func (UnimplementedConductorServer) ListBundles(*ListBundles, Conductor_ListBundlesServer) error {
+	return status.Errorf(codes.Unimplemented, "method ListBundles not implemented")
 }
-func (UnimplementedConductorServer) GetArtifact(*ArtifactIdentifier, Conductor_GetArtifactServer) error {
-	return status.Errorf(codes.Unimplemented, "method GetArtifact not implemented")
+func (UnimplementedConductorServer) ListBundleFiles(*BundleIdentifier, Conductor_ListBundleFilesServer) error {
+	return status.Errorf(codes.Unimplemented, "method ListBundleFiles not implemented")
 }
-func (UnimplementedConductorServer) SetArtifact(Conductor_SetArtifactServer) error {
-	return status.Errorf(codes.Unimplemented, "method SetArtifact not implemented")
+func (UnimplementedConductorServer) GetBundleFiles(*GetBundleFiles, Conductor_GetBundleFilesServer) error {
+	return status.Errorf(codes.Unimplemented, "method GetBundleFiles not implemented")
 }
-func (UnimplementedConductorServer) RemoveArtifact(context.Context, *ArtifactIdentifier) (*emptypb.Empty, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method RemoveArtifact not implemented")
+func (UnimplementedConductorServer) SetBundleFiles(Conductor_SetBundleFilesServer) error {
+	return status.Errorf(codes.Unimplemented, "method SetBundleFiles not implemented")
+}
+func (UnimplementedConductorServer) RemoveBundle(context.Context, *BundleIdentifier) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RemoveBundle not implemented")
 }
 func (UnimplementedConductorServer) DeployService(context.Context, *DeployService) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeployService not implemented")
@@ -451,88 +488,109 @@ func (x *conductorListNamespacesServer) Send(m *Namespace) error {
 	return x.ServerStream.SendMsg(m)
 }
 
-func _Conductor_ListArtifacts_Handler(srv interface{}, stream grpc.ServerStream) error {
-	m := new(ListArtifacts)
+func _Conductor_ListBundles_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(ListBundles)
 	if err := stream.RecvMsg(m); err != nil {
 		return err
 	}
-	return srv.(ConductorServer).ListArtifacts(m, &conductorListArtifactsServer{stream})
+	return srv.(ConductorServer).ListBundles(m, &conductorListBundlesServer{stream})
 }
 
-type Conductor_ListArtifactsServer interface {
-	Send(*ArtifactIdentifier) error
+type Conductor_ListBundlesServer interface {
+	Send(*BundleIdentifier) error
 	grpc.ServerStream
 }
 
-type conductorListArtifactsServer struct {
+type conductorListBundlesServer struct {
 	grpc.ServerStream
 }
 
-func (x *conductorListArtifactsServer) Send(m *ArtifactIdentifier) error {
+func (x *conductorListBundlesServer) Send(m *BundleIdentifier) error {
 	return x.ServerStream.SendMsg(m)
 }
 
-func _Conductor_GetArtifact_Handler(srv interface{}, stream grpc.ServerStream) error {
-	m := new(ArtifactIdentifier)
+func _Conductor_ListBundleFiles_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(BundleIdentifier)
 	if err := stream.RecvMsg(m); err != nil {
 		return err
 	}
-	return srv.(ConductorServer).GetArtifact(m, &conductorGetArtifactServer{stream})
+	return srv.(ConductorServer).ListBundleFiles(m, &conductorListBundleFilesServer{stream})
 }
 
-type Conductor_GetArtifactServer interface {
-	Send(*ArtifactContent) error
+type Conductor_ListBundleFilesServer interface {
+	Send(*BundleFile) error
 	grpc.ServerStream
 }
 
-type conductorGetArtifactServer struct {
+type conductorListBundleFilesServer struct {
 	grpc.ServerStream
 }
 
-func (x *conductorGetArtifactServer) Send(m *ArtifactContent) error {
+func (x *conductorListBundleFilesServer) Send(m *BundleFile) error {
 	return x.ServerStream.SendMsg(m)
 }
 
-func _Conductor_SetArtifact_Handler(srv interface{}, stream grpc.ServerStream) error {
-	return srv.(ConductorServer).SetArtifact(&conductorSetArtifactServer{stream})
+func _Conductor_GetBundleFiles_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(GetBundleFiles)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(ConductorServer).GetBundleFiles(m, &conductorGetBundleFilesServer{stream})
 }
 
-type Conductor_SetArtifactServer interface {
+type Conductor_GetBundleFilesServer interface {
+	Send(*BundleContent) error
+	grpc.ServerStream
+}
+
+type conductorGetBundleFilesServer struct {
+	grpc.ServerStream
+}
+
+func (x *conductorGetBundleFilesServer) Send(m *BundleContent) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+func _Conductor_SetBundleFiles_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(ConductorServer).SetBundleFiles(&conductorSetBundleFilesServer{stream})
+}
+
+type Conductor_SetBundleFilesServer interface {
 	SendAndClose(*emptypb.Empty) error
-	Recv() (*ArtifactContent, error)
+	Recv() (*BundleContent, error)
 	grpc.ServerStream
 }
 
-type conductorSetArtifactServer struct {
+type conductorSetBundleFilesServer struct {
 	grpc.ServerStream
 }
 
-func (x *conductorSetArtifactServer) SendAndClose(m *emptypb.Empty) error {
+func (x *conductorSetBundleFilesServer) SendAndClose(m *emptypb.Empty) error {
 	return x.ServerStream.SendMsg(m)
 }
 
-func (x *conductorSetArtifactServer) Recv() (*ArtifactContent, error) {
-	m := new(ArtifactContent)
+func (x *conductorSetBundleFilesServer) Recv() (*BundleContent, error) {
+	m := new(BundleContent)
 	if err := x.ServerStream.RecvMsg(m); err != nil {
 		return nil, err
 	}
 	return m, nil
 }
 
-func _Conductor_RemoveArtifact_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ArtifactIdentifier)
+func _Conductor_RemoveBundle_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(BundleIdentifier)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ConductorServer).RemoveArtifact(ctx, in)
+		return srv.(ConductorServer).RemoveBundle(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/khutulun.Conductor/removeArtifact",
+		FullMethod: "/khutulun.Conductor/removeBundle",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ConductorServer).RemoveArtifact(ctx, req.(*ArtifactIdentifier))
+		return srv.(ConductorServer).RemoveBundle(ctx, req.(*BundleIdentifier))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -618,8 +676,8 @@ var Conductor_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Conductor_AddHost_Handler,
 		},
 		{
-			MethodName: "removeArtifact",
-			Handler:    _Conductor_RemoveArtifact_Handler,
+			MethodName: "removeBundle",
+			Handler:    _Conductor_RemoveBundle_Handler,
 		},
 		{
 			MethodName: "deployService",
@@ -638,18 +696,23 @@ var Conductor_ServiceDesc = grpc.ServiceDesc{
 			ServerStreams: true,
 		},
 		{
-			StreamName:    "listArtifacts",
-			Handler:       _Conductor_ListArtifacts_Handler,
+			StreamName:    "listBundles",
+			Handler:       _Conductor_ListBundles_Handler,
 			ServerStreams: true,
 		},
 		{
-			StreamName:    "getArtifact",
-			Handler:       _Conductor_GetArtifact_Handler,
+			StreamName:    "listBundleFiles",
+			Handler:       _Conductor_ListBundleFiles_Handler,
 			ServerStreams: true,
 		},
 		{
-			StreamName:    "setArtifact",
-			Handler:       _Conductor_SetArtifact_Handler,
+			StreamName:    "getBundleFiles",
+			Handler:       _Conductor_GetBundleFiles_Handler,
+			ServerStreams: true,
+		},
+		{
+			StreamName:    "setBundleFiles",
+			Handler:       _Conductor_SetBundleFiles_Handler,
 			ClientStreams: true,
 		},
 		{
