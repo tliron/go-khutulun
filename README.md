@@ -49,9 +49,11 @@ experience as well as resilience in the case of failures and restarts.
 Clusters
 --------
 
-Cluster formation is emergent and based on the [SWIM gossip protocol](https://ieeexplore.ieee.org/document/1028914).
-At the minimum you need just one "seed" host to bootstrap it, but because all hosts are "masters"
-the cluster can survive with as little as one arbitrary host.
+Cluster formation is emergent and based on the
+[SWIM gossip protocol](https://ieeexplore.ieee.org/document/1028914), with optional support for UDP
+multicast for automatic mutual discovery. At the minimum you need just one "seed" host to bootstrap
+a cluster, but because all hosts are "masters" the cluster can survive with as little as one arbitrary
+host.
 
 Khutulun doesn't distribute its management state among hosts. Instead it simply requires that all
 hosts have access to the same shared filesystem. A simple NFS share should be enough even for large
@@ -59,11 +61,16 @@ clusters. Coordination is handled via [flock](https://man7.org/linux/man-pages/m
 
 What about setting up the cluster hosts? Bare metal tasks like partitioning drives, installing
 operating systems, and configuring networking and other essential services? Or cloud tasks like
-provisioning virtual machines, virtual storage, and virtual networks? Simply put, it's out of the
-scope of Khutulun. Use a dedicated infrastructure manager instead. Khutulun can interact with such
+provisioning virtual machines, virtual storage, and virtual networks? Simply put, that work is out of
+the scope of Khutulun. Use a dedicated infrastructure manager instead. Khutulun can interact with such
 tools, for example to allow workloads to modify their own cluster, or to use a Khutulun cluster as
-a dedicated "management cluster" that, well, manages the hardware of all other clusters. Included is
-a plugin for [Terraform](https://www.terraform.io/) that allows for that.
+a dedicated "management cluster" that, well, manages the hardware of all other clusters.
+
+Included is are plugins for [Terraform](https://www.terraform.io/) and Ansible that make it easy
+to install Khutulun on your infrastructure while preparing it.
+
+By the way, hosts do not have to be dedicated to Khutulun and its workloads. You can use Khutulun to
+manage services across many machines without having to conceptualize them as a "cloud".
 
 Get It
 ------

@@ -132,11 +132,37 @@ func (self *Conductor) getBundleDir(namespace string, type_ string, name string)
 }
 
 func (self *Conductor) getBundleMainFile(namespace string, type_ string, name string) string {
+	dir := self.getBundleDir(namespace, type_, name)
 	switch type_ {
-	case "template", "profile", "clout":
-		return filepath.Join(self.getBundleDir(namespace, type_, name), type_+".yaml")
+	case "template":
+		if entries, err := os.ReadDir(dir); err == nil {
+			for _, entry := range entries {
+				path := filepath.Join(dir, entry.Name())
+				if filepath.Ext(path) == ".yaml" {
+					return path
+				}
+			}
+		}
+		return ""
+
+	case "plugin":
+		if entries, err := os.ReadDir(dir); err == nil {
+			for _, entry := range entries {
+				path := filepath.Join(dir, entry.Name())
+				if stat, err := os.Stat(path); err == nil {
+					if stat.Mode()&0100 != 0 {
+						return path
+					}
+				}
+			}
+		}
+		return ""
+
+	case "profile", "clout":
+		return filepath.Join(dir, type_+".yaml")
+
 	default:
-		return filepath.Join(self.getBundleDir(namespace, type_, name), name)
+		return filepath.Join(dir, name)
 	}
 }
 

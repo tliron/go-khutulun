@@ -46,8 +46,10 @@ func registerBundle(namespace string, type_ string, args []string) {
 					util.FailOnError(err)
 					bundleFiles = append(bundleFiles, clientpkg.SetBundleFile{
 						SourcePath: path,
-						BundlePath: path[length:],
-						Executable: stat.Mode()&0100 != 0,
+						BundleFile: clientpkg.BundleFile{
+							Path:       path[length:],
+							Executable: stat.Mode()&0100 != 0,
+						},
 					})
 				}
 				return nil
@@ -59,8 +61,10 @@ func registerBundle(namespace string, type_ string, args []string) {
 			// TODO: handle archives
 			bundleFiles = append(bundleFiles, clientpkg.SetBundleFile{
 				SourcePath: path,
-				BundlePath: filepath.Base(path),
-				Executable: stat.Mode()&0100 != 0,
+				BundleFile: clientpkg.BundleFile{
+					Path:       filepath.Base(path),
+					Executable: stat.Mode()&0100 != 0,
+				},
 			})
 		}
 

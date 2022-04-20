@@ -65,6 +65,6 @@ func (self *Client) AddHost(name string, address string) error {
 	if _, err := self.client.AddHost(context, &identifier); err == nil {
 		return nil
 	} else {
-		return util.UnpackError(err)
+		return util.UnpackGrpcError(err)
 	}
 }

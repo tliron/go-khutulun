@@ -23,8 +23,12 @@ func NewServer(conductor *Conductor) *Server {
 
 func (self *Server) Start(cluster bool, grpc bool, http bool, reconcile bool) error {
 	if cluster {
-		self.conductor.cluster = NewCluster()
-		if err := self.conductor.cluster.Start(); err != nil {
+		var err error
+		if self.conductor.cluster, err = NewCluster(); err == nil {
+			if err := self.conductor.cluster.Start(); err != nil {
+				return err
+			}
+		} else {
 			return err
 		}
 	}
@@ -60,6 +64,11 @@ func (self *Server) Start(cluster bool, grpc bool, http bool, reconcile bool) er
 		self.ticker = NewTicker(TICKER_FREQUENCY, func() {
 			self.conductor.Schedule()
 			self.conductor.Reconcile()
+			if self.conductor.cluster != nil {
+				if err := self.conductor.cluster.Announce(); err != nil {
+					log.Errorf("%s", err.Error())
+				}
+			}
 		})
 		self.ticker.Start()
 	}

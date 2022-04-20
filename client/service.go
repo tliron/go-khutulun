@@ -22,5 +22,5 @@ func (self *Client) DeployService(serviceNamespace string, serviceName string, t
 	defer cancel()
 
 	_, err := self.client.DeployService(context, &args)
-	return util.UnpackError(err)
+	return util.UnpackGrpcError(err)
 }

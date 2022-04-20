@@ -3,6 +3,7 @@ package util
 import (
 	"fmt"
 
+	"google.golang.org/grpc/codes"
 	statuspkg "google.golang.org/grpc/status"
 )
 
@@ -18,9 +19,13 @@ func (self statusError) Unwrap() error {
 	return self.status.Err()
 }
 
-func UnpackError(err error) error {
+func UnpackGrpcError(err error) error {
 	if status, ok := statuspkg.FromError(err); ok {
-		return statusError{status}
+		if status.Code() != codes.OK {
+			return statusError{status}
+		} else {
+			return nil
+		}
 	} else {
 		return err
 	}

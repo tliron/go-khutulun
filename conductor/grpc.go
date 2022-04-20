@@ -77,7 +77,7 @@ func (self *GRPC) ListHosts(empty *emptypb.Empty, server api.Conductor_ListHosts
 	grpcLog.Info("listHosts")
 
 	if self.conductor.cluster != nil {
-		for _, member := range self.conductor.cluster.ListMembers() {
+		for _, member := range self.conductor.cluster.ListHosts() {
 			server.Send(&api.HostIdentifier{
 				Name:    member.name,
 				Address: member.address,
@@ -94,7 +94,7 @@ func (self *GRPC) AddHost(context contextpkg.Context, identifier *api.HostIdenti
 	grpcLog.Info("addHost")
 
 	if self.conductor.cluster != nil {
-		if err := self.conductor.cluster.AddMembers([]string{identifier.Address}); err == nil {
+		if err := self.conductor.cluster.AddHosts([]string{identifier.Address}); err == nil {
 			return new(emptypb.Empty), nil
 		} else {
 			return new(emptypb.Empty), statuspkg.Errorf(codes.Aborted, "%s", err.Error())
@@ -248,6 +248,7 @@ func (self *GRPC) SetBundleFiles(server api.Conductor_SetBundleFilesServer) erro
 								if err := file.Close(); err != nil {
 									return statuspkg.Errorf(codes.Aborted, "%s", err.Error())
 								}
+								file = nil
 							}
 							path := filepath.Join(self.conductor.getBundleDir(namespace, type_, name), content.File.Path)
 							if err := os.MkdirAll(filepath.Dir(path), 0777); err != nil {
@@ -265,7 +266,7 @@ func (self *GRPC) SetBundleFiles(server api.Conductor_SetBundleFilesServer) erro
 						}
 
 						if file == nil {
-							return statuspkg.Errorf(codes.Aborted, "message must container \"fileStart\"")
+							return statuspkg.Errorf(codes.Aborted, "message must container \"file\"")
 						}
 
 						if _, err := file.Write(content.Bytes); err != nil {
@@ -279,7 +280,9 @@ func (self *GRPC) SetBundleFiles(server api.Conductor_SetBundleFilesServer) erro
 							break
 						} else {
 							if file != nil {
-								file.Close()
+								if err := file.Close(); err != nil {
+									grpcLog.Errorf("file close: %s", err.Error())
+								}
 							}
 							return statuspkg.Errorf(codes.Aborted, "%s", err.Error())
 						}
@@ -287,8 +290,11 @@ func (self *GRPC) SetBundleFiles(server api.Conductor_SetBundleFilesServer) erro
 				}
 
 				if file != nil {
-					file.Close()
+					if err := file.Close(); err != nil {
+						grpcLog.Errorf("file close: %s", err.Error())
+					}
 				}
+
 				return nil
 			} else {
 				return statuspkg.Errorf(codes.Aborted, "%s", err.Error())

@@ -22,9 +22,8 @@ type BundleFile struct {
 }
 
 type SetBundleFile struct {
+	BundleFile
 	SourcePath string
-	BundlePath string
-	Executable bool
 }
 
 func (self *Client) ListBundles(namespace string, type_ string) ([]BundleIdentifier, error) {
@@ -45,7 +44,7 @@ func (self *Client) ListBundles(namespace string, type_ string) ([]BundleIdentif
 				if err == io.EOF {
 					break
 				} else {
-					return nil, util.UnpackError(err)
+					return nil, util.UnpackGrpcError(err)
 				}
 			}
 
@@ -58,7 +57,7 @@ func (self *Client) ListBundles(namespace string, type_ string) ([]BundleIdentif
 
 		return bundles, nil
 	} else {
-		return nil, util.UnpackError(err)
+		return nil, util.UnpackGrpcError(err)
 	}
 }
 
@@ -85,14 +84,14 @@ func (self *Client) ListBundleFiles(namespace string, type_ string, name string)
 				if err == io.EOF {
 					break
 				} else {
-					return nil, util.UnpackError(err)
+					return nil, util.UnpackGrpcError(err)
 				}
 			}
 		}
 
 		return bundleFiles, nil
 	} else {
-		return nil, util.UnpackError(err)
+		return nil, util.UnpackGrpcError(err)
 	}
 }
 
@@ -116,14 +115,14 @@ func (self *Client) GetBundleFile(namespace string, type_ string, name string, p
 				if err == io.EOF {
 					break
 				} else {
-					return util.UnpackError(err)
+					return util.UnpackGrpcError(err)
 				}
 			}
 		}
 
 		return nil
 	} else {
-		return util.UnpackError(err)
+		return util.UnpackGrpcError(err)
 	}
 }
 
@@ -139,7 +138,7 @@ func (self *Client) SetBundleFiles(namespace string, type_ string, name string, 
 		}
 
 		if err := client.Send(&api.BundleContent{Start: &api.BundleContent_Start{Identifier: &identifier}}); err != nil {
-			return util.UnpackError(err)
+			return util.UnpackGrpcError(err)
 		}
 
 		buffer := make([]byte, BUFFER_SIZE)
@@ -148,7 +147,7 @@ func (self *Client) SetBundleFiles(namespace string, type_ string, name string, 
 			if file, err := os.Open(bundleFile.SourcePath); err == nil {
 				content := api.BundleContent{
 					File: &api.BundleFile{
-						Path:       bundleFile.BundlePath,
+						Path:       bundleFile.Path,
 						Executable: bundleFile.Executable,
 					},
 				}
@@ -157,17 +156,17 @@ func (self *Client) SetBundleFiles(namespace string, type_ string, name string, 
 					if err := file.Close(); err != nil {
 						log.Errorf("file close: %s", err)
 					}
-					return util.UnpackError(err)
+					return util.UnpackGrpcError(err)
 				}
 
 				for {
 					if count, err := file.Read(buffer); err == nil {
-						content := api.BundleContent{Bytes: buffer[:count]}
+						content = api.BundleContent{Bytes: buffer[:count]}
 						if err := client.Send(&content); err != nil {
 							if err := file.Close(); err != nil {
 								log.Errorf("file close: %s", err)
 							}
-							return util.UnpackError(err)
+							return util.UnpackGrpcError(err)
 						}
 					} else {
 						if err == io.EOF {
@@ -176,7 +175,7 @@ func (self *Client) SetBundleFiles(namespace string, type_ string, name string, 
 							if err := file.Close(); err != nil {
 								log.Errorf("file close: %s", err)
 							}
-							return util.UnpackError(err)
+							return util.UnpackGrpcError(err)
 						}
 					}
 				}
@@ -185,20 +184,17 @@ func (self *Client) SetBundleFiles(namespace string, type_ string, name string, 
 					log.Errorf("file close: %s", err)
 				}
 			} else {
-				return util.UnpackError(err)
+				return util.UnpackGrpcError(err)
 			}
 		}
 
-		return nil
-
-		/*
-			if _, err := client.CloseAndRecv(); err == io.EOF {
-				return nil
-			} else {
-				return util.UnpackError(err)
-			}*/
+		if _, err := client.CloseAndRecv(); err == io.EOF {
+			return nil
+		} else {
+			return util.UnpackGrpcError(err)
+		}
 	} else {
-		return util.UnpackError(err)
+		return util.UnpackGrpcError(err)
 	}
 }
 
@@ -213,5 +209,5 @@ func (self *Client) RemoveBundle(namespace string, type_ string, name string) er
 	}
 
 	_, err := self.client.RemoveBundle(context, &identifier)
-	return util.UnpackError(err)
+	return util.UnpackGrpcError(err)
 }

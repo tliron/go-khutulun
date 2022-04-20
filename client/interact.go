@@ -51,7 +51,7 @@ func (self *Client) Interact(identifier []string, stdin io.Reader, stdout io.Wri
 		}
 
 		if err := client.Send(&interaction); err != nil {
-			return util.UnpackError(err)
+			return util.UnpackGrpcError(err)
 		}
 
 		// Read and send stdin
@@ -95,14 +95,14 @@ func (self *Client) Interact(identifier []string, stdin io.Reader, stdout io.Wri
 				if err == io.EOF {
 					break
 				} else {
-					return util.UnpackError(err)
+					return util.UnpackGrpcError(err)
 				}
 			}
 		}
 
 		return nil
 	} else {
-		return util.UnpackError(err)
+		return util.UnpackGrpcError(err)
 	}
 }
 
@@ -113,6 +113,6 @@ func (self *Client) InteractRelay(server api.Conductor_InteractServer, start *ap
 	if client, err := self.client.Interact(context); err == nil {
 		return util.InteractRelay(server, client, start, log)
 	} else {
-		return util.UnpackError(err)
+		return util.UnpackGrpcError(err)
 	}
 }
