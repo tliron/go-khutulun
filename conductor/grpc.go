@@ -180,7 +180,8 @@ func (self *GRPC) GetBundleFiles(getBundleFiles *api.GetBundleFiles, server api.
 		for _, path := range getBundleFiles.Paths {
 			if file, err := os.Open(filepath.Join(dir, path)); err == nil {
 				for {
-					if count, err := file.Read(buffer); err == nil {
+					count, err := file.Read(buffer)
+					if count > 0 {
 						content := api.BundleContent{Bytes: buffer[:count]}
 						if err := server.Send(&content); err != nil {
 							if err := file.Close(); err != nil {
@@ -188,7 +189,8 @@ func (self *GRPC) GetBundleFiles(getBundleFiles *api.GetBundleFiles, server api.
 							}
 							return statuspkg.Errorf(codes.Aborted, "%s", err.Error())
 						}
-					} else {
+					}
+					if err != nil {
 						if err == io.EOF {
 							break
 						} else {
@@ -243,7 +245,10 @@ func (self *GRPC) SetBundleFiles(server api.Conductor_SetBundleFilesServer) erro
 						}
 
 						if content.File != nil {
-							// TODO: don't overwrite .lock file
+							if content.File.Path == LOCK_FILE {
+								// TODO
+							}
+
 							if file != nil {
 								if err := file.Close(); err != nil {
 									return statuspkg.Errorf(codes.Aborted, "%s", err.Error())

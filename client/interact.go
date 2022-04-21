@@ -58,7 +58,8 @@ func (self *Client) Interact(identifier []string, stdin io.Reader, stdout io.Wri
 		go func() {
 			var buffer []byte = make([]byte, 1)
 			for {
-				if _, err := stdin.Read(buffer); err == nil {
+				count, err := stdin.Read(buffer)
+				if count > 0 {
 					if err := client.Send(&api.Interaction{
 						Stream: api.Interaction_STDIN,
 						Bytes:  buffer,
@@ -66,7 +67,8 @@ func (self *Client) Interact(identifier []string, stdin io.Reader, stdout io.Wri
 						log.Errorf("client send: %s", err.Error())
 						return
 					}
-				} else {
+				}
+				if err != nil {
 					if err != io.EOF {
 						log.Errorf("stdin read: %s", err.Error())
 					}

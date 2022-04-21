@@ -2,7 +2,6 @@ package client
 
 import (
 	"io"
-	"os"
 
 	"github.com/tliron/khutulun/api"
 	"github.com/tliron/khutulun/util"
@@ -23,7 +22,7 @@ type BundleFile struct {
 
 type SetBundleFile struct {
 	BundleFile
-	SourcePath string
+	Reader io.Reader
 }
 
 func (self *Client) ListBundles(namespace string, type_ string) ([]BundleIdentifier, error) {
@@ -144,47 +143,32 @@ func (self *Client) SetBundleFiles(namespace string, type_ string, name string, 
 		buffer := make([]byte, BUFFER_SIZE)
 
 		for _, bundleFile := range bundleFiles {
-			if file, err := os.Open(bundleFile.SourcePath); err == nil {
-				content := api.BundleContent{
-					File: &api.BundleFile{
-						Path:       bundleFile.Path,
-						Executable: bundleFile.Executable,
-					},
-				}
+			content := api.BundleContent{
+				File: &api.BundleFile{
+					Path:       bundleFile.Path,
+					Executable: bundleFile.Executable,
+				},
+			}
 
-				if err := client.Send(&content); err != nil {
-					if err := file.Close(); err != nil {
-						log.Errorf("file close: %s", err)
-					}
-					return util.UnpackGrpcError(err)
-				}
-
-				for {
-					if count, err := file.Read(buffer); err == nil {
-						content = api.BundleContent{Bytes: buffer[:count]}
-						if err := client.Send(&content); err != nil {
-							if err := file.Close(); err != nil {
-								log.Errorf("file close: %s", err)
-							}
-							return util.UnpackGrpcError(err)
-						}
-					} else {
-						if err == io.EOF {
-							break
-						} else {
-							if err := file.Close(); err != nil {
-								log.Errorf("file close: %s", err)
-							}
-							return util.UnpackGrpcError(err)
-						}
-					}
-				}
-
-				if err := file.Close(); err != nil {
-					log.Errorf("file close: %s", err)
-				}
-			} else {
+			if err := client.Send(&content); err != nil {
 				return util.UnpackGrpcError(err)
+			}
+
+			for {
+				count, err := bundleFile.Reader.Read(buffer)
+				if count > 0 {
+					content = api.BundleContent{Bytes: buffer[:count]}
+					if err := client.Send(&content); err != nil {
+						return util.UnpackGrpcError(err)
+					}
+				}
+				if err != nil {
+					if err == io.EOF {
+						break
+					} else {
+						return util.UnpackGrpcError(err)
+					}
+				}
 			}
 		}
 

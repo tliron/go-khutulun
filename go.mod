@@ -4,6 +4,7 @@ go 1.18
 
 require (
 	github.com/danjacques/gofslock v0.0.0-20220131014315-6e321f4509c8
+	github.com/fsnotify/fsnotify v1.5.1
 	github.com/hashicorp/go-plugin v1.4.3
 	github.com/hashicorp/memberlist v0.3.1
 	github.com/rakyll/statik v0.1.7
@@ -32,7 +33,6 @@ require (
 	github.com/dop251/goja v0.0.0-20220408131256-ffe77e20c6f1 // indirect
 	github.com/emirpasic/gods v1.12.0 // indirect
 	github.com/fatih/color v1.13.0 // indirect
-	github.com/fsnotify/fsnotify v1.5.1 // indirect
 	github.com/fxamacker/cbor/v2 v2.4.0 // indirect
 	github.com/go-git/gcfg v1.5.0 // indirect
 	github.com/go-git/go-billy/v5 v5.3.1 // indirect

@@ -54,8 +54,8 @@ func StartCommand(command *exec.Command, server Interactor, log logging.Logger) 
 	go func() {
 		for {
 			select {
-			case buffer := <-process.Stdout:
-				if buffer == nil {
+			case buffer, ok := <-process.Stdout:
+				if !ok {
 					log.Debug("stdout closed")
 					return
 				}
@@ -65,8 +65,8 @@ func StartCommand(command *exec.Command, server Interactor, log logging.Logger) 
 					Bytes:  buffer,
 				})
 
-			case buffer := <-process.Stderr:
-				if buffer == nil {
+			case buffer, ok := <-process.Stderr:
+				if !ok {
 					log.Debug("stderr closed")
 					return
 				}

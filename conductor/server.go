@@ -1,6 +1,7 @@
 package conductor
 
 import (
+	"fmt"
 	"time"
 )
 
@@ -12,6 +13,7 @@ const TICKER_FREQUENCY = 10 * time.Second
 
 type Server struct {
 	conductor *Conductor
+	watcher   *Watcher
 	grpc      *GRPC
 	http      *HTTP
 	ticker    *Ticker
@@ -21,9 +23,20 @@ func NewServer(conductor *Conductor) *Server {
 	return &Server{conductor: conductor}
 }
 
-func (self *Server) Start(cluster bool, grpc bool, http bool, reconcile bool) error {
+func (self *Server) Start(watcher bool, cluster bool, grpc bool, http bool, ticker bool) error {
+	var err error
+
+	if watcher {
+		if self.watcher, err = NewWatcher(self.conductor, func(path string) {
+			fmt.Println(path)
+		}); err == nil {
+			self.watcher.Start()
+		} else {
+			return err
+		}
+	}
+
 	if cluster {
-		var err error
 		if self.conductor.cluster, err = NewCluster(); err == nil {
 			if err := self.conductor.cluster.Start(); err != nil {
 				return err
@@ -60,7 +73,7 @@ func (self *Server) Start(cluster bool, grpc bool, http bool, reconcile bool) er
 		}
 	}
 
-	if reconcile {
+	if ticker {
 		self.ticker = NewTicker(TICKER_FREQUENCY, func() {
 			self.conductor.Schedule()
 			self.conductor.Reconcile()
@@ -95,6 +108,12 @@ func (self *Server) Stop() error {
 
 	if self.conductor.cluster != nil {
 		if err_ := self.conductor.cluster.Stop(); err_ != nil {
+			err = err_
+		}
+	}
+
+	if self.watcher != nil {
+		if err_ := self.watcher.Stop(); err_ != nil {
 			err = err_
 		}
 	}

@@ -10,3 +10,4 @@ var log = logging.GetLogger(toolName)
 
 var clusterName string
 var pseudoTerminal bool
+var unpack string

@@ -21,7 +21,7 @@ var serverCommand = &cobra.Command{
 		util.OnExitError(conductor.Release)
 		server := conductorpkg.NewServer(conductor)
 		util.OnExitError(server.Stop)
-		err := server.Start(true, true, true, true)
+		err := server.Start(true, true, true, true, true)
 		util.FailOnError(err)
 		select {}
 	},

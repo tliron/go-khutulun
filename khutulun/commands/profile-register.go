@@ -6,6 +6,7 @@ import (
 
 func init() {
 	profileCommand.AddCommand(profileRegisterCommand)
+	profileRegisterCommand.Flags().StringVarP(&unpack, "unpack", "u", "auto", "unpack archive (\"auto\" or \"false\")")
 }
 
 var profileRegisterCommand = &cobra.Command{

@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/danjacques/gofslock/fslock"
+	"github.com/tliron/khutulun/util"
 )
 
 const LOCK_FILE = ".lock"
@@ -150,7 +151,7 @@ func (self *Conductor) getBundleMainFile(namespace string, type_ string, name st
 			for _, entry := range entries {
 				path := filepath.Join(dir, entry.Name())
 				if stat, err := os.Stat(path); err == nil {
-					if stat.Mode()&0100 != 0 {
+					if util.IsExecutable(stat.Mode()) {
 						return path
 					}
 				}

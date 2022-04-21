@@ -6,6 +6,7 @@ import (
 
 func init() {
 	pluginCommand.AddCommand(pluginRegisterCommand)
+	pluginRegisterCommand.Flags().StringVarP(&unpack, "unpack", "u", "auto", "unpack archive (\"auto\" or \"false\")")
 }
 
 var pluginRegisterCommand = &cobra.Command{
