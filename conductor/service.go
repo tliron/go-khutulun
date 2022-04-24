@@ -1,27 +1,11 @@
 package conductor
 
-import (
-	cloutpkg "github.com/tliron/puccini/clout"
-)
-
-func (self *Conductor) GetServiceClout(namespace string, serviceName string) (*cloutpkg.Clout, error) {
-	if lock, err := self.lockBundle(namespace, "clout", serviceName, false); err == nil {
-		defer func() {
-			if err := lock.Unlock(); err != nil {
-				grpcLog.Errorf("unlock: %s", err.Error())
-			}
-		}()
-
-		cloutPath := self.getBundleMainFile(namespace, "clout", serviceName)
-		return cloutpkg.Load(cloutPath, "yaml")
-	} else {
-		return nil, err
-	}
-}
+import "strings"
 
 func (self *Conductor) DeployService(templateNamespace string, templateName string, serviceNamespace string, serviceName string) error {
 	if _, problems, err := self.CompileTosca(templateNamespace, templateName, serviceNamespace, serviceName); err == nil {
-		self.Reconcile()
+		reconcile := self.ScheduleService(serviceNamespace, serviceName)
+		self.HandleReconcile(reconcile)
 		return nil
 	} else {
 		if problems != nil {
@@ -30,4 +14,79 @@ func (self *Conductor) DeployService(templateNamespace string, templateName stri
 			return err
 		}
 	}
+}
+
+//
+// ServiceIdentifier
+//
+
+type ServiceIdentifier struct {
+	Namespace string `json:"namespace"`
+	Name      string `json:"name"`
+}
+
+func (self *ServiceIdentifier) Equals(identifier *ServiceIdentifier) bool {
+	if self == identifier {
+		return true
+	} else {
+		return (self.Namespace == identifier.Namespace) && (self.Name == identifier.Name)
+	}
+}
+
+// fmt.Stringer interface
+func (self *ServiceIdentifier) String() string {
+	return self.Namespace + "," + self.Name
+}
+
+//
+// ServiceIdentifiers
+//
+
+type ServiceIdentifiers struct {
+	List []*ServiceIdentifier
+}
+
+func NewServiceIdentifiers() *ServiceIdentifiers {
+	return new(ServiceIdentifiers)
+}
+
+func (self *ServiceIdentifiers) Has(identifier *ServiceIdentifier) bool {
+	for _, identifier_ := range self.List {
+		if identifier_.Equals(identifier) {
+			return true
+		}
+	}
+	return false
+}
+
+func (self *ServiceIdentifiers) Add(identifiers ...*ServiceIdentifier) bool {
+	var added bool
+	for _, identifier := range identifiers {
+		if !self.Has(identifier) {
+			self.List = append(self.List, identifier)
+			added = true
+		}
+	}
+	return added
+}
+
+func (self *ServiceIdentifiers) Merge(identifiers *ServiceIdentifiers) bool {
+	if identifiers != nil {
+		return self.Add(identifiers.List...)
+	} else {
+		return false
+	}
+}
+
+// fmt.Stringer interface
+func (self *ServiceIdentifiers) String() string {
+	var builder strings.Builder
+	last := len(self.List) - 1
+	for index, identifier := range self.List {
+		builder.WriteString(identifier.String())
+		if index != last {
+			builder.WriteRune(';')
+		}
+	}
+	return builder.String()
 }

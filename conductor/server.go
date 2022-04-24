@@ -2,16 +2,30 @@ package conductor
 
 import (
 	"fmt"
+	"net"
 	"time"
 )
 
-const TICKER_FREQUENCY = 10 * time.Second
+const TICKER_FREQUENCY = 30 * time.Second
 
 //
 // Server
 //
 
 type Server struct {
+	GRPCProtocol       string
+	GRPCAddress        string
+	GRPCPort           int
+	HTTPProtocol       string
+	HTTPAddress        string
+	HTTPPort           int
+	GossipAddress      string
+	GossipPort         int
+	BroadcastProtocol  string
+	BroadcastInterface *net.Interface
+	BroadcastAddress   string
+	BroadcastPort      int
+
 	conductor *Conductor
 	watcher   *Watcher
 	grpc      *GRPC
@@ -20,15 +34,19 @@ type Server struct {
 }
 
 func NewServer(conductor *Conductor) *Server {
-	return &Server{conductor: conductor}
+	return &Server{
+		conductor: conductor,
+	}
 }
 
-func (self *Server) Start(watcher bool, cluster bool, grpc bool, http bool, ticker bool) error {
+func (self *Server) Start(watcher bool, ticker bool) error {
 	var err error
 
 	if watcher {
-		if self.watcher, err = NewWatcher(self.conductor, func(path string) {
-			fmt.Println(path)
+		if self.watcher, err = NewWatcher(self.conductor, func(change Change, identifier []string) {
+			if change != Changed {
+				fmt.Printf("%s %v\n", change.String(), identifier)
+			}
 		}); err == nil {
 			self.watcher.Start()
 		} else {
@@ -36,35 +54,37 @@ func (self *Server) Start(watcher bool, cluster bool, grpc bool, http bool, tick
 		}
 	}
 
-	if cluster {
-		if self.conductor.cluster, err = NewCluster(); err == nil {
-			if err := self.conductor.cluster.Start(); err != nil {
-				return err
-			}
-		} else {
+	if self.GossipPort != 0 {
+		self.conductor.cluster = NewCluster(self.GossipAddress, self.GossipPort, self.BroadcastProtocol, self.BroadcastInterface, self.BroadcastAddress, self.BroadcastPort)
+		self.conductor.cluster.onMessage = self.conductor.onMessage
+		if err := self.conductor.cluster.Start(); err != nil {
 			return err
 		}
 	}
 
-	if grpc {
-		self.grpc = NewGRPC(self.conductor)
+	if self.GRPCPort != 0 {
+		self.grpc = NewGRPC(self.conductor, self.GRPCProtocol, self.GRPCAddress, self.GRPCPort)
 		if err := self.grpc.Start(); err != nil {
 			if self.conductor.cluster != nil {
-				self.conductor.cluster.Stop()
+				if err := self.conductor.cluster.Stop(); err != nil {
+					log.Errorf("%s", err.Error())
+				}
 			}
 			return err
 		}
 	}
 
-	if http {
+	if self.HTTPPort != 0 {
 		var err error
-		if self.http, err = NewHTTP(self.conductor); err == nil {
+		if self.http, err = NewHTTP(self.conductor, self.HTTPProtocol, self.HTTPAddress, self.HTTPPort); err == nil {
 			if err := self.http.Start(); err != nil {
 				if self.grpc != nil {
 					self.grpc.Stop()
 				}
 				if self.conductor.cluster != nil {
-					self.conductor.cluster.Stop()
+					if err := self.conductor.cluster.Stop(); err != nil {
+						log.Errorf("%s", err.Error())
+					}
 				}
 				return err
 			}
@@ -75,8 +95,8 @@ func (self *Server) Start(watcher bool, cluster bool, grpc bool, http bool, tick
 
 	if ticker {
 		self.ticker = NewTicker(TICKER_FREQUENCY, func() {
-			self.conductor.Schedule()
-			self.conductor.Reconcile()
+			//self.conductor.Schedule()
+			//self.conductor.Reconcile()
 			if self.conductor.cluster != nil {
 				if err := self.conductor.cluster.Announce(); err != nil {
 					log.Errorf("%s", err.Error())

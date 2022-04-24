@@ -26,7 +26,7 @@ type Client struct {
 func NewClientFromConfiguration(configurationPath string, clusterName string) (*Client, error) {
 	if client, err := configuration.LoadOrNewClient(configurationPath); err == nil {
 		if cluster := client.GetCluster(clusterName); cluster != nil {
-			target := fmt.Sprintf("%s:%d", cluster.IP, cluster.Port)
+			target := fmt.Sprintf("[%s]:%d", cluster.IP, cluster.Port)
 			return NewClient(target)
 		} else {
 			if clusterName == "" {

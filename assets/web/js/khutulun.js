@@ -122,10 +122,10 @@ $(document).ready(function () {
     });
   });
 
-  syncTable('services', 'api/bundle/list?type=clout');
-  syncTable('templates', 'api/bundle/list?type=template');
-  syncTable('profiles', 'api/bundle/list?type=profile');
-  syncTable('plugins', 'api/bundle/list?type=plugin');
+  syncTable('services', 'api/package/list?type=clout');
+  syncTable('templates', 'api/package/list?type=template');
+  syncTable('profiles', 'api/package/list?type=profile');
+  syncTable('plugins', 'api/package/list?type=plugin');
   syncTable('runnables', 'api/resource/list?type=runnable');
 
 });

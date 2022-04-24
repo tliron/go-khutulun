@@ -21,6 +21,6 @@ ssh "$HOST" systemctl --user start khutulun-conductor.service
 ssh "$HOST" systemctl --user enable khutulun-conductor.service
 ssh "$HOST" loginctl enable-linger
 
-khutulun host add "$HOST" "$HOST"
+#khutulun host add "$HOST" "$HOST"
 
 # journalctl -f --user -u khutulun-conductor

@@ -3,60 +3,72 @@ package conductor
 import (
 	"fmt"
 	"net"
-	"strings"
 	"time"
 
 	"github.com/hashicorp/memberlist"
+	"github.com/tliron/kutil/ard"
+	"github.com/tliron/kutil/format"
 	"github.com/tliron/kutil/logging/sink"
 	"github.com/tliron/kutil/util"
 )
 
-const ADD_HOST = "khutulun.addHost:"
+type OnMessageFunc func(message any, broadcast bool)
 
 //
 // Cluster
 //
 
 type Cluster struct {
-	clusterPort      int
-	broadcastNetwork string
-	broadcastAddress string
-	broadcastPort    int
+	GossipAddress      string
+	GossipPort         int // memberlist default is 7946
+	BroadcastProtocol  string
+	BroadcastInterface *net.Interface
+	BroadcastAddress   string // https://en.wikipedia.org/wiki/Multicast_address
+	BroadcastPort      int
 
+	onMessage    OnMessageFunc
 	cluster      *memberlist.Memberlist
 	clusterQueue *memberlist.TransmitLimitedQueue
 	broadcaster  *Broadcaster
 	receiver     *Receiver
 }
 
-func NewCluster() (*Cluster, error) {
-	self := Cluster{
-		clusterPort:      7946,
-		broadcastNetwork: "udp4",
-		broadcastAddress: "239.0.0.0",
-		broadcastPort:    7947,
+func NewCluster(gossipAddress string, gossipPort int, broadcastProtocol string, broadcastInterface *net.Interface, broadcastAddress string, broadcastPort int) *Cluster {
+	return &Cluster{
+		GossipAddress:      gossipAddress,
+		GossipPort:         gossipPort,
+		BroadcastProtocol:  broadcastProtocol,
+		BroadcastInterface: broadcastInterface,
+		BroadcastAddress:   broadcastAddress,
+		BroadcastPort:      broadcastPort,
 	}
-	var err error
-	broadcastAddress := fmt.Sprintf("%s:%d", self.broadcastAddress, self.broadcastPort)
-	if self.broadcaster, err = NewBroadcaster(self.broadcastNetwork, broadcastAddress); err != nil {
-		return nil, err
-	}
-	if self.receiver, err = NewReceiver(self.broadcastNetwork, broadcastAddress, self.receive); err != nil {
-		return nil, err
-	}
-	return &self, nil
 }
 
 func (self *Cluster) Start() error {
-	config := memberlist.DefaultLocalConfig()
-	config.BindPort = self.clusterPort
-	config.AdvertisePort = self.clusterPort
+	var err error
+
+	if self.GossipAddress, err = toReachableAddress(self.GossipAddress); err != nil {
+		return err
+	}
+
+	if self.BroadcastPort != 0 {
+		if self.broadcaster, err = NewBroadcaster(self.BroadcastProtocol, self.BroadcastAddress, self.BroadcastPort); err != nil {
+			return err
+		}
+		if self.receiver, err = NewReceiver(self.BroadcastProtocol, self.BroadcastInterface, self.BroadcastAddress, self.BroadcastPort, self.receive); err != nil {
+			return err
+		}
+	}
+
+	config := memberlist.DefaultLANConfig()
+	config.BindAddr = self.GossipAddress
+	config.BindPort = self.GossipPort
+	config.AdvertisePort = self.GossipPort
 	config.Delegate = self
 	config.Events = sink.NewMemberlistEventLog(clusterLog)
-	//config.Logger =
+	config.Logger = sink.NewMemberlistStandardLog([]string{"khutulun", "memberlist"})
 
 	clusterLog.Notice("starting memberlist")
-	var err error
 	if self.cluster, err = memberlist.Create(config); err == nil {
 		self.clusterQueue = &memberlist.TransmitLimitedQueue{
 			NumNodes: func() int {
@@ -65,11 +77,13 @@ func (self *Cluster) Start() error {
 		}
 
 		if err := self.broadcaster.Start(); err != nil {
+			clusterLog.Errorf("%s", err.Error())
 			return self.Stop()
 		}
 
 		self.receiver.Ignore = append(self.receiver.Ignore, self.broadcaster.Address())
 		if err := self.receiver.Start(); err != nil {
+			clusterLog.Errorf("%s", err.Error())
 			return self.Stop()
 		}
 
@@ -79,9 +93,16 @@ func (self *Cluster) Start() error {
 	}
 }
 
+func (self *Cluster) LocalGossipAddress() string {
+	//return self.reachableGossipAddress
+	return self.cluster.LocalNode().Address()
+}
+
 func (self *Cluster) Announce() error {
-	address := self.cluster.LocalNode().Address()
-	return self.broadcaster.SendString(ADD_HOST + address)
+	command := make(map[string]any)
+	command["command"] = ADD_HOST
+	command["address"] = self.LocalGossipAddress()
+	return self.broadcaster.SendJSON(command)
 }
 
 func (self *Cluster) Stop() error {
@@ -112,7 +133,7 @@ func (self *Cluster) ListHosts() []Host {
 	for _, node := range self.cluster.Members() {
 		hosts = append(hosts, Host{
 			name:    node.Name,
-			address: fmt.Sprintf("%s:%d", node.Addr.String(), node.Port),
+			address: fmt.Sprintf("[%s]:%d", node.Addr.String(), node.Port),
 		})
 	}
 	return hosts
@@ -123,6 +144,32 @@ func (self *Cluster) AddHosts(hosts []string) error {
 	return err
 }
 
+func (self *Cluster) SendJSON(host string, message any) (bool, error) {
+	if code, err := format.EncodeJSON(message, ""); err == nil {
+		return self.Send(host, util.StringToBytes(code))
+	} else {
+		return false, err
+	}
+}
+
+func (self *Cluster) Send(host string, message []byte) (bool, error) {
+	if node, ok := self.GetMember(host); ok {
+		clusterLog.Infof("sending message to %s: %s", host, message)
+		return true, self.cluster.SendReliable(node, message)
+	} else {
+		return false, nil
+	}
+}
+
+func (self *Cluster) GetMember(host string) (*memberlist.Node, bool) {
+	for _, member := range self.cluster.Members() {
+		if member.Name == host {
+			return member, true
+		}
+	}
+	return nil, false
+}
+
 // memberlist.Delegate interface
 func (self *Cluster) NodeMeta(limit int) []byte {
 	return nil
@@ -130,6 +177,11 @@ func (self *Cluster) NodeMeta(limit int) []byte {
 
 // memberlist.Delegate interface
 func (self *Cluster) NotifyMsg(bytes []byte) {
+	if message, _, err := ard.DecodeJSON(util.BytesToString(bytes), false); err == nil {
+		go self.onMessage(message, false)
+	} else {
+		clusterLog.Errorf("%s", err.Error())
+	}
 }
 
 // memberlist.Delegate interface
@@ -147,13 +199,9 @@ func (self *Cluster) MergeRemoteState(buf []byte, join bool) {
 }
 
 func (self *Cluster) receive(address *net.UDPAddr, message []byte) {
-	message_ := util.BytesToString(message)
-	if strings.HasPrefix(message_, ADD_HOST) {
-		host := message_[len(ADD_HOST):]
-		if err := self.AddHosts([]string{host}); err != nil {
-			clusterLog.Errorf("%s", err.Error())
-		}
+	if message_, _, err := ard.DecodeJSON(util.BytesToString(message), false); err == nil {
+		go self.onMessage(message_, true)
 	} else {
-		clusterLog.Errorf("received unsupported broadcast: %s", message_)
+		clusterLog.Errorf("%s", err.Error())
 	}
 }

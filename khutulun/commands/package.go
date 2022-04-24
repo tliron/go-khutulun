@@ -14,12 +14,12 @@ import (
 	"github.com/tliron/kutil/util"
 )
 
-func listBundles(namespace string, type_ string) {
+func listPackages(namespace string, type_ string) {
 	client, err := clientpkg.NewClientFromConfiguration(configurationPath, clusterName)
 	util.FailOnError(err)
 	util.OnExitError(client.Close)
 
-	identifiers, err := client.ListBundles(namespace, type_)
+	identifiers, err := client.ListPackages(namespace, type_)
 	util.FailOnError(err)
 	if len(identifiers) > 0 {
 		err = formatpkg.Print(identifiers, format, terminal.Stdout, strict, pretty)
@@ -27,7 +27,7 @@ func listBundles(namespace string, type_ string) {
 	}
 }
 
-func registerBundle(namespace string, type_ string, args []string) {
+func registerPackage(namespace string, type_ string, args []string) {
 	name := args[0]
 
 	client, err := clientpkg.NewClientFromConfiguration(configurationPath, clusterName)
@@ -37,7 +37,7 @@ func registerBundle(namespace string, type_ string, args []string) {
 	context := urlpkg.NewContext()
 	util.OnExitError(context.Release)
 
-	var bundleFiles []clientpkg.SetBundleFile
+	var packageFiles []clientpkg.SetPackageFile
 
 	var url urlpkg.URL
 	var path string
@@ -79,9 +79,9 @@ func registerBundle(namespace string, type_ string, args []string) {
 				reader, err := os.Open(path)
 				util.FailOnError(err)
 				util.OnExitError(reader.Close)
-				bundleFiles = append(bundleFiles, clientpkg.SetBundleFile{
+				packageFiles = append(packageFiles, clientpkg.SetPackageFile{
 					Reader: reader,
-					BundleFile: clientpkg.BundleFile{
+					PackageFile: clientpkg.PackageFile{
 						Path:       path[length:],
 						Executable: khutulunutil.IsExecutable(stat.Mode()),
 					},
@@ -121,9 +121,9 @@ func registerBundle(namespace string, type_ string, args []string) {
 							reader, err := file.Open()
 							util.FailOnError(err)
 							util.OnExitError(reader.Close)
-							bundleFiles = append(bundleFiles, clientpkg.SetBundleFile{
+							packageFiles = append(packageFiles, clientpkg.SetPackageFile{
 								Reader: reader,
-								BundleFile: clientpkg.BundleFile{
+								PackageFile: clientpkg.PackageFile{
 									Path:       file.Name,
 									Executable: khutulunutil.IsExecutable(file.Mode()),
 								},
@@ -136,9 +136,9 @@ func registerBundle(namespace string, type_ string, args []string) {
 				reader, err := os.Open(path)
 				util.FailOnError(err)
 				util.OnExitError(reader.Close)
-				bundleFiles = append(bundleFiles, clientpkg.SetBundleFile{
+				packageFiles = append(packageFiles, clientpkg.SetPackageFile{
 					Reader: reader,
-					BundleFile: clientpkg.BundleFile{
+					PackageFile: clientpkg.PackageFile{
 						Path:       filepath.Base(path),
 						Executable: khutulunutil.IsExecutable(stat.Mode()),
 					},
@@ -149,22 +149,22 @@ func registerBundle(namespace string, type_ string, args []string) {
 			reader, err := url.Open()
 			util.FailOnError(err)
 			util.OnExitError(reader.Close)
-			bundleFiles = append(bundleFiles, clientpkg.SetBundleFile{
+			packageFiles = append(packageFiles, clientpkg.SetPackageFile{
 				Reader: reader,
-				BundleFile: clientpkg.BundleFile{
+				PackageFile: clientpkg.PackageFile{
 					Path: filepath.Base(path),
 				},
 			})
 		}
 	}
 
-	if len(bundleFiles) > 0 {
-		err = client.SetBundleFiles(namespace, type_, name, bundleFiles)
+	if len(packageFiles) > 0 {
+		err = client.SetPackageFiles(namespace, type_, name, packageFiles)
 		util.FailOnError(err)
 	}
 }
 
-func fetchBundle(namespace string, type_ string, args []string) {
+func fetchPackage(namespace string, type_ string, args []string) {
 	client, err := clientpkg.NewClientFromConfiguration(configurationPath, clusterName)
 	util.FailOnError(err)
 	util.OnExitError(client.Close)
@@ -173,10 +173,10 @@ func fetchBundle(namespace string, type_ string, args []string) {
 	if len(args) > 1 {
 		path := args[1]
 
-		err = client.GetBundleFile(namespace, type_, name, path, terminal.Stdout)
+		err = client.GetPackageFile(namespace, type_, name, path, terminal.Stdout)
 		util.FailOnError(err)
 	} else {
-		files, err := client.ListBundleFiles(namespace, type_, name)
+		files, err := client.ListPackageFiles(namespace, type_, name)
 		util.FailOnError(err)
 		for _, file := range files {
 			terminal.Println(file.Path)
@@ -184,13 +184,13 @@ func fetchBundle(namespace string, type_ string, args []string) {
 	}
 }
 
-func delist(namespace string, type_ string, args []string) {
+func delistPackage(namespace string, type_ string, args []string) {
 	name := args[0]
 
 	client, err := clientpkg.NewClientFromConfiguration(configurationPath, clusterName)
 	util.FailOnError(err)
 	util.OnExitError(client.Close)
 
-	err = client.RemoveBundle(namespace, type_, name)
+	err = client.RemovePackage(namespace, type_, name)
 	util.FailOnError(err)
 }

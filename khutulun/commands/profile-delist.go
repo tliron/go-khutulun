@@ -13,6 +13,6 @@ var profileDelistCommand = &cobra.Command{
 	Short: "Delist a profile",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		delist(namespace, "profile", args)
+		delistPackage(namespace, "profile", args)
 	},
 }

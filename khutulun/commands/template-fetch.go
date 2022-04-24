@@ -13,6 +13,6 @@ var templateFetchCommand = &cobra.Command{
 	Short: "List or fetch a template's content",
 	Args:  cobra.RangeArgs(1, 2),
 	Run: func(cmd *cobra.Command, args []string) {
-		fetchBundle(namespace, "template", args)
+		fetchPackage(namespace, "template", args)
 	},
 }

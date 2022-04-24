@@ -14,11 +14,11 @@ service Conductor {
 
     rpc listNamespaces(google.protobuf.Empty) returns (stream Namespace);
 
-    rpc listBundles(ListBundles) returns (stream BundleIdentifier);
-    rpc listBundleFiles(BundleIdentifier) returns (stream BundleFile);
-    rpc getBundleFiles(GetBundleFiles) returns (stream BundleContent);
-    rpc setBundleFiles(stream BundleContent) returns (google.protobuf.Empty);
-    rpc removeBundle(BundleIdentifier) returns (google.protobuf.Empty);
+    rpc listPackages(ListPackages) returns (stream PackageIdentifier);
+    rpc listPackageFiles(PackageIdentifier) returns (stream PackageFile);
+    rpc getPackageFiles(GetPackageFiles) returns (stream PackageContent);
+    rpc setPackageFiles(stream PackageContent) returns (google.protobuf.Empty);
+    rpc removePackage(PackageIdentifier) returns (google.protobuf.Empty);
 
     rpc deployService(DeployService) returns (google.protobuf.Empty);
 
@@ -49,38 +49,38 @@ message HostIdentifier {
     string address = 2;
 }
 
-message BundleType {
+message PackageType {
     string name = 1;
 }
 
-message BundleIdentifier {
-    BundleType type = 1;
+message PackageIdentifier {
+    PackageType type = 1;
     string namespace = 2;
     string name = 3;
 }
 
-message ListBundles {
-    BundleType type = 1;
+message ListPackages {
+    PackageType type = 1;
     string namespace = 2;
 }
 
-message GetBundleFiles {
-    BundleIdentifier identifier = 1;
+message GetPackageFiles {
+    PackageIdentifier identifier = 1;
     repeated string paths = 3;
 }
 
-message BundleFile {
+message PackageFile {
     string path = 1;
     bool executable = 2;
 }
 
-message BundleContent {
+message PackageContent {
     message Start {
-        BundleIdentifier identifier = 1;
+        PackageIdentifier identifier = 1;
     }
 
     Start start = 1;
-    BundleFile file = 2;
+    PackageFile file = 2;
     bytes bytes = 3;
 }
 
@@ -94,7 +94,7 @@ message ListServices {
 }
 
 message DeployService {
-    BundleIdentifier template = 1;
+    PackageIdentifier template = 1;
     ServiceIdentifier service = 2;
 }
 

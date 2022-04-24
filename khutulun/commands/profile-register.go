@@ -14,6 +14,6 @@ var profileRegisterCommand = &cobra.Command{
 	Short: "Register a profile",
 	Args:  cobra.RangeArgs(1, 2),
 	Run: func(cmd *cobra.Command, args []string) {
-		registerBundle(namespace, "profile", args)
+		registerPackage(namespace, "profile", args)
 	},
 }

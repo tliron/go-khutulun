@@ -13,6 +13,6 @@ var serviceFetchCommand = &cobra.Command{
 	Short: "Fetch a service's Clout content",
 	Run: func(cmd *cobra.Command, args []string) {
 		args = append(args, "clout.yaml")
-		fetchBundle(namespace, "clout", args)
+		fetchPackage(namespace, "clout", args)
 	},
 }

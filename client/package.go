@@ -9,33 +9,33 @@ import (
 
 const BUFFER_SIZE = 65536
 
-type BundleIdentifier struct {
+type PackageIdentifier struct {
 	Namespace string `json:"namespace" yaml:"namespace"`
 	Type      string `json:"type" yaml:"type"`
 	Name      string `json:"name" yaml:"name"`
 }
 
-type BundleFile struct {
+type PackageFile struct {
 	Path       string
 	Executable bool
 }
 
-type SetBundleFile struct {
-	BundleFile
+type SetPackageFile struct {
+	PackageFile
 	Reader io.Reader
 }
 
-func (self *Client) ListBundles(namespace string, type_ string) ([]BundleIdentifier, error) {
+func (self *Client) ListPackages(namespace string, type_ string) ([]PackageIdentifier, error) {
 	context, cancel := self.newContextWithTimeout()
 	defer cancel()
 
-	listBundles := api.ListBundles{
+	listPackages := api.ListPackages{
 		Namespace: namespace,
-		Type:      &api.BundleType{Name: type_},
+		Type:      &api.PackageType{Name: type_},
 	}
 
-	if client, err := self.client.ListBundles(context, &listBundles); err == nil {
-		var bundles []BundleIdentifier
+	if client, err := self.client.ListPackages(context, &listPackages); err == nil {
+		var identifiers []PackageIdentifier
 
 		for {
 			identifier, err := client.Recv()
@@ -47,37 +47,37 @@ func (self *Client) ListBundles(namespace string, type_ string) ([]BundleIdentif
 				}
 			}
 
-			bundles = append(bundles, BundleIdentifier{
+			identifiers = append(identifiers, PackageIdentifier{
 				Namespace: identifier.Namespace,
 				Type:      identifier.Type.Name,
 				Name:      identifier.Name,
 			})
 		}
 
-		return bundles, nil
+		return identifiers, nil
 	} else {
 		return nil, util.UnpackGrpcError(err)
 	}
 }
 
-func (self *Client) ListBundleFiles(namespace string, type_ string, name string) ([]BundleFile, error) {
+func (self *Client) ListPackageFiles(namespace string, type_ string, name string) ([]PackageFile, error) {
 	context, cancel := self.newContextWithTimeout()
 	defer cancel()
 
-	identifier := api.BundleIdentifier{
+	identifier := api.PackageIdentifier{
 		Namespace: namespace,
-		Type:      &api.BundleType{Name: type_},
+		Type:      &api.PackageType{Name: type_},
 		Name:      name,
 	}
 
-	if client, err := self.client.ListBundleFiles(context, &identifier); err == nil {
-		var bundleFiles []BundleFile
+	if client, err := self.client.ListPackageFiles(context, &identifier); err == nil {
+		var packageFiles []PackageFile
 
 		for {
-			if bundleFile_, err := client.Recv(); err == nil {
-				bundleFiles = append(bundleFiles, BundleFile{
-					Path:       bundleFile_.Path,
-					Executable: bundleFile_.Executable,
+			if packageFile_, err := client.Recv(); err == nil {
+				packageFiles = append(packageFiles, PackageFile{
+					Path:       packageFile_.Path,
+					Executable: packageFile_.Executable,
 				})
 			} else {
 				if err == io.EOF {
@@ -88,23 +88,23 @@ func (self *Client) ListBundleFiles(namespace string, type_ string, name string)
 			}
 		}
 
-		return bundleFiles, nil
+		return packageFiles, nil
 	} else {
 		return nil, util.UnpackGrpcError(err)
 	}
 }
 
-func (self *Client) GetBundleFile(namespace string, type_ string, name string, path string, writer io.Writer) error {
+func (self *Client) GetPackageFile(namespace string, type_ string, name string, path string, writer io.Writer) error {
 	context, cancel := self.newContextWithTimeout()
 	defer cancel()
 
-	identifier := api.BundleIdentifier{
+	identifier := api.PackageIdentifier{
 		Namespace: namespace,
-		Type:      &api.BundleType{Name: type_},
+		Type:      &api.PackageType{Name: type_},
 		Name:      name,
 	}
 
-	if client, err := self.client.GetBundleFiles(context, &api.GetBundleFiles{Identifier: &identifier, Paths: []string{path}}); err == nil {
+	if client, err := self.client.GetPackageFiles(context, &api.GetPackageFiles{Identifier: &identifier, Paths: []string{path}}); err == nil {
 		for {
 			if content, err := client.Recv(); err == nil {
 				if _, err := writer.Write(content.Bytes); err != nil {
@@ -125,28 +125,28 @@ func (self *Client) GetBundleFile(namespace string, type_ string, name string, p
 	}
 }
 
-func (self *Client) SetBundleFiles(namespace string, type_ string, name string, bundleFiles []SetBundleFile) error {
+func (self *Client) SetPackageFiles(namespace string, type_ string, name string, packageFiles []SetPackageFile) error {
 	context, cancel := self.newContextWithTimeout()
 	defer cancel()
 
-	if client, err := self.client.SetBundleFiles(context); err == nil {
-		identifier := api.BundleIdentifier{
+	if client, err := self.client.SetPackageFiles(context); err == nil {
+		identifier := api.PackageIdentifier{
 			Namespace: namespace,
-			Type:      &api.BundleType{Name: type_},
+			Type:      &api.PackageType{Name: type_},
 			Name:      name,
 		}
 
-		if err := client.Send(&api.BundleContent{Start: &api.BundleContent_Start{Identifier: &identifier}}); err != nil {
+		if err := client.Send(&api.PackageContent{Start: &api.PackageContent_Start{Identifier: &identifier}}); err != nil {
 			return util.UnpackGrpcError(err)
 		}
 
 		buffer := make([]byte, BUFFER_SIZE)
 
-		for _, bundleFile := range bundleFiles {
-			content := api.BundleContent{
-				File: &api.BundleFile{
-					Path:       bundleFile.Path,
-					Executable: bundleFile.Executable,
+		for _, packageFile := range packageFiles {
+			content := api.PackageContent{
+				File: &api.PackageFile{
+					Path:       packageFile.Path,
+					Executable: packageFile.Executable,
 				},
 			}
 
@@ -155,9 +155,9 @@ func (self *Client) SetBundleFiles(namespace string, type_ string, name string, 
 			}
 
 			for {
-				count, err := bundleFile.Reader.Read(buffer)
+				count, err := packageFile.Reader.Read(buffer)
 				if count > 0 {
-					content = api.BundleContent{Bytes: buffer[:count]}
+					content = api.PackageContent{Bytes: buffer[:count]}
 					if err := client.Send(&content); err != nil {
 						return util.UnpackGrpcError(err)
 					}
@@ -182,16 +182,16 @@ func (self *Client) SetBundleFiles(namespace string, type_ string, name string, 
 	}
 }
 
-func (self *Client) RemoveBundle(namespace string, type_ string, name string) error {
+func (self *Client) RemovePackage(namespace string, type_ string, name string) error {
 	context, cancel := self.newContextWithTimeout()
 	defer cancel()
 
-	identifier := api.BundleIdentifier{
+	identifier := api.PackageIdentifier{
 		Namespace: namespace,
-		Type:      &api.BundleType{Name: type_},
+		Type:      &api.PackageType{Name: type_},
 		Name:      name,
 	}
 
-	_, err := self.client.RemoveBundle(context, &identifier)
+	_, err := self.client.RemovePackage(context, &identifier)
 	return util.UnpackGrpcError(err)
 }

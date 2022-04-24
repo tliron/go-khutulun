@@ -12,6 +12,6 @@ var templateListCommand = &cobra.Command{
 	Use:   "list",
 	Short: "List registered templates",
 	Run: func(cmd *cobra.Command, args []string) {
-		listBundles(namespace, "template")
+		listPackages(namespace, "template")
 	},
 }

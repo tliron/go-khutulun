@@ -4,6 +4,7 @@ import (
 	"errors"
 	"net"
 
+	"github.com/tliron/kutil/format"
 	"github.com/tliron/kutil/util"
 )
 
@@ -14,17 +15,18 @@ const DEFAULT_MAX_MESSAGE_SIZE = 8192
 //
 
 type Broadcaster struct {
-	network    string
+	protocol   string
 	address    *net.UDPAddr
 	connection *net.UDPConn
 }
 
-func NewBroadcaster(network string, address string) (*Broadcaster, error) {
+func NewBroadcaster(protocol string, address string, port int) (*Broadcaster, error) {
 	self := Broadcaster{
-		network: network,
+		protocol: protocol,
 	}
 	var err error
-	if self.address, err = net.ResolveUDPAddr(network, address); err == nil {
+	if self.address, err = newUdpAddr(protocol, address, port); err == nil {
+		//fmt.Printf("BROADCSTER ZONE: %s\n", self.address.Zone)
 		return &self, nil
 	} else {
 		return nil, err
@@ -33,7 +35,7 @@ func NewBroadcaster(network string, address string) (*Broadcaster, error) {
 
 func (self *Broadcaster) Start() error {
 	var err error
-	self.connection, err = net.DialUDP(self.network, nil, self.address)
+	self.connection, err = net.DialUDP(self.protocol, nil, self.address)
 	return err
 }
 
@@ -45,8 +47,12 @@ func (self *Broadcaster) Stop() error {
 	}
 }
 
-func (self *Broadcaster) SendString(message string) error {
-	return self.Send(util.StringToBytes(message))
+func (self *Broadcaster) SendJSON(message any) error {
+	if code, err := format.EncodeJSON(message, ""); err == nil {
+		return self.Send(util.StringToBytes(code))
+	} else {
+		return err
+	}
 }
 
 func (self *Broadcaster) Send(message []byte) error {
@@ -80,21 +86,24 @@ type ReceiveFunc func(address *net.UDPAddr, message []byte)
 type Receiver struct {
 	Ignore []*net.UDPAddr
 
-	network        string
+	protocol       string
+	inter          *net.Interface
 	address        *net.UDPAddr
 	receive        ReceiveFunc
 	connection     *net.UDPConn
 	maxMessageSize int
 }
 
-func NewReceiver(network string, address string, receive ReceiveFunc) (*Receiver, error) {
+func NewReceiver(protocol string, inter *net.Interface, address string, port int, receive ReceiveFunc) (*Receiver, error) {
 	self := Receiver{
-		network:        network,
+		protocol:       protocol,
+		inter:          inter,
 		receive:        receive,
 		maxMessageSize: DEFAULT_MAX_MESSAGE_SIZE,
 	}
 	var err error
-	if self.address, err = net.ResolveUDPAddr(network, address); err == nil {
+	if self.address, err = newUdpAddr(protocol, address, port); err == nil {
+		//fmt.Printf("RECEIVER ZONE: %s\n", self.address.Zone)
 		return &self, nil
 	} else {
 		return nil, err
@@ -103,7 +112,7 @@ func NewReceiver(network string, address string, receive ReceiveFunc) (*Receiver
 
 func (self *Receiver) Start() error {
 	var err error
-	if self.connection, err = net.ListenMulticastUDP(self.network, nil, self.address); err == nil {
+	if self.connection, err = net.ListenMulticastUDP(self.protocol, self.inter, self.address); err == nil {
 		self.connection.SetReadBuffer(self.maxMessageSize)
 
 		go func() {
@@ -111,7 +120,7 @@ func (self *Receiver) Start() error {
 			for {
 				if count, address, err := self.connection.ReadFromUDP(buffer); err == nil {
 					if self.ignore(address) {
-						clusterLog.Infof("ignoring broadcast from: %s", address.String())
+						clusterLog.Debugf("ignoring broadcast from: %s", address.String())
 						continue
 					}
 
@@ -141,7 +150,7 @@ func (self *Receiver) Stop() error {
 
 func (self *Receiver) ignore(address *net.UDPAddr) bool {
 	for _, ignore_ := range self.Ignore {
-		if address.IP.Equal(ignore_.IP) && (address.Port == ignore_.Port) {
+		if address.IP.Equal(ignore_.IP) && (address.Port == ignore_.Port) && (address.Zone == ignore_.Zone) {
 			return true
 		}
 	}

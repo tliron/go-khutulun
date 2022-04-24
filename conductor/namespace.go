@@ -9,8 +9,9 @@ func (self *Conductor) ListNamespaces() ([]string, error) {
 	if files, err := ioutil.ReadDir(self.statePath); err == nil {
 		var names []string
 		for _, file := range files {
-			if file.IsDir() {
-				names = append(names, file.Name())
+			name := file.Name()
+			if file.IsDir() && !isHidden(name) {
+				names = append(names, name)
 			}
 		}
 		return names, nil

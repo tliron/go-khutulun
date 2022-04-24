@@ -51,6 +51,8 @@ topology_template:
             image:
               reference: docker.io/postgres:14.2
             create-arguments: [ --env=POSTGRES_PASSWORD=postgres ]
+          attributes:
+            host: lab1
       requirements:
       - storage: directory
 

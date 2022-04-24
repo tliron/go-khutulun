@@ -3,7 +3,7 @@ package conductor
 import (
 	"os"
 
-	"github.com/tliron/khutulun/plugin"
+	"github.com/tliron/kutil/logging"
 	cloutpkg "github.com/tliron/puccini/clout"
 )
 
@@ -17,14 +17,14 @@ type ResourceIdentifier struct {
 func (self *Conductor) ListResources(namespace string, serviceName string, type_ string) ([]ResourceIdentifier, error) {
 	var resources []ResourceIdentifier
 
-	var bundles []BundleIdentifier
+	var identifiers []PackageIdentifier
 	if serviceName == "" {
 		var err error
-		if bundles, err = self.ListBundles(namespace, "clout"); err != nil {
+		if identifiers, err = self.ListPackages(namespace, "clout"); err != nil {
 			return nil, err
 		}
 	} else {
-		bundles = []BundleIdentifier{
+		identifiers = []PackageIdentifier{
 			{
 				Namespace: namespace,
 				Type:      "clout",
@@ -33,15 +33,21 @@ func (self *Conductor) ListResources(namespace string, serviceName string, type_
 		}
 	}
 
-	for _, bundle := range bundles {
-		if clout, err := self.GetClout(bundle.Namespace, bundle.Name, true); err == nil {
-			for _, resource := range self.getResources(clout, type_) {
-				resources = append(resources, ResourceIdentifier{
-					Namespace: bundle.Namespace,
-					Service:   bundle.Name,
-					Type:      type_,
-					Name:      resource.Name,
-				})
+	for _, identifier := range identifiers {
+		if lock, clout, err := self.OpenClout(identifier.Namespace, identifier.Name); err == nil {
+			logging.CallAndLogError(lock.Unlock, "unlock", log)
+
+			if err := self.CoerceClout(clout); err == nil {
+				for _, resource := range self.getResources(clout, type_) {
+					resources = append(resources, ResourceIdentifier{
+						Namespace: identifier.Namespace,
+						Service:   identifier.Name,
+						Type:      type_,
+						Name:      resource.Name,
+					})
+				}
+			} else {
+				return nil, err
 			}
 		} else {
 			if !os.IsNotExist(err) {
@@ -53,10 +59,10 @@ func (self *Conductor) ListResources(namespace string, serviceName string, type_
 	return resources, nil
 }
 
-func (self *Conductor) getResources(clout *cloutpkg.Clout, type_ string) []plugin.Container {
-	var containers []plugin.Container
+func (self *Conductor) getResources(clout *cloutpkg.Clout, type_ string) []Container {
+	var containers []Container
 	for _, vertex := range clout.Vertexes {
-		containers = append(containers, GetContainers(vertex.Properties)...)
+		containers = append(containers, GetContainers(vertex)...)
 	}
 	return containers
 }

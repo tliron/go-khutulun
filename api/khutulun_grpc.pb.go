@@ -27,11 +27,11 @@ type ConductorClient interface {
 	ListHosts(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (Conductor_ListHostsClient, error)
 	AddHost(ctx context.Context, in *HostIdentifier, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	ListNamespaces(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (Conductor_ListNamespacesClient, error)
-	ListBundles(ctx context.Context, in *ListBundles, opts ...grpc.CallOption) (Conductor_ListBundlesClient, error)
-	ListBundleFiles(ctx context.Context, in *BundleIdentifier, opts ...grpc.CallOption) (Conductor_ListBundleFilesClient, error)
-	GetBundleFiles(ctx context.Context, in *GetBundleFiles, opts ...grpc.CallOption) (Conductor_GetBundleFilesClient, error)
-	SetBundleFiles(ctx context.Context, opts ...grpc.CallOption) (Conductor_SetBundleFilesClient, error)
-	RemoveBundle(ctx context.Context, in *BundleIdentifier, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	ListPackages(ctx context.Context, in *ListPackages, opts ...grpc.CallOption) (Conductor_ListPackagesClient, error)
+	ListPackageFiles(ctx context.Context, in *PackageIdentifier, opts ...grpc.CallOption) (Conductor_ListPackageFilesClient, error)
+	GetPackageFiles(ctx context.Context, in *GetPackageFiles, opts ...grpc.CallOption) (Conductor_GetPackageFilesClient, error)
+	SetPackageFiles(ctx context.Context, opts ...grpc.CallOption) (Conductor_SetPackageFilesClient, error)
+	RemovePackage(ctx context.Context, in *PackageIdentifier, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	DeployService(ctx context.Context, in *DeployService, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	ListResources(ctx context.Context, in *ListResources, opts ...grpc.CallOption) (Conductor_ListResourcesClient, error)
 	Interact(ctx context.Context, opts ...grpc.CallOption) (Conductor_InteractClient, error)
@@ -127,12 +127,12 @@ func (x *conductorListNamespacesClient) Recv() (*Namespace, error) {
 	return m, nil
 }
 
-func (c *conductorClient) ListBundles(ctx context.Context, in *ListBundles, opts ...grpc.CallOption) (Conductor_ListBundlesClient, error) {
-	stream, err := c.cc.NewStream(ctx, &Conductor_ServiceDesc.Streams[2], "/khutulun.Conductor/listBundles", opts...)
+func (c *conductorClient) ListPackages(ctx context.Context, in *ListPackages, opts ...grpc.CallOption) (Conductor_ListPackagesClient, error) {
+	stream, err := c.cc.NewStream(ctx, &Conductor_ServiceDesc.Streams[2], "/khutulun.Conductor/listPackages", opts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &conductorListBundlesClient{stream}
+	x := &conductorListPackagesClient{stream}
 	if err := x.ClientStream.SendMsg(in); err != nil {
 		return nil, err
 	}
@@ -142,29 +142,29 @@ func (c *conductorClient) ListBundles(ctx context.Context, in *ListBundles, opts
 	return x, nil
 }
 
-type Conductor_ListBundlesClient interface {
-	Recv() (*BundleIdentifier, error)
+type Conductor_ListPackagesClient interface {
+	Recv() (*PackageIdentifier, error)
 	grpc.ClientStream
 }
 
-type conductorListBundlesClient struct {
+type conductorListPackagesClient struct {
 	grpc.ClientStream
 }
 
-func (x *conductorListBundlesClient) Recv() (*BundleIdentifier, error) {
-	m := new(BundleIdentifier)
+func (x *conductorListPackagesClient) Recv() (*PackageIdentifier, error) {
+	m := new(PackageIdentifier)
 	if err := x.ClientStream.RecvMsg(m); err != nil {
 		return nil, err
 	}
 	return m, nil
 }
 
-func (c *conductorClient) ListBundleFiles(ctx context.Context, in *BundleIdentifier, opts ...grpc.CallOption) (Conductor_ListBundleFilesClient, error) {
-	stream, err := c.cc.NewStream(ctx, &Conductor_ServiceDesc.Streams[3], "/khutulun.Conductor/listBundleFiles", opts...)
+func (c *conductorClient) ListPackageFiles(ctx context.Context, in *PackageIdentifier, opts ...grpc.CallOption) (Conductor_ListPackageFilesClient, error) {
+	stream, err := c.cc.NewStream(ctx, &Conductor_ServiceDesc.Streams[3], "/khutulun.Conductor/listPackageFiles", opts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &conductorListBundleFilesClient{stream}
+	x := &conductorListPackageFilesClient{stream}
 	if err := x.ClientStream.SendMsg(in); err != nil {
 		return nil, err
 	}
@@ -174,29 +174,29 @@ func (c *conductorClient) ListBundleFiles(ctx context.Context, in *BundleIdentif
 	return x, nil
 }
 
-type Conductor_ListBundleFilesClient interface {
-	Recv() (*BundleFile, error)
+type Conductor_ListPackageFilesClient interface {
+	Recv() (*PackageFile, error)
 	grpc.ClientStream
 }
 
-type conductorListBundleFilesClient struct {
+type conductorListPackageFilesClient struct {
 	grpc.ClientStream
 }
 
-func (x *conductorListBundleFilesClient) Recv() (*BundleFile, error) {
-	m := new(BundleFile)
+func (x *conductorListPackageFilesClient) Recv() (*PackageFile, error) {
+	m := new(PackageFile)
 	if err := x.ClientStream.RecvMsg(m); err != nil {
 		return nil, err
 	}
 	return m, nil
 }
 
-func (c *conductorClient) GetBundleFiles(ctx context.Context, in *GetBundleFiles, opts ...grpc.CallOption) (Conductor_GetBundleFilesClient, error) {
-	stream, err := c.cc.NewStream(ctx, &Conductor_ServiceDesc.Streams[4], "/khutulun.Conductor/getBundleFiles", opts...)
+func (c *conductorClient) GetPackageFiles(ctx context.Context, in *GetPackageFiles, opts ...grpc.CallOption) (Conductor_GetPackageFilesClient, error) {
+	stream, err := c.cc.NewStream(ctx, &Conductor_ServiceDesc.Streams[4], "/khutulun.Conductor/getPackageFiles", opts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &conductorGetBundleFilesClient{stream}
+	x := &conductorGetPackageFilesClient{stream}
 	if err := x.ClientStream.SendMsg(in); err != nil {
 		return nil, err
 	}
@@ -206,47 +206,47 @@ func (c *conductorClient) GetBundleFiles(ctx context.Context, in *GetBundleFiles
 	return x, nil
 }
 
-type Conductor_GetBundleFilesClient interface {
-	Recv() (*BundleContent, error)
+type Conductor_GetPackageFilesClient interface {
+	Recv() (*PackageContent, error)
 	grpc.ClientStream
 }
 
-type conductorGetBundleFilesClient struct {
+type conductorGetPackageFilesClient struct {
 	grpc.ClientStream
 }
 
-func (x *conductorGetBundleFilesClient) Recv() (*BundleContent, error) {
-	m := new(BundleContent)
+func (x *conductorGetPackageFilesClient) Recv() (*PackageContent, error) {
+	m := new(PackageContent)
 	if err := x.ClientStream.RecvMsg(m); err != nil {
 		return nil, err
 	}
 	return m, nil
 }
 
-func (c *conductorClient) SetBundleFiles(ctx context.Context, opts ...grpc.CallOption) (Conductor_SetBundleFilesClient, error) {
-	stream, err := c.cc.NewStream(ctx, &Conductor_ServiceDesc.Streams[5], "/khutulun.Conductor/setBundleFiles", opts...)
+func (c *conductorClient) SetPackageFiles(ctx context.Context, opts ...grpc.CallOption) (Conductor_SetPackageFilesClient, error) {
+	stream, err := c.cc.NewStream(ctx, &Conductor_ServiceDesc.Streams[5], "/khutulun.Conductor/setPackageFiles", opts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &conductorSetBundleFilesClient{stream}
+	x := &conductorSetPackageFilesClient{stream}
 	return x, nil
 }
 
-type Conductor_SetBundleFilesClient interface {
-	Send(*BundleContent) error
+type Conductor_SetPackageFilesClient interface {
+	Send(*PackageContent) error
 	CloseAndRecv() (*emptypb.Empty, error)
 	grpc.ClientStream
 }
 
-type conductorSetBundleFilesClient struct {
+type conductorSetPackageFilesClient struct {
 	grpc.ClientStream
 }
 
-func (x *conductorSetBundleFilesClient) Send(m *BundleContent) error {
+func (x *conductorSetPackageFilesClient) Send(m *PackageContent) error {
 	return x.ClientStream.SendMsg(m)
 }
 
-func (x *conductorSetBundleFilesClient) CloseAndRecv() (*emptypb.Empty, error) {
+func (x *conductorSetPackageFilesClient) CloseAndRecv() (*emptypb.Empty, error) {
 	if err := x.ClientStream.CloseSend(); err != nil {
 		return nil, err
 	}
@@ -257,9 +257,9 @@ func (x *conductorSetBundleFilesClient) CloseAndRecv() (*emptypb.Empty, error) {
 	return m, nil
 }
 
-func (c *conductorClient) RemoveBundle(ctx context.Context, in *BundleIdentifier, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+func (c *conductorClient) RemovePackage(ctx context.Context, in *PackageIdentifier, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	out := new(emptypb.Empty)
-	err := c.cc.Invoke(ctx, "/khutulun.Conductor/removeBundle", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/khutulun.Conductor/removePackage", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -346,11 +346,11 @@ type ConductorServer interface {
 	ListHosts(*emptypb.Empty, Conductor_ListHostsServer) error
 	AddHost(context.Context, *HostIdentifier) (*emptypb.Empty, error)
 	ListNamespaces(*emptypb.Empty, Conductor_ListNamespacesServer) error
-	ListBundles(*ListBundles, Conductor_ListBundlesServer) error
-	ListBundleFiles(*BundleIdentifier, Conductor_ListBundleFilesServer) error
-	GetBundleFiles(*GetBundleFiles, Conductor_GetBundleFilesServer) error
-	SetBundleFiles(Conductor_SetBundleFilesServer) error
-	RemoveBundle(context.Context, *BundleIdentifier) (*emptypb.Empty, error)
+	ListPackages(*ListPackages, Conductor_ListPackagesServer) error
+	ListPackageFiles(*PackageIdentifier, Conductor_ListPackageFilesServer) error
+	GetPackageFiles(*GetPackageFiles, Conductor_GetPackageFilesServer) error
+	SetPackageFiles(Conductor_SetPackageFilesServer) error
+	RemovePackage(context.Context, *PackageIdentifier) (*emptypb.Empty, error)
 	DeployService(context.Context, *DeployService) (*emptypb.Empty, error)
 	ListResources(*ListResources, Conductor_ListResourcesServer) error
 	Interact(Conductor_InteractServer) error
@@ -373,20 +373,20 @@ func (UnimplementedConductorServer) AddHost(context.Context, *HostIdentifier) (*
 func (UnimplementedConductorServer) ListNamespaces(*emptypb.Empty, Conductor_ListNamespacesServer) error {
 	return status.Errorf(codes.Unimplemented, "method ListNamespaces not implemented")
 }
-func (UnimplementedConductorServer) ListBundles(*ListBundles, Conductor_ListBundlesServer) error {
-	return status.Errorf(codes.Unimplemented, "method ListBundles not implemented")
+func (UnimplementedConductorServer) ListPackages(*ListPackages, Conductor_ListPackagesServer) error {
+	return status.Errorf(codes.Unimplemented, "method ListPackages not implemented")
 }
-func (UnimplementedConductorServer) ListBundleFiles(*BundleIdentifier, Conductor_ListBundleFilesServer) error {
-	return status.Errorf(codes.Unimplemented, "method ListBundleFiles not implemented")
+func (UnimplementedConductorServer) ListPackageFiles(*PackageIdentifier, Conductor_ListPackageFilesServer) error {
+	return status.Errorf(codes.Unimplemented, "method ListPackageFiles not implemented")
 }
-func (UnimplementedConductorServer) GetBundleFiles(*GetBundleFiles, Conductor_GetBundleFilesServer) error {
-	return status.Errorf(codes.Unimplemented, "method GetBundleFiles not implemented")
+func (UnimplementedConductorServer) GetPackageFiles(*GetPackageFiles, Conductor_GetPackageFilesServer) error {
+	return status.Errorf(codes.Unimplemented, "method GetPackageFiles not implemented")
 }
-func (UnimplementedConductorServer) SetBundleFiles(Conductor_SetBundleFilesServer) error {
-	return status.Errorf(codes.Unimplemented, "method SetBundleFiles not implemented")
+func (UnimplementedConductorServer) SetPackageFiles(Conductor_SetPackageFilesServer) error {
+	return status.Errorf(codes.Unimplemented, "method SetPackageFiles not implemented")
 }
-func (UnimplementedConductorServer) RemoveBundle(context.Context, *BundleIdentifier) (*emptypb.Empty, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method RemoveBundle not implemented")
+func (UnimplementedConductorServer) RemovePackage(context.Context, *PackageIdentifier) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RemovePackage not implemented")
 }
 func (UnimplementedConductorServer) DeployService(context.Context, *DeployService) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeployService not implemented")
@@ -488,109 +488,109 @@ func (x *conductorListNamespacesServer) Send(m *Namespace) error {
 	return x.ServerStream.SendMsg(m)
 }
 
-func _Conductor_ListBundles_Handler(srv interface{}, stream grpc.ServerStream) error {
-	m := new(ListBundles)
+func _Conductor_ListPackages_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(ListPackages)
 	if err := stream.RecvMsg(m); err != nil {
 		return err
 	}
-	return srv.(ConductorServer).ListBundles(m, &conductorListBundlesServer{stream})
+	return srv.(ConductorServer).ListPackages(m, &conductorListPackagesServer{stream})
 }
 
-type Conductor_ListBundlesServer interface {
-	Send(*BundleIdentifier) error
+type Conductor_ListPackagesServer interface {
+	Send(*PackageIdentifier) error
 	grpc.ServerStream
 }
 
-type conductorListBundlesServer struct {
+type conductorListPackagesServer struct {
 	grpc.ServerStream
 }
 
-func (x *conductorListBundlesServer) Send(m *BundleIdentifier) error {
+func (x *conductorListPackagesServer) Send(m *PackageIdentifier) error {
 	return x.ServerStream.SendMsg(m)
 }
 
-func _Conductor_ListBundleFiles_Handler(srv interface{}, stream grpc.ServerStream) error {
-	m := new(BundleIdentifier)
+func _Conductor_ListPackageFiles_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(PackageIdentifier)
 	if err := stream.RecvMsg(m); err != nil {
 		return err
 	}
-	return srv.(ConductorServer).ListBundleFiles(m, &conductorListBundleFilesServer{stream})
+	return srv.(ConductorServer).ListPackageFiles(m, &conductorListPackageFilesServer{stream})
 }
 
-type Conductor_ListBundleFilesServer interface {
-	Send(*BundleFile) error
+type Conductor_ListPackageFilesServer interface {
+	Send(*PackageFile) error
 	grpc.ServerStream
 }
 
-type conductorListBundleFilesServer struct {
+type conductorListPackageFilesServer struct {
 	grpc.ServerStream
 }
 
-func (x *conductorListBundleFilesServer) Send(m *BundleFile) error {
+func (x *conductorListPackageFilesServer) Send(m *PackageFile) error {
 	return x.ServerStream.SendMsg(m)
 }
 
-func _Conductor_GetBundleFiles_Handler(srv interface{}, stream grpc.ServerStream) error {
-	m := new(GetBundleFiles)
+func _Conductor_GetPackageFiles_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(GetPackageFiles)
 	if err := stream.RecvMsg(m); err != nil {
 		return err
 	}
-	return srv.(ConductorServer).GetBundleFiles(m, &conductorGetBundleFilesServer{stream})
+	return srv.(ConductorServer).GetPackageFiles(m, &conductorGetPackageFilesServer{stream})
 }
 
-type Conductor_GetBundleFilesServer interface {
-	Send(*BundleContent) error
+type Conductor_GetPackageFilesServer interface {
+	Send(*PackageContent) error
 	grpc.ServerStream
 }
 
-type conductorGetBundleFilesServer struct {
+type conductorGetPackageFilesServer struct {
 	grpc.ServerStream
 }
 
-func (x *conductorGetBundleFilesServer) Send(m *BundleContent) error {
+func (x *conductorGetPackageFilesServer) Send(m *PackageContent) error {
 	return x.ServerStream.SendMsg(m)
 }
 
-func _Conductor_SetBundleFiles_Handler(srv interface{}, stream grpc.ServerStream) error {
-	return srv.(ConductorServer).SetBundleFiles(&conductorSetBundleFilesServer{stream})
+func _Conductor_SetPackageFiles_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(ConductorServer).SetPackageFiles(&conductorSetPackageFilesServer{stream})
 }
 
-type Conductor_SetBundleFilesServer interface {
+type Conductor_SetPackageFilesServer interface {
 	SendAndClose(*emptypb.Empty) error
-	Recv() (*BundleContent, error)
+	Recv() (*PackageContent, error)
 	grpc.ServerStream
 }
 
-type conductorSetBundleFilesServer struct {
+type conductorSetPackageFilesServer struct {
 	grpc.ServerStream
 }
 
-func (x *conductorSetBundleFilesServer) SendAndClose(m *emptypb.Empty) error {
+func (x *conductorSetPackageFilesServer) SendAndClose(m *emptypb.Empty) error {
 	return x.ServerStream.SendMsg(m)
 }
 
-func (x *conductorSetBundleFilesServer) Recv() (*BundleContent, error) {
-	m := new(BundleContent)
+func (x *conductorSetPackageFilesServer) Recv() (*PackageContent, error) {
+	m := new(PackageContent)
 	if err := x.ServerStream.RecvMsg(m); err != nil {
 		return nil, err
 	}
 	return m, nil
 }
 
-func _Conductor_RemoveBundle_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(BundleIdentifier)
+func _Conductor_RemovePackage_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PackageIdentifier)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ConductorServer).RemoveBundle(ctx, in)
+		return srv.(ConductorServer).RemovePackage(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/khutulun.Conductor/removeBundle",
+		FullMethod: "/khutulun.Conductor/removePackage",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ConductorServer).RemoveBundle(ctx, req.(*BundleIdentifier))
+		return srv.(ConductorServer).RemovePackage(ctx, req.(*PackageIdentifier))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -676,8 +676,8 @@ var Conductor_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Conductor_AddHost_Handler,
 		},
 		{
-			MethodName: "removeBundle",
-			Handler:    _Conductor_RemoveBundle_Handler,
+			MethodName: "removePackage",
+			Handler:    _Conductor_RemovePackage_Handler,
 		},
 		{
 			MethodName: "deployService",
@@ -696,23 +696,23 @@ var Conductor_ServiceDesc = grpc.ServiceDesc{
 			ServerStreams: true,
 		},
 		{
-			StreamName:    "listBundles",
-			Handler:       _Conductor_ListBundles_Handler,
+			StreamName:    "listPackages",
+			Handler:       _Conductor_ListPackages_Handler,
 			ServerStreams: true,
 		},
 		{
-			StreamName:    "listBundleFiles",
-			Handler:       _Conductor_ListBundleFiles_Handler,
+			StreamName:    "listPackageFiles",
+			Handler:       _Conductor_ListPackageFiles_Handler,
 			ServerStreams: true,
 		},
 		{
-			StreamName:    "getBundleFiles",
-			Handler:       _Conductor_GetBundleFiles_Handler,
+			StreamName:    "getPackageFiles",
+			Handler:       _Conductor_GetPackageFiles_Handler,
 			ServerStreams: true,
 		},
 		{
-			StreamName:    "setBundleFiles",
-			Handler:       _Conductor_SetBundleFiles_Handler,
+			StreamName:    "setPackageFiles",
+			Handler:       _Conductor_SetPackageFiles_Handler,
 			ClientStreams: true,
 		},
 		{

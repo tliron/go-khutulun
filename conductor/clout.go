@@ -2,23 +2,24 @@ package conductor
 
 import (
 	"errors"
+	"os"
 
 	"github.com/danjacques/gofslock/fslock"
+	"github.com/tliron/kutil/format"
+	"github.com/tliron/kutil/logging"
 	problemspkg "github.com/tliron/kutil/problems"
 	cloutpkg "github.com/tliron/puccini/clout"
 	"github.com/tliron/puccini/clout/js"
 )
 
 func (self *Conductor) OpenClout(namespace string, serviceName string) (fslock.Handle, *cloutpkg.Clout, error) {
-	if lock, err := self.lockBundle(namespace, "clout", serviceName, false); err == nil {
-		cloutPath := self.getBundleMainFile(namespace, "clout", serviceName)
+	if lock, err := self.lockPackage(namespace, "clout", serviceName, false); err == nil {
+		cloutPath := self.getPackageMainFile(namespace, "clout", serviceName)
 		log.Debugf("reading clout: %q", cloutPath)
 		if clout, err := cloutpkg.Load(cloutPath, "yaml"); err == nil {
 			return lock, clout, nil
 		} else {
-			if err := lock.Unlock(); err != nil {
-				log.Errorf("unlock: %s", err.Error())
-			}
+			logging.CallAndLogError(lock.Unlock, "unlock", log)
 			return nil, nil, err
 		}
 	} else {
@@ -26,23 +27,15 @@ func (self *Conductor) OpenClout(namespace string, serviceName string) (fslock.H
 	}
 }
 
-func (self *Conductor) GetClout(namespace string, serviceName string, coerce bool) (*cloutpkg.Clout, error) {
-	if lock, clout, err := self.OpenClout(namespace, serviceName); err == nil {
-		defer func() {
-			if err := lock.Unlock(); err != nil {
-				grpcLog.Errorf("unlock: %s", err.Error())
-			}
-		}()
+func (self *Conductor) SaveClout(serviceNamespace string, serviceName string, clout *cloutpkg.Clout) error {
+	cloutPath := self.getPackageMainFile(serviceNamespace, "clout", serviceName)
+	log.Infof("writing to %q", cloutPath)
+	if file, err := os.OpenFile(cloutPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0666); err == nil {
+		defer file.Close()
 
-		if coerce {
-			if err := self.CoerceClout(clout); err != nil {
-				return nil, err
-			}
-		}
-
-		return clout, nil
+		return format.WriteYAML(clout, file, "  ", false)
 	} else {
-		return nil, err
+		return err
 	}
 }
 

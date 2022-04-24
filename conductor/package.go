@@ -9,32 +9,34 @@ import (
 
 	"github.com/danjacques/gofslock/fslock"
 	"github.com/tliron/khutulun/util"
+	"github.com/tliron/kutil/logging"
 )
 
 const LOCK_FILE = ".lock"
 
-type BundleIdentifier struct {
+type PackageIdentifier struct {
 	Namespace string `json:"namespace" yaml:"namespace"`
 	Type      string `json:"type" yaml:"type"`
 	Name      string `json:"name" yaml:"name"`
 }
 
-type BundleFile struct {
+type PackageFile struct {
 	Path       string
 	Executable bool
 }
 
-func (self *Conductor) ListBundles(namespace string, type_ string) ([]BundleIdentifier, error) {
+func (self *Conductor) ListPackages(namespace string, type_ string) ([]PackageIdentifier, error) {
 	if namespaces, err := self.namespaceToNamespaces(namespace); err == nil {
-		var identifiers []BundleIdentifier
+		var identifiers []PackageIdentifier
 		for _, namespace_ := range namespaces {
-			if files, err := os.ReadDir(self.getBundleTypeDir(namespace_, type_)); err == nil {
+			if files, err := os.ReadDir(self.getPackageTypeDir(namespace_, type_)); err == nil {
 				for _, file := range files {
-					if file.IsDir() {
-						identifiers = append(identifiers, BundleIdentifier{
+					name := file.Name()
+					if file.IsDir() && !isHidden(name) {
+						identifiers = append(identifiers, PackageIdentifier{
 							Namespace: namespace_,
 							Type:      type_,
-							Name:      file.Name(),
+							Name:      name,
 						})
 					}
 				}
@@ -50,21 +52,17 @@ func (self *Conductor) ListBundles(namespace string, type_ string) ([]BundleIden
 	}
 }
 
-func (self *Conductor) ListBundleFiles(namespace string, type_ string, name string) ([]BundleFile, error) {
-	if lock, err := self.lockBundle(namespace, type_, name, false); err == nil {
-		defer func() {
-			if err := lock.Unlock(); err != nil {
-				log.Errorf("unlock: %s", err.Error())
-			}
-		}()
+func (self *Conductor) ListPackageFiles(namespace string, type_ string, name string) ([]PackageFile, error) {
+	if lock, err := self.lockPackage(namespace, type_, name, false); err == nil {
+		defer logging.CallAndLogError(lock.Unlock, "unlock", log)
 
-		path := self.getBundleDir(namespace, type_, name)
+		path := self.getPackageDir(namespace, type_, name)
 		length := len(path) + 1
-		var files []BundleFile
+		var files []PackageFile
 		if err := filepath.WalkDir(path, func(path string, entry fs.DirEntry, err error) error {
 			if !entry.IsDir() {
 				if stat, err := os.Stat(path); err == nil {
-					files = append(files, BundleFile{
+					files = append(files, PackageFile{
 						Path:       path[length:],
 						Executable: stat.Mode()&0100 != 0,
 					})
@@ -83,16 +81,14 @@ func (self *Conductor) ListBundleFiles(namespace string, type_ string, name stri
 	}
 }
 
-func (self *Conductor) ReadBundleFile(namespace string, type_ string, name string, path string) (fslock.Handle, io.ReadCloser, error) {
-	if lock, err := self.lockBundle(namespace, type_, name, false); err == nil {
-		path = filepath.Join(self.getBundleDir(namespace, type_, name), path)
+func (self *Conductor) ReadPackageFile(namespace string, type_ string, name string, path string) (fslock.Handle, io.ReadCloser, error) {
+	if lock, err := self.lockPackage(namespace, type_, name, false); err == nil {
+		path = filepath.Join(self.getPackageDir(namespace, type_, name), path)
 		log.Debugf("reading from %q", path)
 		if file, err := os.Open(path); err == nil {
 			return lock, file, nil
 		} else {
-			if err := lock.Unlock(); err != nil {
-				log.Errorf("unlock: %s", err.Error())
-			}
+			logging.CallAndLogError(lock.Unlock, "unlock", log)
 			return nil, nil, err
 		}
 	} else {
@@ -100,16 +96,12 @@ func (self *Conductor) ReadBundleFile(namespace string, type_ string, name strin
 	}
 }
 
-func (self *Conductor) DeleteBundle(namespace string, type_ string, name string) error {
-	if lock, err := self.lockBundle(namespace, type_, name, false); err == nil {
-		defer func() {
-			if err := lock.Unlock(); err != nil {
-				log.Errorf("unlock: %s", err.Error())
-			}
-		}()
+func (self *Conductor) DeletePackage(namespace string, type_ string, name string) error {
+	if lock, err := self.lockPackage(namespace, type_, name, false); err == nil {
+		defer logging.CallAndLogError(lock.Unlock, "unlock", log)
 
-		path := self.getBundleDir(namespace, type_, name)
-		log.Infof("deleting bundle %q", path)
+		path := self.getPackageDir(namespace, type_, name)
+		log.Infof("deleting package %q", path)
 		// TODO: is it OK to delete the lock file while we're holding it?
 		return os.RemoveAll(path)
 	} else {
@@ -124,16 +116,16 @@ func (self *Conductor) getNamespaceDir(namespace string) string {
 	return filepath.Join(self.statePath, namespace)
 }
 
-func (self *Conductor) getBundleTypeDir(namespace string, type_ string) string {
+func (self *Conductor) getPackageTypeDir(namespace string, type_ string) string {
 	return filepath.Join(self.getNamespaceDir(namespace), type_)
 }
 
-func (self *Conductor) getBundleDir(namespace string, type_ string, name string) string {
-	return filepath.Join(self.getBundleTypeDir(namespace, type_), name)
+func (self *Conductor) getPackageDir(namespace string, type_ string, name string) string {
+	return filepath.Join(self.getPackageTypeDir(namespace, type_), name)
 }
 
-func (self *Conductor) getBundleMainFile(namespace string, type_ string, name string) string {
-	dir := self.getBundleDir(namespace, type_, name)
+func (self *Conductor) getPackageMainFile(namespace string, type_ string, name string) string {
+	dir := self.getPackageDir(namespace, type_, name)
 	switch type_ {
 	case "template":
 		if entries, err := os.ReadDir(dir); err == nil {
@@ -167,8 +159,8 @@ func (self *Conductor) getBundleMainFile(namespace string, type_ string, name st
 	}
 }
 
-func (self *Conductor) lockBundle(namespace string, type_ string, name string, create bool) (fslock.Handle, error) {
-	path := filepath.Join(self.getBundleDir(namespace, type_, name), LOCK_FILE)
+func (self *Conductor) lockPackage(namespace string, type_ string, name string, create bool) (fslock.Handle, error) {
+	path := filepath.Join(self.getPackageDir(namespace, type_, name), LOCK_FILE)
 	blocker := newBlocker(time.Second, 5)
 	if lock, err := fslock.LockSharedBlocking(path, blocker); err == nil {
 		return lock, nil

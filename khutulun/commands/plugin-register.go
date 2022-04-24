@@ -14,6 +14,6 @@ var pluginRegisterCommand = &cobra.Command{
 	Short: "Register a plugin",
 	Args:  cobra.RangeArgs(2, 3),
 	Run: func(cmd *cobra.Command, args []string) {
-		registerBundle(namespace, "plugin", getPluginArgs(args))
+		registerPackage(namespace, "plugin", getPluginArgs(args))
 	},
 }

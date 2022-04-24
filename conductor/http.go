@@ -2,8 +2,6 @@ package conductor
 
 import (
 	contextpkg "context"
-	"fmt"
-	"net"
 	"net/http"
 	"time"
 
@@ -17,15 +15,20 @@ import (
 //
 
 type HTTP struct {
-	port       int
+	Protocol string
+	Address  string
+	Port     int
+
 	httpServer *http.Server
 	mux        *http.ServeMux
 	conductor  *Conductor
 }
 
-func NewHTTP(conductor *Conductor) (*HTTP, error) {
+func NewHTTP(conductor *Conductor, protocol string, address string, port int) (*HTTP, error) {
 	self := HTTP{
-		port:      8182,
+		Protocol:  protocol,
+		Address:   address,
+		Port:      port,
 		mux:       http.NewServeMux(),
 		conductor: conductor,
 	}
@@ -37,7 +40,7 @@ func NewHTTP(conductor *Conductor) (*HTTP, error) {
 	}
 
 	self.mux.HandleFunc("/api/namespace/list", self.listNamespaces)
-	self.mux.HandleFunc("/api/bundle/list", self.listBundles)
+	self.mux.HandleFunc("/api/package/list", self.listPackages)
 	self.mux.HandleFunc("/api/resource/list", self.listResources)
 
 	self.httpServer = &http.Server{
@@ -48,7 +51,7 @@ func NewHTTP(conductor *Conductor) (*HTTP, error) {
 }
 
 func (self *HTTP) Start() error {
-	if listener, err := net.Listen("tcp", fmt.Sprintf(":%d", self.port)); err == nil {
+	if listener, err := newListener(self.Protocol, self.Address, self.Port); err == nil {
 		httpLog.Noticef("starting server on: %s", listener.Addr().String())
 		go func() {
 			if err := self.httpServer.Serve(listener); err != nil {
@@ -80,12 +83,12 @@ func (self *HTTP) listNamespaces(writer http.ResponseWriter, request *http.Reque
 	}
 }
 
-func (self *HTTP) listBundles(writer http.ResponseWriter, request *http.Request) {
+func (self *HTTP) listPackages(writer http.ResponseWriter, request *http.Request) {
 	namespace := request.URL.Query().Get("namespace")
 	type_ := request.URL.Query().Get("type")
 	if type_ != "" {
-		if bundles, err := self.conductor.ListBundles(namespace, type_); err == nil {
-			format.WriteJSON(bundles, writer, "")
+		if identifiers, err := self.conductor.ListPackages(namespace, type_); err == nil {
+			format.WriteJSON(identifiers, writer, "")
 		} else {
 			writer.WriteHeader(500)
 		}

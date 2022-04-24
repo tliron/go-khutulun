@@ -13,6 +13,6 @@ var pluginDelistCommand = &cobra.Command{
 	Short: "Delist a plugin",
 	Args:  cobra.ExactArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
-		delist(namespace, "plugin", getPluginArgs(args))
+		delistPackage(namespace, "plugin", getPluginArgs(args))
 	},
 }

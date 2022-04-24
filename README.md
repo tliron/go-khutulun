@@ -7,11 +7,11 @@ Khutulun
 [![Latest Release](https://img.shields.io/github/release/tliron/khutulun.svg)](https://github.com/tliron/khutulun/releases/latest)
 [![Go Report Card](https://goreportcard.com/badge/github.com/tliron/khutulun)](https://goreportcard.com/report/github.com/tliron/khutulun)
 
-A service orchestrator for machine clusters that speaks
+A distributed orchestrator for services that speaks
 [TOSCA](https://www.oasis-open.org/committees/tosca/).
 
-Khutulun addresses similar uses as [Kubernetes](https://kubernetes.io/) does and can provide an
-alternative, more straightforward solution.
+Khutulun addresses similar uses as [Kubernetes](https://kubernetes.io/) does and can provide a
+more straightforward solution.
 
 Its primary design goal is that the outcome of orchestration would be no different from what a
 sysadmin would do themselves. If you want to simply install and run a bare process on a machine,
@@ -36,15 +36,21 @@ can call other plugins and can themselves be implemented as workloads on the clu
 Some included resource types and plugins:
 
 * Bare processes: self-contained or otherwise installable executables and scripts
-* Containers or pods of containers using [Podman](https://podman.io/)
+* Containers using [Podman](https://podman.io/) or 
+  [systemd-nspawn](https://www.freedesktop.org/software/systemd/man/systemd-nspawn.html)
 * Pristine containers using [Distrobox](https://distrobox.privatedns.org/) (on top of Podman)
-* System containers using [systemd-nspawn](https://www.freedesktop.org/software/systemd/man/systemd-nspawn.html)
+  or systemd-nspawn
+* Pods of containers using Podman
 * Virtual machines using [libvirt](https://libvirt.org/)
 * TCP port reservation with support for exposure through [Firewalld](https://firewalld.org/)
 * Local or networked directory storage
 
 Plugins can optionally wrap resources in usermode systemd units. This provides a unified admin
 experience as well as resilience in the case of failures and restarts.
+
+Note that Khutulun does not demand that every container (pod) have its own IP address in an
+internal network. (Very much unlike Kubernetes.) If desired this feature could be implemented by
+a networking plugin.
 
 Clusters
 --------
@@ -66,8 +72,9 @@ the scope of Khutulun. Use a dedicated infrastructure manager instead. Khutulun 
 tools, for example to allow workloads to modify their own cluster, or to use a Khutulun cluster as
 a dedicated "management cluster" that, well, manages the hardware of all other clusters.
 
-Included is are plugins for [Terraform](https://www.terraform.io/) and Ansible that make it easy
-to install Khutulun on your infrastructure while preparing it.
+Included is are plugins for [Terraform](https://www.terraform.io/) and
+[Ansible](https://www.ansible.com/) that make it easy to install Khutulun on your infrastructure
+while preparing it.
 
 By the way, hosts do not have to be dedicated to Khutulun and its workloads. You can use Khutulun to
 manage services across many machines without having to conceptualize them as a "cloud".
@@ -88,7 +95,7 @@ to provide specific implementations. Khutulun comes with its own TOSCA profile a
 plugins. You are encouraged to add your own.
 
 One of the hallmarks of TOSCA is that every service is a topological graph. Moreover, the edges
-of the graph are 1st-class citizens. This killer feature supercharges your modeling power for the
+of the graph are first-class citizens. This killer feature supercharges your modeling power for the
 cloud.
 
 The developers of Khutulun are involved in the TOSCA community and committed to improving the
@@ -119,9 +126,9 @@ worlds.
 What's wrong with just having a filesystem shared among all hosts? Seriously, why make things more
 complicated than they have to be?
 
-Also note that etcd has strict limits on the size of documents, which is an obstacle for sharing large,
+Note that etcd has strict limits on the size of documents, which is an obstacle for sharing large,
 useful binary artifacts. That means that if you need to share large, useful binary artifacts you will
-need to deploy yet another system. Are we winning yet?
+need to deploy yet another storage system. Are we winning yet?
 
 ### Why is there no custom Khutulun cluster installer? Why recommend using Terraform and other tools instead?
 
@@ -133,16 +140,15 @@ to have its own opinion.
 [Khutulun](https://en.wikipedia.org/wiki/Khutulun) (Mongolian: Хотулун) was a fabled Mongolian warrior,
 daughter of Kublai Khan's cousin, Kaidu.
 
-She was likely the inspiration for *Turandot* (Persian: Turandokht), the protagonist of
+She was likely the inspiration for *Turandot*, the protagonist of Count Carlo Gozzi's *commedia dell'arte*
+[play](https://en.wikipedia.org/wiki/turandot_(Gozzi)), which in turn inspired
 [Giacomo Puccini](https://en.wikipedia.org/wiki/Giacomo_Puccini)'s
-[opera of the same name](https://en.wikipedia.org/wiki/Turandot), which was in turn likely inspired
-by Count Carlo Gozzi's *commedia dell'arte*
-[play of the same name](https://en.wikipedia.org/wiki/turandot_(Gozzi)).
+[opera of the same name](https://en.wikipedia.org/wiki/Turandot).
 
 And [Puccini](https://puccini.cloud/) is the TOSCA processor that drives Khutulun.
 
 ### How do I pronounce "Khutulun"?
 
 * International level: "KOO-too-loon"
-* Cosmopolitan level: "XOO-too-loon" (the "x" sounds like "ch" in "Johann Sebastian Bach")
+* Cosmopolitan level: "CHOO-too-loon" ("ch" like in "Johann Sebastian Bach")
 * Expert level: Mongolian "Хотулун" ([video](https://www.youtube.com/watch?v=uP0BagZ-ZCE&t=58s))

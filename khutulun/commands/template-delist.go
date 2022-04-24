@@ -13,6 +13,6 @@ var templateDelistCommand = &cobra.Command{
 	Short: "Delist a template",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		delist(namespace, "template", args)
+		delistPackage(namespace, "template", args)
 	},
 }

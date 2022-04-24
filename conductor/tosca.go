@@ -1,9 +1,7 @@
 package conductor
 
 import (
-	"os"
-
-	"github.com/tliron/kutil/format"
+	"github.com/tliron/kutil/logging"
 	problemspkg "github.com/tliron/kutil/problems"
 	urlpkg "github.com/tliron/kutil/url"
 	cloutpkg "github.com/tliron/puccini/clout"
@@ -15,22 +13,20 @@ import (
 var parserContext = parser.NewContext()
 
 func (self *Conductor) ParseTosca(templateNamespace string, templateName string) (*normal.ServiceTemplate, *problemspkg.Problems, error) {
-	profilePath := self.getBundleTypeDir(templateNamespace, "profile")
-	commonProfilePath := self.getBundleTypeDir("common", "profile")
+	profilePath := self.getPackageTypeDir(templateNamespace, "profile")
+	commonProfilePath := self.getPackageTypeDir("common", "profile")
+
+	// TODO: lock *all* profiles
 
 	origins := []urlpkg.URL{
 		urlpkg.NewFileURL(profilePath, self.urlContext),
 		urlpkg.NewFileURL(commonProfilePath, self.urlContext),
 	}
 
-	if lock, err := self.lockBundle(templateNamespace, "template", templateName, false); err == nil {
-		defer func() {
-			if err := lock.Unlock(); err != nil {
-				log.Errorf("unlock: %s", err.Error())
-			}
-		}()
+	if lock, err := self.lockPackage(templateNamespace, "template", templateName, false); err == nil {
+		defer logging.CallAndLogError(lock.Unlock, "unlock", log)
 
-		templatePath := self.getBundleMainFile(templateNamespace, "template", templateName)
+		templatePath := self.getPackageMainFile(templateNamespace, "template", templateName)
 		if url, err := urlpkg.NewValidURL(templatePath, nil, self.urlContext); err == nil {
 			if _, serviceTemplate, problems, err := parserContext.Parse(url, origins, nil, nil, nil); err == nil {
 				return serviceTemplate, problems, nil
@@ -57,29 +53,17 @@ func (self *Conductor) CompileTosca(templateNamespace string, templateName strin
 				return nil, nil, problems.WithError(nil, false)
 			}
 
-			if lock, err := self.lockBundle(serviceNamespace, "clout", serviceName, true); err == nil {
-				defer func() {
-					if err := lock.Unlock(); err != nil {
-						log.Errorf("unlock: %s", err.Error())
-					}
-				}()
+			if lock, err := self.lockPackage(serviceNamespace, "clout", serviceName, true); err == nil {
+				defer logging.CallAndLogError(lock.Unlock, "unlock", log)
 
-				cloutPath := self.getBundleMainFile(serviceNamespace, "clout", serviceName)
-				log.Infof("writing to %q", cloutPath)
-				if file, err := os.OpenFile(cloutPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0666); err == nil {
-					defer file.Close()
-
-					if err := format.WriteYAML(clout, file, "  ", false); err != nil {
-						return nil, nil, err
-					}
+				if err := self.SaveClout(serviceNamespace, serviceName, clout); err == nil {
+					return clout, problems, nil
 				} else {
 					return nil, nil, err
 				}
 			} else {
 				return nil, nil, err
 			}
-
-			return clout, problems, nil
 		} else {
 			return nil, nil, problems.WithError(err, false)
 		}
