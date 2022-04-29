@@ -1,4 +1,4 @@
-package conductor
+package host
 
 import (
 	"fmt"
@@ -9,10 +9,10 @@ import (
 	"github.com/tliron/kutil/logging"
 )
 
-var log = logging.GetLogger("khutulun.conductor")
+var log = logging.GetLogger("khutulun.host")
 var watcherLog = logging.GetLogger("khutulun.watcher")
 var grpcLog = logging.GetLogger("khutulun.grpc")
-var clusterLog = logging.GetLogger("khutulun.cluster")
+var gossipLog = logging.GetLogger("khutulun.gossip")
 var httpLog = logging.GetLogger("khutulun.http")
 var reconcileLog = logging.GetLogger("khutulun.reconcile")
 var scheduleLog = logging.GetLogger("khutulun.schedule")

@@ -1,11 +1,11 @@
-package conductor
+package host
 
 import (
 	"io/ioutil"
 	"os"
 )
 
-func (self *Conductor) ListNamespaces() ([]string, error) {
+func (self *Host) ListNamespaces() ([]string, error) {
 	if files, err := ioutil.ReadDir(self.statePath); err == nil {
 		var names []string
 		for _, file := range files {
@@ -24,7 +24,7 @@ func (self *Conductor) ListNamespaces() ([]string, error) {
 	}
 }
 
-func (self *Conductor) namespaceToNamespaces(namespace string) ([]string, error) {
+func (self *Host) namespaceToNamespaces(namespace string) ([]string, error) {
 	if namespace == "" {
 		return self.ListNamespaces()
 	} else {

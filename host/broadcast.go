@@ -1,4 +1,4 @@
-package conductor
+package host
 
 import (
 	"errors"
@@ -57,7 +57,7 @@ func (self *Broadcaster) SendJSON(message any) error {
 
 func (self *Broadcaster) Send(message []byte) error {
 	if self.connection != nil {
-		clusterLog.Infof("sending broadcast: %s", message)
+		gossipLog.Debugf("sending broadcast: %s", message)
 		_, err := self.connection.Write(message)
 		return err
 	} else {
@@ -120,15 +120,15 @@ func (self *Receiver) Start() error {
 			for {
 				if count, address, err := self.connection.ReadFromUDP(buffer); err == nil {
 					if self.ignore(address) {
-						clusterLog.Debugf("ignoring broadcast from: %s", address.String())
+						gossipLog.Debugf("ignoring broadcast from: %s", address.String())
 						continue
 					}
 
 					message := buffer[:count]
-					clusterLog.Infof("received broadcast: %s", message)
+					gossipLog.Debugf("received broadcast: %s", message)
 					self.receive(address, message)
 				} else {
-					clusterLog.Info("receiver closed")
+					gossipLog.Info("receiver closed")
 					return
 				}
 			}

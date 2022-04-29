@@ -20,7 +20,7 @@ func init() {
 
 var rootCommand = &cobra.Command{
 	Use:   toolName,
-	Short: "Khutulun conductor",
+	Short: "Khutulun host",
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		err := terminal.ProcessColorizeFlag(colorize)
 		util.FailOnError(err)

@@ -12,17 +12,20 @@ function escapeAttribute(html) {
   return escapeContent(html).replace(/"/g, "&quot;");
 }
 
-function syncTable(tab, url) {
+function syncTable(tab, url, columns) {
+  let namespaced = columns.includes('namespace');
   let tabControl = $('#'+tab+'-tab');
   let headerNamespace = $('#header-namespace');
   let selectNamespace = $('#select-namespace');
 
-  tabControl.on('hide.bs.tab', function(event) {
-    headerNamespace.addClass('invisible');
-  });
+  if (namespaced)
+    tabControl.on('hide.bs.tab', function(event) {
+      headerNamespace.addClass('invisible');
+    });
 
   tabControl.on('show.bs.tab', function(event) {
-    headerNamespace.removeClass('invisible');
+    if (namespaced)
+      headerNamespace.removeClass('invisible');
     let table = $('#'+tab+' table');
     let tbody = $('#'+tab+' table tbody');
 
@@ -57,8 +60,15 @@ function syncTable(tab, url) {
       for (let i = 0, l = identifiers.length; i < l; i++) {
         let identifier = identifiers[i];
         if (!find(identifier, exists)) {
-          let namespace_ = identifier.namespace == '_' ? '(default)' : identifier.namespace;
-          let tr = $(`<tr><td>` + escapeContent(namespace_) + `</td><td>` + escapeContent(identifier.name) + `</td><td></td></tr>`);
+          let tr = `<tr>`
+          for (let ii = 0, ll = columns.length; ii < ll; ii++) {
+            let column = columns[ii];
+            let value = identifier[column] || '';
+            if ((column == 'namespace') && (value == '_'))
+              value = '(default)'
+            tr += `<td>` + escapeContent(value) + `</td>`;
+          }
+          tr = $(tr + `</tr>`)
           tr.data('identifier', identifier);
           tbody.append(tr);
         }
@@ -92,14 +102,15 @@ function syncTable(tab, url) {
 
     function tickTable() {
       $.get({
-        url: url + '&namespace=' + encodeURIComponent(namespace),
+        url: url + (namespaced ? '&namespace=' + encodeURIComponent(namespace) : ''),
         dataType: 'json',
         success: renderTable
       });
     }
 
     function tick() {
-      tickNamespaces();
+      if (namespaced)
+        tickNamespaces();
       tickTable();
     }
 
@@ -122,10 +133,12 @@ $(document).ready(function () {
     });
   });
 
-  syncTable('services', 'api/package/list?type=clout');
-  syncTable('templates', 'api/package/list?type=template');
-  syncTable('profiles', 'api/package/list?type=profile');
-  syncTable('plugins', 'api/package/list?type=plugin');
-  syncTable('runnables', 'api/resource/list?type=runnable');
+  syncTable('services', 'api/package/list?type=clout', ['namespace', 'name', 'description']);
+  syncTable('templates', 'api/package/list?type=template', ['namespace', 'name', 'description']);
+  syncTable('profiles', 'api/package/list?type=profile', ['namespace', 'name', 'description']);
+  syncTable('plugins', 'api/package/list?type=plugin', ['namespace', 'name', 'description']);
+  syncTable('runnables', 'api/resource/list?type=runnable', ['namespace', 'name', 'description', 'host']);
+  syncTable('connections', 'api/resource/list?type=connection', ['namespace', 'name', 'description', 'host']);
+  syncTable('hosts', 'api/host/list', ['name', 'grpcAddress']);
 
 });

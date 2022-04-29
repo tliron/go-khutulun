@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/tliron/khutulun/khutulun-conductor/commands"
+	"github.com/tliron/khutulun/khutulun-host/commands"
 	"github.com/tliron/kutil/util"
 
 	_ "github.com/tliron/kutil/logging/simple"

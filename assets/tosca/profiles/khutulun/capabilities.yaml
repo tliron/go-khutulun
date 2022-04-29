@@ -31,7 +31,7 @@ capability_types:
         required: false
       user:
         description: >-
-          Operating system user owning the runnable. If not provided will be the user owning the conductor.
+          Operating system user owning the runnable. If not provided will be the user owning the host service.
         type: string
         required: false
       systemd:

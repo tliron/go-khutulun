@@ -1,4 +1,4 @@
-package conductor
+package host
 
 import (
 	contextpkg "context"
@@ -21,20 +21,20 @@ type HTTP struct {
 
 	httpServer *http.Server
 	mux        *http.ServeMux
-	conductor  *Conductor
+	host       *Host
 }
 
-func NewHTTP(conductor *Conductor, protocol string, address string, port int) (*HTTP, error) {
+func NewHTTP(host *Host, protocol string, address string, port int) (*HTTP, error) {
 	self := HTTP{
-		Protocol:  protocol,
-		Address:   address,
-		Port:      port,
-		mux:       http.NewServeMux(),
-		conductor: conductor,
+		Protocol: protocol,
+		Address:  address,
+		Port:     port,
+		mux:      http.NewServeMux(),
+		host:     host,
 	}
 
-	if fs, err := fspkg.New(); err == nil {
-		self.mux.Handle("/", http.FileServer(fs))
+	if filesystem, err := fspkg.New(); err == nil {
+		self.mux.Handle("/", http.FileServer(filesystem))
 	} else {
 		return nil, err
 	}
@@ -42,6 +42,7 @@ func NewHTTP(conductor *Conductor, protocol string, address string, port int) (*
 	self.mux.HandleFunc("/api/namespace/list", self.listNamespaces)
 	self.mux.HandleFunc("/api/package/list", self.listPackages)
 	self.mux.HandleFunc("/api/resource/list", self.listResources)
+	self.mux.HandleFunc("/api/host/list", self.listHosts)
 
 	self.httpServer = &http.Server{
 		Handler: self.mux,
@@ -76,7 +77,7 @@ func (self *HTTP) Stop() error {
 }
 
 func (self *HTTP) listNamespaces(writer http.ResponseWriter, request *http.Request) {
-	if namespaces, err := self.conductor.ListNamespaces(); err == nil {
+	if namespaces, err := self.host.ListNamespaces(); err == nil {
 		format.WriteJSON(namespaces, writer, "")
 	} else {
 		writer.WriteHeader(500)
@@ -87,7 +88,7 @@ func (self *HTTP) listPackages(writer http.ResponseWriter, request *http.Request
 	namespace := request.URL.Query().Get("namespace")
 	type_ := request.URL.Query().Get("type")
 	if type_ != "" {
-		if identifiers, err := self.conductor.ListPackages(namespace, type_); err == nil {
+		if identifiers, err := self.host.ListPackages(namespace, type_); err == nil {
 			format.WriteJSON(identifiers, writer, "")
 		} else {
 			writer.WriteHeader(500)
@@ -102,12 +103,20 @@ func (self *HTTP) listResources(writer http.ResponseWriter, request *http.Reques
 	service := request.URL.Query().Get("service")
 	type_ := request.URL.Query().Get("type")
 	if type_ != "" {
-		if resources, err := self.conductor.ListResources(namespace, service, type_); err == nil {
+		if resources, err := self.host.ListResources(namespace, service, type_); err == nil {
 			format.WriteJSON(resources, writer, "")
 		} else {
 			writer.WriteHeader(500)
 		}
 	} else {
 		writer.WriteHeader(400)
+	}
+}
+
+func (self *HTTP) listHosts(writer http.ResponseWriter, request *http.Request) {
+	if self.host.gossip != nil {
+		format.WriteJSON(self.host.gossip.ListHosts(), writer, "")
+	} else {
+		writer.WriteHeader(500)
 	}
 }

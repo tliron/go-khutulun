@@ -1,8 +1,0 @@
-[Unit]
-Description=Khutulun Conductor
-
-[Service]
-ExecStart=/mnt/khutulun/common/plugin/conductor/conductor server -v
-
-[Install]
-WantedBy=default.target

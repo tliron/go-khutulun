@@ -19,47 +19,47 @@ import (
 // Requires gRPC-Go v1.32.0 or later.
 const _ = grpc.SupportPackageIsVersion7
 
-// ConductorClient is the client API for Conductor service.
+// HostClient is the client API for Host service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
-type ConductorClient interface {
+type HostClient interface {
 	GetVersion(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*Version, error)
-	ListHosts(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (Conductor_ListHostsClient, error)
-	AddHost(ctx context.Context, in *HostIdentifier, opts ...grpc.CallOption) (*emptypb.Empty, error)
-	ListNamespaces(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (Conductor_ListNamespacesClient, error)
-	ListPackages(ctx context.Context, in *ListPackages, opts ...grpc.CallOption) (Conductor_ListPackagesClient, error)
-	ListPackageFiles(ctx context.Context, in *PackageIdentifier, opts ...grpc.CallOption) (Conductor_ListPackageFilesClient, error)
-	GetPackageFiles(ctx context.Context, in *GetPackageFiles, opts ...grpc.CallOption) (Conductor_GetPackageFilesClient, error)
-	SetPackageFiles(ctx context.Context, opts ...grpc.CallOption) (Conductor_SetPackageFilesClient, error)
+	ListHosts(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (Host_ListHostsClient, error)
+	AddHost(ctx context.Context, in *AddHost, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	ListNamespaces(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (Host_ListNamespacesClient, error)
+	ListPackages(ctx context.Context, in *ListPackages, opts ...grpc.CallOption) (Host_ListPackagesClient, error)
+	ListPackageFiles(ctx context.Context, in *PackageIdentifier, opts ...grpc.CallOption) (Host_ListPackageFilesClient, error)
+	GetPackageFiles(ctx context.Context, in *GetPackageFiles, opts ...grpc.CallOption) (Host_GetPackageFilesClient, error)
+	SetPackageFiles(ctx context.Context, opts ...grpc.CallOption) (Host_SetPackageFilesClient, error)
 	RemovePackage(ctx context.Context, in *PackageIdentifier, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	DeployService(ctx context.Context, in *DeployService, opts ...grpc.CallOption) (*emptypb.Empty, error)
-	ListResources(ctx context.Context, in *ListResources, opts ...grpc.CallOption) (Conductor_ListResourcesClient, error)
-	Interact(ctx context.Context, opts ...grpc.CallOption) (Conductor_InteractClient, error)
+	ListResources(ctx context.Context, in *ListResources, opts ...grpc.CallOption) (Host_ListResourcesClient, error)
+	Interact(ctx context.Context, opts ...grpc.CallOption) (Host_InteractClient, error)
 }
 
-type conductorClient struct {
+type hostClient struct {
 	cc grpc.ClientConnInterface
 }
 
-func NewConductorClient(cc grpc.ClientConnInterface) ConductorClient {
-	return &conductorClient{cc}
+func NewHostClient(cc grpc.ClientConnInterface) HostClient {
+	return &hostClient{cc}
 }
 
-func (c *conductorClient) GetVersion(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*Version, error) {
+func (c *hostClient) GetVersion(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*Version, error) {
 	out := new(Version)
-	err := c.cc.Invoke(ctx, "/khutulun.Conductor/getVersion", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/khutulun.Host/getVersion", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *conductorClient) ListHosts(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (Conductor_ListHostsClient, error) {
-	stream, err := c.cc.NewStream(ctx, &Conductor_ServiceDesc.Streams[0], "/khutulun.Conductor/listHosts", opts...)
+func (c *hostClient) ListHosts(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (Host_ListHostsClient, error) {
+	stream, err := c.cc.NewStream(ctx, &Host_ServiceDesc.Streams[0], "/khutulun.Host/listHosts", opts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &conductorListHostsClient{stream}
+	x := &hostListHostsClient{stream}
 	if err := x.ClientStream.SendMsg(in); err != nil {
 		return nil, err
 	}
@@ -69,16 +69,16 @@ func (c *conductorClient) ListHosts(ctx context.Context, in *emptypb.Empty, opts
 	return x, nil
 }
 
-type Conductor_ListHostsClient interface {
+type Host_ListHostsClient interface {
 	Recv() (*HostIdentifier, error)
 	grpc.ClientStream
 }
 
-type conductorListHostsClient struct {
+type hostListHostsClient struct {
 	grpc.ClientStream
 }
 
-func (x *conductorListHostsClient) Recv() (*HostIdentifier, error) {
+func (x *hostListHostsClient) Recv() (*HostIdentifier, error) {
 	m := new(HostIdentifier)
 	if err := x.ClientStream.RecvMsg(m); err != nil {
 		return nil, err
@@ -86,21 +86,21 @@ func (x *conductorListHostsClient) Recv() (*HostIdentifier, error) {
 	return m, nil
 }
 
-func (c *conductorClient) AddHost(ctx context.Context, in *HostIdentifier, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+func (c *hostClient) AddHost(ctx context.Context, in *AddHost, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	out := new(emptypb.Empty)
-	err := c.cc.Invoke(ctx, "/khutulun.Conductor/addHost", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/khutulun.Host/addHost", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *conductorClient) ListNamespaces(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (Conductor_ListNamespacesClient, error) {
-	stream, err := c.cc.NewStream(ctx, &Conductor_ServiceDesc.Streams[1], "/khutulun.Conductor/listNamespaces", opts...)
+func (c *hostClient) ListNamespaces(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (Host_ListNamespacesClient, error) {
+	stream, err := c.cc.NewStream(ctx, &Host_ServiceDesc.Streams[1], "/khutulun.Host/listNamespaces", opts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &conductorListNamespacesClient{stream}
+	x := &hostListNamespacesClient{stream}
 	if err := x.ClientStream.SendMsg(in); err != nil {
 		return nil, err
 	}
@@ -110,16 +110,16 @@ func (c *conductorClient) ListNamespaces(ctx context.Context, in *emptypb.Empty,
 	return x, nil
 }
 
-type Conductor_ListNamespacesClient interface {
+type Host_ListNamespacesClient interface {
 	Recv() (*Namespace, error)
 	grpc.ClientStream
 }
 
-type conductorListNamespacesClient struct {
+type hostListNamespacesClient struct {
 	grpc.ClientStream
 }
 
-func (x *conductorListNamespacesClient) Recv() (*Namespace, error) {
+func (x *hostListNamespacesClient) Recv() (*Namespace, error) {
 	m := new(Namespace)
 	if err := x.ClientStream.RecvMsg(m); err != nil {
 		return nil, err
@@ -127,12 +127,12 @@ func (x *conductorListNamespacesClient) Recv() (*Namespace, error) {
 	return m, nil
 }
 
-func (c *conductorClient) ListPackages(ctx context.Context, in *ListPackages, opts ...grpc.CallOption) (Conductor_ListPackagesClient, error) {
-	stream, err := c.cc.NewStream(ctx, &Conductor_ServiceDesc.Streams[2], "/khutulun.Conductor/listPackages", opts...)
+func (c *hostClient) ListPackages(ctx context.Context, in *ListPackages, opts ...grpc.CallOption) (Host_ListPackagesClient, error) {
+	stream, err := c.cc.NewStream(ctx, &Host_ServiceDesc.Streams[2], "/khutulun.Host/listPackages", opts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &conductorListPackagesClient{stream}
+	x := &hostListPackagesClient{stream}
 	if err := x.ClientStream.SendMsg(in); err != nil {
 		return nil, err
 	}
@@ -142,16 +142,16 @@ func (c *conductorClient) ListPackages(ctx context.Context, in *ListPackages, op
 	return x, nil
 }
 
-type Conductor_ListPackagesClient interface {
+type Host_ListPackagesClient interface {
 	Recv() (*PackageIdentifier, error)
 	grpc.ClientStream
 }
 
-type conductorListPackagesClient struct {
+type hostListPackagesClient struct {
 	grpc.ClientStream
 }
 
-func (x *conductorListPackagesClient) Recv() (*PackageIdentifier, error) {
+func (x *hostListPackagesClient) Recv() (*PackageIdentifier, error) {
 	m := new(PackageIdentifier)
 	if err := x.ClientStream.RecvMsg(m); err != nil {
 		return nil, err
@@ -159,12 +159,12 @@ func (x *conductorListPackagesClient) Recv() (*PackageIdentifier, error) {
 	return m, nil
 }
 
-func (c *conductorClient) ListPackageFiles(ctx context.Context, in *PackageIdentifier, opts ...grpc.CallOption) (Conductor_ListPackageFilesClient, error) {
-	stream, err := c.cc.NewStream(ctx, &Conductor_ServiceDesc.Streams[3], "/khutulun.Conductor/listPackageFiles", opts...)
+func (c *hostClient) ListPackageFiles(ctx context.Context, in *PackageIdentifier, opts ...grpc.CallOption) (Host_ListPackageFilesClient, error) {
+	stream, err := c.cc.NewStream(ctx, &Host_ServiceDesc.Streams[3], "/khutulun.Host/listPackageFiles", opts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &conductorListPackageFilesClient{stream}
+	x := &hostListPackageFilesClient{stream}
 	if err := x.ClientStream.SendMsg(in); err != nil {
 		return nil, err
 	}
@@ -174,16 +174,16 @@ func (c *conductorClient) ListPackageFiles(ctx context.Context, in *PackageIdent
 	return x, nil
 }
 
-type Conductor_ListPackageFilesClient interface {
+type Host_ListPackageFilesClient interface {
 	Recv() (*PackageFile, error)
 	grpc.ClientStream
 }
 
-type conductorListPackageFilesClient struct {
+type hostListPackageFilesClient struct {
 	grpc.ClientStream
 }
 
-func (x *conductorListPackageFilesClient) Recv() (*PackageFile, error) {
+func (x *hostListPackageFilesClient) Recv() (*PackageFile, error) {
 	m := new(PackageFile)
 	if err := x.ClientStream.RecvMsg(m); err != nil {
 		return nil, err
@@ -191,12 +191,12 @@ func (x *conductorListPackageFilesClient) Recv() (*PackageFile, error) {
 	return m, nil
 }
 
-func (c *conductorClient) GetPackageFiles(ctx context.Context, in *GetPackageFiles, opts ...grpc.CallOption) (Conductor_GetPackageFilesClient, error) {
-	stream, err := c.cc.NewStream(ctx, &Conductor_ServiceDesc.Streams[4], "/khutulun.Conductor/getPackageFiles", opts...)
+func (c *hostClient) GetPackageFiles(ctx context.Context, in *GetPackageFiles, opts ...grpc.CallOption) (Host_GetPackageFilesClient, error) {
+	stream, err := c.cc.NewStream(ctx, &Host_ServiceDesc.Streams[4], "/khutulun.Host/getPackageFiles", opts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &conductorGetPackageFilesClient{stream}
+	x := &hostGetPackageFilesClient{stream}
 	if err := x.ClientStream.SendMsg(in); err != nil {
 		return nil, err
 	}
@@ -206,16 +206,16 @@ func (c *conductorClient) GetPackageFiles(ctx context.Context, in *GetPackageFil
 	return x, nil
 }
 
-type Conductor_GetPackageFilesClient interface {
+type Host_GetPackageFilesClient interface {
 	Recv() (*PackageContent, error)
 	grpc.ClientStream
 }
 
-type conductorGetPackageFilesClient struct {
+type hostGetPackageFilesClient struct {
 	grpc.ClientStream
 }
 
-func (x *conductorGetPackageFilesClient) Recv() (*PackageContent, error) {
+func (x *hostGetPackageFilesClient) Recv() (*PackageContent, error) {
 	m := new(PackageContent)
 	if err := x.ClientStream.RecvMsg(m); err != nil {
 		return nil, err
@@ -223,30 +223,30 @@ func (x *conductorGetPackageFilesClient) Recv() (*PackageContent, error) {
 	return m, nil
 }
 
-func (c *conductorClient) SetPackageFiles(ctx context.Context, opts ...grpc.CallOption) (Conductor_SetPackageFilesClient, error) {
-	stream, err := c.cc.NewStream(ctx, &Conductor_ServiceDesc.Streams[5], "/khutulun.Conductor/setPackageFiles", opts...)
+func (c *hostClient) SetPackageFiles(ctx context.Context, opts ...grpc.CallOption) (Host_SetPackageFilesClient, error) {
+	stream, err := c.cc.NewStream(ctx, &Host_ServiceDesc.Streams[5], "/khutulun.Host/setPackageFiles", opts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &conductorSetPackageFilesClient{stream}
+	x := &hostSetPackageFilesClient{stream}
 	return x, nil
 }
 
-type Conductor_SetPackageFilesClient interface {
+type Host_SetPackageFilesClient interface {
 	Send(*PackageContent) error
 	CloseAndRecv() (*emptypb.Empty, error)
 	grpc.ClientStream
 }
 
-type conductorSetPackageFilesClient struct {
+type hostSetPackageFilesClient struct {
 	grpc.ClientStream
 }
 
-func (x *conductorSetPackageFilesClient) Send(m *PackageContent) error {
+func (x *hostSetPackageFilesClient) Send(m *PackageContent) error {
 	return x.ClientStream.SendMsg(m)
 }
 
-func (x *conductorSetPackageFilesClient) CloseAndRecv() (*emptypb.Empty, error) {
+func (x *hostSetPackageFilesClient) CloseAndRecv() (*emptypb.Empty, error) {
 	if err := x.ClientStream.CloseSend(); err != nil {
 		return nil, err
 	}
@@ -257,30 +257,30 @@ func (x *conductorSetPackageFilesClient) CloseAndRecv() (*emptypb.Empty, error) 
 	return m, nil
 }
 
-func (c *conductorClient) RemovePackage(ctx context.Context, in *PackageIdentifier, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+func (c *hostClient) RemovePackage(ctx context.Context, in *PackageIdentifier, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	out := new(emptypb.Empty)
-	err := c.cc.Invoke(ctx, "/khutulun.Conductor/removePackage", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/khutulun.Host/removePackage", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *conductorClient) DeployService(ctx context.Context, in *DeployService, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+func (c *hostClient) DeployService(ctx context.Context, in *DeployService, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	out := new(emptypb.Empty)
-	err := c.cc.Invoke(ctx, "/khutulun.Conductor/deployService", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/khutulun.Host/deployService", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *conductorClient) ListResources(ctx context.Context, in *ListResources, opts ...grpc.CallOption) (Conductor_ListResourcesClient, error) {
-	stream, err := c.cc.NewStream(ctx, &Conductor_ServiceDesc.Streams[6], "/khutulun.Conductor/listResources", opts...)
+func (c *hostClient) ListResources(ctx context.Context, in *ListResources, opts ...grpc.CallOption) (Host_ListResourcesClient, error) {
+	stream, err := c.cc.NewStream(ctx, &Host_ServiceDesc.Streams[6], "/khutulun.Host/listResources", opts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &conductorListResourcesClient{stream}
+	x := &hostListResourcesClient{stream}
 	if err := x.ClientStream.SendMsg(in); err != nil {
 		return nil, err
 	}
@@ -290,16 +290,16 @@ func (c *conductorClient) ListResources(ctx context.Context, in *ListResources, 
 	return x, nil
 }
 
-type Conductor_ListResourcesClient interface {
+type Host_ListResourcesClient interface {
 	Recv() (*ResourceIdentifier, error)
 	grpc.ClientStream
 }
 
-type conductorListResourcesClient struct {
+type hostListResourcesClient struct {
 	grpc.ClientStream
 }
 
-func (x *conductorListResourcesClient) Recv() (*ResourceIdentifier, error) {
+func (x *hostListResourcesClient) Recv() (*ResourceIdentifier, error) {
 	m := new(ResourceIdentifier)
 	if err := x.ClientStream.RecvMsg(m); err != nil {
 		return nil, err
@@ -307,30 +307,30 @@ func (x *conductorListResourcesClient) Recv() (*ResourceIdentifier, error) {
 	return m, nil
 }
 
-func (c *conductorClient) Interact(ctx context.Context, opts ...grpc.CallOption) (Conductor_InteractClient, error) {
-	stream, err := c.cc.NewStream(ctx, &Conductor_ServiceDesc.Streams[7], "/khutulun.Conductor/interact", opts...)
+func (c *hostClient) Interact(ctx context.Context, opts ...grpc.CallOption) (Host_InteractClient, error) {
+	stream, err := c.cc.NewStream(ctx, &Host_ServiceDesc.Streams[7], "/khutulun.Host/interact", opts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &conductorInteractClient{stream}
+	x := &hostInteractClient{stream}
 	return x, nil
 }
 
-type Conductor_InteractClient interface {
+type Host_InteractClient interface {
 	Send(*Interaction) error
 	Recv() (*Interaction, error)
 	grpc.ClientStream
 }
 
-type conductorInteractClient struct {
+type hostInteractClient struct {
 	grpc.ClientStream
 }
 
-func (x *conductorInteractClient) Send(m *Interaction) error {
+func (x *hostInteractClient) Send(m *Interaction) error {
 	return x.ClientStream.SendMsg(m)
 }
 
-func (x *conductorInteractClient) Recv() (*Interaction, error) {
+func (x *hostInteractClient) Recv() (*Interaction, error) {
 	m := new(Interaction)
 	if err := x.ClientStream.RecvMsg(m); err != nil {
 		return nil, err
@@ -338,238 +338,238 @@ func (x *conductorInteractClient) Recv() (*Interaction, error) {
 	return m, nil
 }
 
-// ConductorServer is the server API for Conductor service.
-// All implementations must embed UnimplementedConductorServer
+// HostServer is the server API for Host service.
+// All implementations must embed UnimplementedHostServer
 // for forward compatibility
-type ConductorServer interface {
+type HostServer interface {
 	GetVersion(context.Context, *emptypb.Empty) (*Version, error)
-	ListHosts(*emptypb.Empty, Conductor_ListHostsServer) error
-	AddHost(context.Context, *HostIdentifier) (*emptypb.Empty, error)
-	ListNamespaces(*emptypb.Empty, Conductor_ListNamespacesServer) error
-	ListPackages(*ListPackages, Conductor_ListPackagesServer) error
-	ListPackageFiles(*PackageIdentifier, Conductor_ListPackageFilesServer) error
-	GetPackageFiles(*GetPackageFiles, Conductor_GetPackageFilesServer) error
-	SetPackageFiles(Conductor_SetPackageFilesServer) error
+	ListHosts(*emptypb.Empty, Host_ListHostsServer) error
+	AddHost(context.Context, *AddHost) (*emptypb.Empty, error)
+	ListNamespaces(*emptypb.Empty, Host_ListNamespacesServer) error
+	ListPackages(*ListPackages, Host_ListPackagesServer) error
+	ListPackageFiles(*PackageIdentifier, Host_ListPackageFilesServer) error
+	GetPackageFiles(*GetPackageFiles, Host_GetPackageFilesServer) error
+	SetPackageFiles(Host_SetPackageFilesServer) error
 	RemovePackage(context.Context, *PackageIdentifier) (*emptypb.Empty, error)
 	DeployService(context.Context, *DeployService) (*emptypb.Empty, error)
-	ListResources(*ListResources, Conductor_ListResourcesServer) error
-	Interact(Conductor_InteractServer) error
-	mustEmbedUnimplementedConductorServer()
+	ListResources(*ListResources, Host_ListResourcesServer) error
+	Interact(Host_InteractServer) error
+	mustEmbedUnimplementedHostServer()
 }
 
-// UnimplementedConductorServer must be embedded to have forward compatible implementations.
-type UnimplementedConductorServer struct {
+// UnimplementedHostServer must be embedded to have forward compatible implementations.
+type UnimplementedHostServer struct {
 }
 
-func (UnimplementedConductorServer) GetVersion(context.Context, *emptypb.Empty) (*Version, error) {
+func (UnimplementedHostServer) GetVersion(context.Context, *emptypb.Empty) (*Version, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetVersion not implemented")
 }
-func (UnimplementedConductorServer) ListHosts(*emptypb.Empty, Conductor_ListHostsServer) error {
+func (UnimplementedHostServer) ListHosts(*emptypb.Empty, Host_ListHostsServer) error {
 	return status.Errorf(codes.Unimplemented, "method ListHosts not implemented")
 }
-func (UnimplementedConductorServer) AddHost(context.Context, *HostIdentifier) (*emptypb.Empty, error) {
+func (UnimplementedHostServer) AddHost(context.Context, *AddHost) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddHost not implemented")
 }
-func (UnimplementedConductorServer) ListNamespaces(*emptypb.Empty, Conductor_ListNamespacesServer) error {
+func (UnimplementedHostServer) ListNamespaces(*emptypb.Empty, Host_ListNamespacesServer) error {
 	return status.Errorf(codes.Unimplemented, "method ListNamespaces not implemented")
 }
-func (UnimplementedConductorServer) ListPackages(*ListPackages, Conductor_ListPackagesServer) error {
+func (UnimplementedHostServer) ListPackages(*ListPackages, Host_ListPackagesServer) error {
 	return status.Errorf(codes.Unimplemented, "method ListPackages not implemented")
 }
-func (UnimplementedConductorServer) ListPackageFiles(*PackageIdentifier, Conductor_ListPackageFilesServer) error {
+func (UnimplementedHostServer) ListPackageFiles(*PackageIdentifier, Host_ListPackageFilesServer) error {
 	return status.Errorf(codes.Unimplemented, "method ListPackageFiles not implemented")
 }
-func (UnimplementedConductorServer) GetPackageFiles(*GetPackageFiles, Conductor_GetPackageFilesServer) error {
+func (UnimplementedHostServer) GetPackageFiles(*GetPackageFiles, Host_GetPackageFilesServer) error {
 	return status.Errorf(codes.Unimplemented, "method GetPackageFiles not implemented")
 }
-func (UnimplementedConductorServer) SetPackageFiles(Conductor_SetPackageFilesServer) error {
+func (UnimplementedHostServer) SetPackageFiles(Host_SetPackageFilesServer) error {
 	return status.Errorf(codes.Unimplemented, "method SetPackageFiles not implemented")
 }
-func (UnimplementedConductorServer) RemovePackage(context.Context, *PackageIdentifier) (*emptypb.Empty, error) {
+func (UnimplementedHostServer) RemovePackage(context.Context, *PackageIdentifier) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RemovePackage not implemented")
 }
-func (UnimplementedConductorServer) DeployService(context.Context, *DeployService) (*emptypb.Empty, error) {
+func (UnimplementedHostServer) DeployService(context.Context, *DeployService) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeployService not implemented")
 }
-func (UnimplementedConductorServer) ListResources(*ListResources, Conductor_ListResourcesServer) error {
+func (UnimplementedHostServer) ListResources(*ListResources, Host_ListResourcesServer) error {
 	return status.Errorf(codes.Unimplemented, "method ListResources not implemented")
 }
-func (UnimplementedConductorServer) Interact(Conductor_InteractServer) error {
+func (UnimplementedHostServer) Interact(Host_InteractServer) error {
 	return status.Errorf(codes.Unimplemented, "method Interact not implemented")
 }
-func (UnimplementedConductorServer) mustEmbedUnimplementedConductorServer() {}
+func (UnimplementedHostServer) mustEmbedUnimplementedHostServer() {}
 
-// UnsafeConductorServer may be embedded to opt out of forward compatibility for this service.
-// Use of this interface is not recommended, as added methods to ConductorServer will
+// UnsafeHostServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to HostServer will
 // result in compilation errors.
-type UnsafeConductorServer interface {
-	mustEmbedUnimplementedConductorServer()
+type UnsafeHostServer interface {
+	mustEmbedUnimplementedHostServer()
 }
 
-func RegisterConductorServer(s grpc.ServiceRegistrar, srv ConductorServer) {
-	s.RegisterService(&Conductor_ServiceDesc, srv)
+func RegisterHostServer(s grpc.ServiceRegistrar, srv HostServer) {
+	s.RegisterService(&Host_ServiceDesc, srv)
 }
 
-func _Conductor_GetVersion_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Host_GetVersion_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(emptypb.Empty)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ConductorServer).GetVersion(ctx, in)
+		return srv.(HostServer).GetVersion(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/khutulun.Conductor/getVersion",
+		FullMethod: "/khutulun.Host/getVersion",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ConductorServer).GetVersion(ctx, req.(*emptypb.Empty))
+		return srv.(HostServer).GetVersion(ctx, req.(*emptypb.Empty))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Conductor_ListHosts_Handler(srv interface{}, stream grpc.ServerStream) error {
+func _Host_ListHosts_Handler(srv interface{}, stream grpc.ServerStream) error {
 	m := new(emptypb.Empty)
 	if err := stream.RecvMsg(m); err != nil {
 		return err
 	}
-	return srv.(ConductorServer).ListHosts(m, &conductorListHostsServer{stream})
+	return srv.(HostServer).ListHosts(m, &hostListHostsServer{stream})
 }
 
-type Conductor_ListHostsServer interface {
+type Host_ListHostsServer interface {
 	Send(*HostIdentifier) error
 	grpc.ServerStream
 }
 
-type conductorListHostsServer struct {
+type hostListHostsServer struct {
 	grpc.ServerStream
 }
 
-func (x *conductorListHostsServer) Send(m *HostIdentifier) error {
+func (x *hostListHostsServer) Send(m *HostIdentifier) error {
 	return x.ServerStream.SendMsg(m)
 }
 
-func _Conductor_AddHost_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(HostIdentifier)
+func _Host_AddHost_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AddHost)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ConductorServer).AddHost(ctx, in)
+		return srv.(HostServer).AddHost(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/khutulun.Conductor/addHost",
+		FullMethod: "/khutulun.Host/addHost",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ConductorServer).AddHost(ctx, req.(*HostIdentifier))
+		return srv.(HostServer).AddHost(ctx, req.(*AddHost))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Conductor_ListNamespaces_Handler(srv interface{}, stream grpc.ServerStream) error {
+func _Host_ListNamespaces_Handler(srv interface{}, stream grpc.ServerStream) error {
 	m := new(emptypb.Empty)
 	if err := stream.RecvMsg(m); err != nil {
 		return err
 	}
-	return srv.(ConductorServer).ListNamespaces(m, &conductorListNamespacesServer{stream})
+	return srv.(HostServer).ListNamespaces(m, &hostListNamespacesServer{stream})
 }
 
-type Conductor_ListNamespacesServer interface {
+type Host_ListNamespacesServer interface {
 	Send(*Namespace) error
 	grpc.ServerStream
 }
 
-type conductorListNamespacesServer struct {
+type hostListNamespacesServer struct {
 	grpc.ServerStream
 }
 
-func (x *conductorListNamespacesServer) Send(m *Namespace) error {
+func (x *hostListNamespacesServer) Send(m *Namespace) error {
 	return x.ServerStream.SendMsg(m)
 }
 
-func _Conductor_ListPackages_Handler(srv interface{}, stream grpc.ServerStream) error {
+func _Host_ListPackages_Handler(srv interface{}, stream grpc.ServerStream) error {
 	m := new(ListPackages)
 	if err := stream.RecvMsg(m); err != nil {
 		return err
 	}
-	return srv.(ConductorServer).ListPackages(m, &conductorListPackagesServer{stream})
+	return srv.(HostServer).ListPackages(m, &hostListPackagesServer{stream})
 }
 
-type Conductor_ListPackagesServer interface {
+type Host_ListPackagesServer interface {
 	Send(*PackageIdentifier) error
 	grpc.ServerStream
 }
 
-type conductorListPackagesServer struct {
+type hostListPackagesServer struct {
 	grpc.ServerStream
 }
 
-func (x *conductorListPackagesServer) Send(m *PackageIdentifier) error {
+func (x *hostListPackagesServer) Send(m *PackageIdentifier) error {
 	return x.ServerStream.SendMsg(m)
 }
 
-func _Conductor_ListPackageFiles_Handler(srv interface{}, stream grpc.ServerStream) error {
+func _Host_ListPackageFiles_Handler(srv interface{}, stream grpc.ServerStream) error {
 	m := new(PackageIdentifier)
 	if err := stream.RecvMsg(m); err != nil {
 		return err
 	}
-	return srv.(ConductorServer).ListPackageFiles(m, &conductorListPackageFilesServer{stream})
+	return srv.(HostServer).ListPackageFiles(m, &hostListPackageFilesServer{stream})
 }
 
-type Conductor_ListPackageFilesServer interface {
+type Host_ListPackageFilesServer interface {
 	Send(*PackageFile) error
 	grpc.ServerStream
 }
 
-type conductorListPackageFilesServer struct {
+type hostListPackageFilesServer struct {
 	grpc.ServerStream
 }
 
-func (x *conductorListPackageFilesServer) Send(m *PackageFile) error {
+func (x *hostListPackageFilesServer) Send(m *PackageFile) error {
 	return x.ServerStream.SendMsg(m)
 }
 
-func _Conductor_GetPackageFiles_Handler(srv interface{}, stream grpc.ServerStream) error {
+func _Host_GetPackageFiles_Handler(srv interface{}, stream grpc.ServerStream) error {
 	m := new(GetPackageFiles)
 	if err := stream.RecvMsg(m); err != nil {
 		return err
 	}
-	return srv.(ConductorServer).GetPackageFiles(m, &conductorGetPackageFilesServer{stream})
+	return srv.(HostServer).GetPackageFiles(m, &hostGetPackageFilesServer{stream})
 }
 
-type Conductor_GetPackageFilesServer interface {
+type Host_GetPackageFilesServer interface {
 	Send(*PackageContent) error
 	grpc.ServerStream
 }
 
-type conductorGetPackageFilesServer struct {
+type hostGetPackageFilesServer struct {
 	grpc.ServerStream
 }
 
-func (x *conductorGetPackageFilesServer) Send(m *PackageContent) error {
+func (x *hostGetPackageFilesServer) Send(m *PackageContent) error {
 	return x.ServerStream.SendMsg(m)
 }
 
-func _Conductor_SetPackageFiles_Handler(srv interface{}, stream grpc.ServerStream) error {
-	return srv.(ConductorServer).SetPackageFiles(&conductorSetPackageFilesServer{stream})
+func _Host_SetPackageFiles_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(HostServer).SetPackageFiles(&hostSetPackageFilesServer{stream})
 }
 
-type Conductor_SetPackageFilesServer interface {
+type Host_SetPackageFilesServer interface {
 	SendAndClose(*emptypb.Empty) error
 	Recv() (*PackageContent, error)
 	grpc.ServerStream
 }
 
-type conductorSetPackageFilesServer struct {
+type hostSetPackageFilesServer struct {
 	grpc.ServerStream
 }
 
-func (x *conductorSetPackageFilesServer) SendAndClose(m *emptypb.Empty) error {
+func (x *hostSetPackageFilesServer) SendAndClose(m *emptypb.Empty) error {
 	return x.ServerStream.SendMsg(m)
 }
 
-func (x *conductorSetPackageFilesServer) Recv() (*PackageContent, error) {
+func (x *hostSetPackageFilesServer) Recv() (*PackageContent, error) {
 	m := new(PackageContent)
 	if err := x.ServerStream.RecvMsg(m); err != nil {
 		return nil, err
@@ -577,82 +577,82 @@ func (x *conductorSetPackageFilesServer) Recv() (*PackageContent, error) {
 	return m, nil
 }
 
-func _Conductor_RemovePackage_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Host_RemovePackage_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(PackageIdentifier)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ConductorServer).RemovePackage(ctx, in)
+		return srv.(HostServer).RemovePackage(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/khutulun.Conductor/removePackage",
+		FullMethod: "/khutulun.Host/removePackage",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ConductorServer).RemovePackage(ctx, req.(*PackageIdentifier))
+		return srv.(HostServer).RemovePackage(ctx, req.(*PackageIdentifier))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Conductor_DeployService_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Host_DeployService_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(DeployService)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ConductorServer).DeployService(ctx, in)
+		return srv.(HostServer).DeployService(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/khutulun.Conductor/deployService",
+		FullMethod: "/khutulun.Host/deployService",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ConductorServer).DeployService(ctx, req.(*DeployService))
+		return srv.(HostServer).DeployService(ctx, req.(*DeployService))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Conductor_ListResources_Handler(srv interface{}, stream grpc.ServerStream) error {
+func _Host_ListResources_Handler(srv interface{}, stream grpc.ServerStream) error {
 	m := new(ListResources)
 	if err := stream.RecvMsg(m); err != nil {
 		return err
 	}
-	return srv.(ConductorServer).ListResources(m, &conductorListResourcesServer{stream})
+	return srv.(HostServer).ListResources(m, &hostListResourcesServer{stream})
 }
 
-type Conductor_ListResourcesServer interface {
+type Host_ListResourcesServer interface {
 	Send(*ResourceIdentifier) error
 	grpc.ServerStream
 }
 
-type conductorListResourcesServer struct {
+type hostListResourcesServer struct {
 	grpc.ServerStream
 }
 
-func (x *conductorListResourcesServer) Send(m *ResourceIdentifier) error {
+func (x *hostListResourcesServer) Send(m *ResourceIdentifier) error {
 	return x.ServerStream.SendMsg(m)
 }
 
-func _Conductor_Interact_Handler(srv interface{}, stream grpc.ServerStream) error {
-	return srv.(ConductorServer).Interact(&conductorInteractServer{stream})
+func _Host_Interact_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(HostServer).Interact(&hostInteractServer{stream})
 }
 
-type Conductor_InteractServer interface {
+type Host_InteractServer interface {
 	Send(*Interaction) error
 	Recv() (*Interaction, error)
 	grpc.ServerStream
 }
 
-type conductorInteractServer struct {
+type hostInteractServer struct {
 	grpc.ServerStream
 }
 
-func (x *conductorInteractServer) Send(m *Interaction) error {
+func (x *hostInteractServer) Send(m *Interaction) error {
 	return x.ServerStream.SendMsg(m)
 }
 
-func (x *conductorInteractServer) Recv() (*Interaction, error) {
+func (x *hostInteractServer) Recv() (*Interaction, error) {
 	m := new(Interaction)
 	if err := x.ServerStream.RecvMsg(m); err != nil {
 		return nil, err
@@ -660,69 +660,69 @@ func (x *conductorInteractServer) Recv() (*Interaction, error) {
 	return m, nil
 }
 
-// Conductor_ServiceDesc is the grpc.ServiceDesc for Conductor service.
+// Host_ServiceDesc is the grpc.ServiceDesc for Host service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
-var Conductor_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "khutulun.Conductor",
-	HandlerType: (*ConductorServer)(nil),
+var Host_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "khutulun.Host",
+	HandlerType: (*HostServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
 			MethodName: "getVersion",
-			Handler:    _Conductor_GetVersion_Handler,
+			Handler:    _Host_GetVersion_Handler,
 		},
 		{
 			MethodName: "addHost",
-			Handler:    _Conductor_AddHost_Handler,
+			Handler:    _Host_AddHost_Handler,
 		},
 		{
 			MethodName: "removePackage",
-			Handler:    _Conductor_RemovePackage_Handler,
+			Handler:    _Host_RemovePackage_Handler,
 		},
 		{
 			MethodName: "deployService",
-			Handler:    _Conductor_DeployService_Handler,
+			Handler:    _Host_DeployService_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{
 		{
 			StreamName:    "listHosts",
-			Handler:       _Conductor_ListHosts_Handler,
+			Handler:       _Host_ListHosts_Handler,
 			ServerStreams: true,
 		},
 		{
 			StreamName:    "listNamespaces",
-			Handler:       _Conductor_ListNamespaces_Handler,
+			Handler:       _Host_ListNamespaces_Handler,
 			ServerStreams: true,
 		},
 		{
 			StreamName:    "listPackages",
-			Handler:       _Conductor_ListPackages_Handler,
+			Handler:       _Host_ListPackages_Handler,
 			ServerStreams: true,
 		},
 		{
 			StreamName:    "listPackageFiles",
-			Handler:       _Conductor_ListPackageFiles_Handler,
+			Handler:       _Host_ListPackageFiles_Handler,
 			ServerStreams: true,
 		},
 		{
 			StreamName:    "getPackageFiles",
-			Handler:       _Conductor_GetPackageFiles_Handler,
+			Handler:       _Host_GetPackageFiles_Handler,
 			ServerStreams: true,
 		},
 		{
 			StreamName:    "setPackageFiles",
-			Handler:       _Conductor_SetPackageFiles_Handler,
+			Handler:       _Host_SetPackageFiles_Handler,
 			ClientStreams: true,
 		},
 		{
 			StreamName:    "listResources",
-			Handler:       _Conductor_ListResources_Handler,
+			Handler:       _Host_ListResources_Handler,
 			ServerStreams: true,
 		},
 		{
 			StreamName:    "interact",
-			Handler:       _Conductor_Interact_Handler,
+			Handler:       _Host_Interact_Handler,
 			ServerStreams: true,
 			ClientStreams: true,
 		},

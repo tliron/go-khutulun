@@ -127,15 +127,21 @@ func (self *Runnable) Interact(server util.Interactor, start *api.Interaction_St
 	args := append([]string{command.Name}, command.Args...)
 	command.Name = "/usr/bin/podman"
 	command.Args = []string{"exec"}
+
 	if command.PseudoTerminal != nil {
 		command.Args = append(command.Args, "--interactive", "--tty")
 	}
+
 	if command.Environment != nil {
 		for k, v := range command.Environment {
 			command.Args = append(command.Args, fmt.Sprintf("--env=%s=%s", k, v))
+			delete(command.Environment, k)
 		}
-		command.Environment = nil
 	}
+
+	// Needed for podman to access "nsenter"
+	command.AddPath("PATH", "/usr/bin")
+
 	command.Args = append(command.Args, resourceName)
 	command.Args = append(command.Args, args...)
 

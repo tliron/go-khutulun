@@ -2,6 +2,7 @@ tosca_definitions_version: tosca_2_0
 
 imports:
 
+- data.yaml
 - interfaces.yaml
 
 relationship_types:
@@ -30,6 +31,8 @@ relationship_types:
     derived_from: Connection
     attributes:
       ip:
-        type: string
+        type: IPAddress
+        default: '::'
       port:
-        type: integer
+        type: AssignablePort
+        default: 0

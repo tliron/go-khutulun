@@ -1,4 +1,4 @@
-package conductor
+package host
 
 import (
 	"github.com/tliron/khutulun/plugin"
@@ -6,7 +6,7 @@ import (
 	cloutpkg "github.com/tliron/puccini/clout"
 )
 
-func (self *Conductor) Reconcile() {
+func (self *Host) Reconcile() {
 	if identifiers, err := self.ListPackages("", "clout"); err == nil {
 		for _, identifier := range identifiers {
 			self.ReconcileService(identifier.Namespace, identifier.Name)
@@ -16,7 +16,7 @@ func (self *Conductor) Reconcile() {
 	}
 }
 
-func (self *Conductor) ReconcileService(namespace string, serviceName string) {
+func (self *Host) ReconcileService(namespace string, serviceName string) {
 	if namespace == "" {
 		namespace = "_"
 	}
@@ -36,8 +36,8 @@ func (self *Conductor) ReconcileService(namespace string, serviceName string) {
 	}
 }
 
-func (self *Conductor) reconcileRunnables(clout *cloutpkg.Clout) {
-	containers := self.getResources(clout, "runnable")
+func (self *Host) reconcileRunnables(clout *cloutpkg.Clout) {
+	containers := GetCloutContainers(clout)
 	if len(containers) == 0 {
 		return
 	}
@@ -98,18 +98,18 @@ func (self Reconcile) Merge(reconcile Reconcile) bool {
 	return added
 }
 
-func (self *Conductor) HandleReconcile(reconcile Reconcile) {
+func (self *Host) HandleReconcile(reconcile Reconcile) {
 	for host, identifiers := range reconcile {
 		if self.host == host {
 			for _, identifier := range identifiers.List {
 				self.ReconcileService(identifier.Namespace, identifier.Name)
 			}
-		} else if self.cluster != nil {
+		} else if self.gossip != nil {
 			reconcileLog.Infof("sending reconcile command to: %s", host)
 			command := make(map[string]any)
 			command["command"] = RECONCILE_SERVICES
 			command["identifiers"] = identifiers.List
-			if _, err := self.cluster.SendJSON(host, command); err != nil {
+			if _, err := self.gossip.SendJSON(host, command); err != nil {
 				reconcileLog.Errorf("%s", err.Error())
 			}
 		}

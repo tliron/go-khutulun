@@ -2,7 +2,7 @@ package commands
 
 import (
 	"github.com/spf13/cobra"
-	conductorpkg "github.com/tliron/khutulun/conductor"
+	hostpkg "github.com/tliron/khutulun/host"
 	cobrautil "github.com/tliron/kutil/cobra"
 	"github.com/tliron/kutil/util"
 )
@@ -42,11 +42,11 @@ var serverCommand = &cobra.Command{
 	Use:   "server",
 	Short: "Run the server",
 	Run: func(cmd *cobra.Command, args []string) {
-		conductor, err := conductorpkg.NewConductor(statePath)
+		host, err := hostpkg.NewHost(statePath)
 		util.FailOnError(err)
-		util.OnExitError(conductor.Release)
-		server := conductorpkg.NewServer(conductor)
-		util.OnExitError(server.Stop)
+		util.OnExitError(host.Release)
+		server := hostpkg.NewServer(host)
+		util.OnExit(server.Stop)
 		server.GRPCProtocol = grpcProtocol
 		server.GRPCAddress = grpcAddress
 		server.GRPCPort = grpcPort

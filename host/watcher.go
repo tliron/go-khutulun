@@ -1,4 +1,4 @@
-package conductor
+package host
 
 import (
 	"io/fs"
@@ -78,16 +78,16 @@ func (self Dir) Equals(dir Dir) bool {
 //
 
 type Watcher struct {
-	conductor *Conductor
+	host      *Host
 	watcher   *fsnotify.Watcher
 	onChanged OnChangedFunc
 	dirs      []Dir
 	lock      util.RWLocker
 }
 
-func NewWatcher(conductor *Conductor, onChanged OnChangedFunc) (*Watcher, error) {
+func NewWatcher(host *Host, onChanged OnChangedFunc) (*Watcher, error) {
 	var self = Watcher{
-		conductor: conductor,
+		host:      host,
 		onChanged: onChanged,
 		lock:      util.NewDefaultRWLocker(),
 	}
@@ -189,7 +189,7 @@ func (self *Watcher) sync() error {
 	self.lock.Lock()
 	defer self.lock.Unlock()
 
-	return filepath.WalkDir(self.conductor.statePath, func(path string, entry fs.DirEntry, err error) error {
+	return filepath.WalkDir(self.host.statePath, func(path string, entry fs.DirEntry, err error) error {
 		if isHidden(path) {
 			return fs.SkipDir
 		}
@@ -239,7 +239,7 @@ func (self *Watcher) remove(dir Dir) error {
 }
 
 func (self *Watcher) toDir(path string) Dir {
-	statePath := self.conductor.statePath
+	statePath := self.host.statePath
 	length := len(statePath) + 1
 	if path == statePath {
 		path = ""
@@ -250,6 +250,6 @@ func (self *Watcher) toDir(path string) Dir {
 }
 
 func (self *Watcher) toPath(dir Dir) string {
-	segments := append([]string{self.conductor.statePath}, dir...)
+	segments := append([]string{self.host.statePath}, dir...)
 	return filepath.Join(segments...)
 }

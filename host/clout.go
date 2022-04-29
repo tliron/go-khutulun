@@ -1,4 +1,4 @@
-package conductor
+package host
 
 import (
 	"errors"
@@ -12,7 +12,7 @@ import (
 	"github.com/tliron/puccini/clout/js"
 )
 
-func (self *Conductor) OpenClout(namespace string, serviceName string) (fslock.Handle, *cloutpkg.Clout, error) {
+func (self *Host) OpenClout(namespace string, serviceName string) (fslock.Handle, *cloutpkg.Clout, error) {
 	if lock, err := self.lockPackage(namespace, "clout", serviceName, false); err == nil {
 		cloutPath := self.getPackageMainFile(namespace, "clout", serviceName)
 		log.Debugf("reading clout: %q", cloutPath)
@@ -27,7 +27,7 @@ func (self *Conductor) OpenClout(namespace string, serviceName string) (fslock.H
 	}
 }
 
-func (self *Conductor) SaveClout(serviceNamespace string, serviceName string, clout *cloutpkg.Clout) error {
+func (self *Host) SaveClout(serviceNamespace string, serviceName string, clout *cloutpkg.Clout) error {
 	cloutPath := self.getPackageMainFile(serviceNamespace, "clout", serviceName)
 	log.Infof("writing to %q", cloutPath)
 	if file, err := os.OpenFile(cloutPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0666); err == nil {
@@ -39,7 +39,7 @@ func (self *Conductor) SaveClout(serviceNamespace string, serviceName string, cl
 	}
 }
 
-func (self *Conductor) CoerceClout(clout *cloutpkg.Clout) error {
+func (self *Host) CoerceClout(clout *cloutpkg.Clout) error {
 	problems := problemspkg.NewProblems(nil)
 	js.Coerce(clout, problems, self.urlContext, true, "yaml", true, false, false)
 	if problems.Empty() {

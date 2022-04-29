@@ -20,8 +20,8 @@ func (self *Client) GetVersion() (string, error) {
 }
 
 type Host struct {
-	Name    string
-	Address string
+	Name        string `yaml:"name" json:"name"`
+	GRPCAddress string `yaml:"grpcAddress" json:"grpcAddress"`
 }
 
 func (self *Client) ListHosts() ([]Host, error) {
@@ -42,8 +42,8 @@ func (self *Client) ListHosts() ([]Host, error) {
 			}
 
 			hosts = append(hosts, Host{
-				Name:    identifier.Name,
-				Address: identifier.Address,
+				Name:        identifier.Name,
+				GRPCAddress: identifier.GrpcAddress,
 			})
 		}
 
@@ -53,16 +53,11 @@ func (self *Client) ListHosts() ([]Host, error) {
 	}
 }
 
-func (self *Client) AddHost(name string, address string) error {
+func (self *Client) AddHost(gossipAddress string) error {
 	context, cancel := self.newContextWithTimeout()
 	defer cancel()
 
-	identifier := api.HostIdentifier{
-		Name:    name,
-		Address: address,
-	}
-
-	if _, err := self.client.AddHost(context, &identifier); err == nil {
+	if _, err := self.client.AddHost(context, &api.AddHost{GossipAddress: gossipAddress}); err == nil {
 		return nil
 	} else {
 		return util.UnpackGrpcError(err)

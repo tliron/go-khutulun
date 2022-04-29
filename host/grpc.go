@@ -1,8 +1,7 @@
-package conductor
+package host
 
 import (
 	contextpkg "context"
-	"fmt"
 	"io"
 	"io/fs"
 	"os"
@@ -28,40 +27,61 @@ var version = api.Version{Version: "0.1.0"}
 //
 
 type GRPC struct {
-	api.UnimplementedConductorServer
+	api.UnimplementedHostServer
 
 	Protocol string
 	Address  string
 	Port     int
+	Local    bool
 
 	grpcServer *grpc.Server
-	conductor  *Conductor
+	host       *Host
 }
 
-func NewGRPC(conductor *Conductor, protocol string, address string, port int) *GRPC {
+func NewGRPC(host *Host, protocol string, address string, port int) *GRPC {
 	return &GRPC{
-		Protocol:  protocol,
-		Address:   address,
-		Port:      port,
-		conductor: conductor,
+		Protocol: protocol,
+		Address:  address,
+		Port:     port,
+		Local:    true,
+		host:     host,
 	}
 }
 
 func (self *GRPC) Start() error {
 	self.grpcServer = grpc.NewServer()
-	api.RegisterConductorServer(self.grpcServer, self)
+	api.RegisterHostServer(self.grpcServer, self)
 
-	if listener, err := newListener(self.Protocol, self.Address, self.Port); err == nil {
-		grpcLog.Noticef("starting server on: %s", listener.Addr().String())
-		go func() {
-			if err := self.grpcServer.Serve(listener); err != nil {
-				grpcLog.Errorf("%s", err.Error())
-			}
-		}()
-		return nil
-	} else {
+	var err error
+	if self.Address, err = toReachableAddress(self.Address); err != nil {
 		return err
 	}
+
+	start := func(address string) error {
+		if listener, err := newListener(self.Protocol, address, self.Port); err == nil {
+			grpcLog.Noticef("starting server on: %s", listener.Addr().String())
+			go func() {
+				if err := self.grpcServer.Serve(listener); err != nil {
+					grpcLog.Errorf("%s", err.Error())
+				}
+			}()
+			return nil
+		} else {
+			return err
+		}
+	}
+
+	if self.Local {
+		if err := start("localhost"); err != nil {
+			return err
+		}
+	}
+
+	if err := start(self.Address); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (self *GRPC) Stop() {
@@ -70,50 +90,50 @@ func (self *GRPC) Stop() {
 	}
 }
 
-// api.ConductorServer interface
+// api.HostServer interface
 func (self *GRPC) GetVersion(context contextpkg.Context, empty *emptypb.Empty) (*api.Version, error) {
 	grpcLog.Info("getVersion()")
 
 	return &version, nil
 }
 
-// api.ConductorServer interface
-func (self *GRPC) ListHosts(empty *emptypb.Empty, server api.Conductor_ListHostsServer) error {
+// api.HostServer interface
+func (self *GRPC) ListHosts(empty *emptypb.Empty, server api.Host_ListHostsServer) error {
 	grpcLog.Info("listHosts()")
 
-	if self.conductor.cluster != nil {
-		for _, member := range self.conductor.cluster.ListHosts() {
+	if self.host.gossip != nil {
+		for _, host := range self.host.gossip.ListHosts() {
 			server.Send(&api.HostIdentifier{
-				Name:    member.name,
-				Address: member.address,
+				Name:        host.Name,
+				GrpcAddress: host.GRPCAddress,
 			})
 		}
 		return nil
 	} else {
-		return statuspkg.Error(codes.Aborted, "cluster not enabled")
+		return statuspkg.Error(codes.Aborted, "gossip not enabled")
 	}
 }
 
-// api.ConductorServer interface
-func (self *GRPC) AddHost(context contextpkg.Context, identifier *api.HostIdentifier) (*emptypb.Empty, error) {
-	grpcLog.Infof("addHost(%q)", identifier.Address)
+// api.HostServer interface
+func (self *GRPC) AddHost(context contextpkg.Context, addHost *api.AddHost) (*emptypb.Empty, error) {
+	grpcLog.Infof("addHost(%q)", addHost.GossipAddress)
 
-	if self.conductor.cluster != nil {
-		if err := self.conductor.cluster.AddHosts([]string{identifier.Address}); err == nil {
+	if self.host.gossip != nil {
+		if err := self.host.gossip.AddHosts([]string{addHost.GossipAddress}); err == nil {
 			return new(emptypb.Empty), nil
 		} else {
 			return new(emptypb.Empty), statuspkg.Errorf(codes.Aborted, "%s", err.Error())
 		}
 	} else {
-		return new(emptypb.Empty), statuspkg.Error(codes.Aborted, "cluster not enabled")
+		return new(emptypb.Empty), statuspkg.Error(codes.Aborted, "gossip not enabled")
 	}
 }
 
-// api.ConductorServer interface
-func (self *GRPC) ListNamespaces(empty *emptypb.Empty, server api.Conductor_ListNamespacesServer) error {
+// api.HostServer interface
+func (self *GRPC) ListNamespaces(empty *emptypb.Empty, server api.Host_ListNamespacesServer) error {
 	grpcLog.Info("listNamespaces()")
 
-	if namespaces, err := self.conductor.ListNamespaces(); err == nil {
+	if namespaces, err := self.host.ListNamespaces(); err == nil {
 		for _, namespace := range namespaces {
 			if err := server.Send(&api.Namespace{Name: namespace}); err != nil {
 				return statuspkg.Errorf(codes.Aborted, "%s", err.Error())
@@ -125,11 +145,11 @@ func (self *GRPC) ListNamespaces(empty *emptypb.Empty, server api.Conductor_List
 	}
 }
 
-// api.ConductorServer interface
-func (self *GRPC) ListPackages(listPackages *api.ListPackages, server api.Conductor_ListPackagesServer) error {
+// api.HostServer interface
+func (self *GRPC) ListPackages(listPackages *api.ListPackages, server api.Host_ListPackagesServer) error {
 	grpcLog.Infof("listPackages(%q, %q)", listPackages.Namespace, listPackages.Type.Name)
 
-	if identifiers, err := self.conductor.ListPackages(listPackages.Namespace, listPackages.Type.Name); err == nil {
+	if identifiers, err := self.host.ListPackages(listPackages.Namespace, listPackages.Type.Name); err == nil {
 		for _, identifier := range identifiers {
 			identifier_ := api.PackageIdentifier{
 				Namespace: identifier.Namespace,
@@ -148,11 +168,11 @@ func (self *GRPC) ListPackages(listPackages *api.ListPackages, server api.Conduc
 	return nil
 }
 
-// api.ConductorServer interface
-func (self *GRPC) ListPackageFiles(identifier *api.PackageIdentifier, server api.Conductor_ListPackageFilesServer) error {
+// api.HostServer interface
+func (self *GRPC) ListPackageFiles(identifier *api.PackageIdentifier, server api.Host_ListPackageFilesServer) error {
 	grpcLog.Infof("listPackageFiles(%q, %q, %q)", identifier.Namespace, identifier.Type.Name, identifier.Name)
 
-	if packageFiles, err := self.conductor.ListPackageFiles(identifier.Namespace, identifier.Type.Name, identifier.Name); err == nil {
+	if packageFiles, err := self.host.ListPackageFiles(identifier.Namespace, identifier.Type.Name, identifier.Name); err == nil {
 		for _, packageFile := range packageFiles {
 			if err := server.Send(&api.PackageFile{
 				Path:       packageFile.Path,
@@ -168,15 +188,15 @@ func (self *GRPC) ListPackageFiles(identifier *api.PackageIdentifier, server api
 	return nil
 }
 
-// api.ConductorServer interface
-func (self *GRPC) GetPackageFiles(getPackageFiles *api.GetPackageFiles, server api.Conductor_GetPackageFilesServer) error {
+// api.HostServer interface
+func (self *GRPC) GetPackageFiles(getPackageFiles *api.GetPackageFiles, server api.Host_GetPackageFilesServer) error {
 	grpcLog.Infof("getPackageFiles(%q, %q, %q)", getPackageFiles.Identifier.Namespace, getPackageFiles.Identifier.Type.Name, getPackageFiles.Identifier.Name)
 
-	if lock, err := self.conductor.lockPackage(getPackageFiles.Identifier.Namespace, getPackageFiles.Identifier.Type.Name, getPackageFiles.Identifier.Name, false); err == nil {
+	if lock, err := self.host.lockPackage(getPackageFiles.Identifier.Namespace, getPackageFiles.Identifier.Type.Name, getPackageFiles.Identifier.Name, false); err == nil {
 		defer logging.CallAndLogError(lock.Unlock, "unlock", grpcLog)
 
 		buffer := make([]byte, BUFFER_SIZE)
-		dir := self.conductor.getPackageDir(getPackageFiles.Identifier.Namespace, getPackageFiles.Identifier.Type.Name, getPackageFiles.Identifier.Name)
+		dir := self.host.getPackageDir(getPackageFiles.Identifier.Namespace, getPackageFiles.Identifier.Type.Name, getPackageFiles.Identifier.Name)
 
 		for _, path := range getPackageFiles.Paths {
 			if file, err := os.Open(filepath.Join(dir, path)); err == nil {
@@ -217,8 +237,8 @@ func (self *GRPC) GetPackageFiles(getPackageFiles *api.GetPackageFiles, server a
 	}
 }
 
-// api.ConductorServer interface
-func (self *GRPC) SetPackageFiles(server api.Conductor_SetPackageFilesServer) error {
+// api.HostServer interface
+func (self *GRPC) SetPackageFiles(server api.Host_SetPackageFilesServer) error {
 	grpcLog.Info("setPackageFiles()")
 
 	if first, err := server.Recv(); err == nil {
@@ -226,7 +246,7 @@ func (self *GRPC) SetPackageFiles(server api.Conductor_SetPackageFilesServer) er
 			namespace := first.Start.Identifier.Namespace
 			type_ := first.Start.Identifier.Type.Name
 			name := first.Start.Identifier.Name
-			if lock, err := self.conductor.lockPackage(namespace, type_, name, true); err == nil {
+			if lock, err := self.host.lockPackage(namespace, type_, name, true); err == nil {
 				defer logging.CallAndLogError(lock.Unlock, "unlock", grpcLog)
 
 				var file *os.File
@@ -252,7 +272,7 @@ func (self *GRPC) SetPackageFiles(server api.Conductor_SetPackageFilesServer) er
 								}
 								file = nil
 							}
-							path := filepath.Join(self.conductor.getPackageDir(namespace, type_, name), content.File.Path)
+							path := filepath.Join(self.host.getPackageDir(namespace, type_, name), content.File.Path)
 							if err := os.MkdirAll(filepath.Dir(path), 0777); err != nil {
 								return statuspkg.Errorf(codes.Aborted, "%s", err.Error())
 							}
@@ -309,33 +329,33 @@ func (self *GRPC) SetPackageFiles(server api.Conductor_SetPackageFilesServer) er
 	}
 }
 
-// api.ConductorServer interface
+// api.HostServer interface
 func (self *GRPC) RemovePackage(context contextpkg.Context, packageIdentifer *api.PackageIdentifier) (*emptypb.Empty, error) {
 	grpcLog.Infof("removePackage(%q, %q, %q)", packageIdentifer.Namespace, packageIdentifer.Type.Name, packageIdentifer.Name)
 
-	if err := self.conductor.DeletePackage(packageIdentifer.Namespace, packageIdentifer.Type.Name, packageIdentifer.Name); err == nil {
+	if err := self.host.DeletePackage(packageIdentifer.Namespace, packageIdentifer.Type.Name, packageIdentifer.Name); err == nil {
 		return new(emptypb.Empty), nil
 	} else {
 		return new(emptypb.Empty), statuspkg.Errorf(codes.Aborted, "%s", err.Error())
 	}
 }
 
-// api.ConductorServer interface
+// api.HostServer interface
 func (self *GRPC) DeployService(context contextpkg.Context, deployService *api.DeployService) (*emptypb.Empty, error) {
-	grpcLog.Infof("deployService(%q, %q)", deployService.Service.Name, deployService.Template.Name)
+	grpcLog.Infof("deployService(%q, %q, %q, %q)", deployService.Template.Namespace, deployService.Template.Name, deployService.Service.Name, deployService.Template.Name)
 
-	if err := self.conductor.DeployService(deployService.Template.Namespace, deployService.Template.Name, deployService.Service.Namespace, deployService.Service.Name); err == nil {
+	if err := self.host.DeployService(deployService.Template.Namespace, deployService.Template.Name, deployService.Service.Namespace, deployService.Service.Name); err == nil {
 		return new(emptypb.Empty), nil
 	} else {
 		return new(emptypb.Empty), statuspkg.Errorf(codes.Aborted, "%s", err.Error())
 	}
 }
 
-// api.ConductorServer interface
-func (self *GRPC) ListResources(listResources *api.ListResources, server api.Conductor_ListResourcesServer) error {
-	grpcLog.Info("listResources()")
+// api.HostServer interface
+func (self *GRPC) ListResources(listResources *api.ListResources, server api.Host_ListResourcesServer) error {
+	grpcLog.Infof("listResources(%q, %q, %q)", listResources.Service.Namespace, listResources.Service.Name, listResources.Type)
 
-	if identifiers, err := self.conductor.ListResources(listResources.Service.Namespace, listResources.Service.Name, listResources.Type); err == nil {
+	if identifiers, err := self.host.ListResources(listResources.Service.Namespace, listResources.Service.Name, listResources.Type); err == nil {
 		for _, identifier := range identifiers {
 			identifier_ := api.ResourceIdentifier{
 				Service: &api.ServiceIdentifier{
@@ -344,6 +364,7 @@ func (self *GRPC) ListResources(listResources *api.ListResources, server api.Con
 				},
 				Type: identifier.Type,
 				Name: identifier.Name,
+				Host: identifier.Host,
 			}
 
 			if err := server.Send(&identifier_); err != nil {
@@ -357,8 +378,8 @@ func (self *GRPC) ListResources(listResources *api.ListResources, server api.Con
 	return nil
 }
 
-// api.ConductorServer interface
-func (self *GRPC) Interact(server api.Conductor_InteractServer) error {
+// api.HostServer interface
+func (self *GRPC) Interact(server api.Host_InteractServer) error {
 	grpcLog.Info("interact()")
 
 	return util.Interact(server, map[string]util.InteractFunc{
@@ -372,13 +393,12 @@ func (self *GRPC) Interact(server api.Conductor_InteractServer) error {
 			command := util.NewCommand(start, grpcLog)
 
 			var relay string
-			if self.conductor.cluster != nil {
-				if self.conductor.host != host {
-					for _, node := range self.conductor.cluster.cluster.Members() {
-						if node.Name == host {
-							// TODO: we need the gRPC info for the host
-							relay = fmt.Sprintf("[%s]:%d", host, self.Port)
-						}
+			if self.host.gossip != nil {
+				if self.host.host != host {
+					if host_ := self.host.gossip.GetHost(host); host_ != nil {
+						relay = host_.GRPCAddress
+					} else {
+						return statuspkg.Errorf(codes.Aborted, "host not found: %s", host)
 					}
 				}
 			}
@@ -407,7 +427,7 @@ func (self *GRPC) Interact(server api.Conductor_InteractServer) error {
 			// TODO: find host for runnable and relay if necessary
 
 			name := "runnable.podman"
-			command := self.conductor.getPackageMainFile("common", "plugin", name)
+			command := self.host.getPackageMainFile("common", "plugin", name)
 
 			client := plugin.NewRunnableClient(name, command)
 			defer client.Close()

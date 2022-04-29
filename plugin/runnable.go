@@ -7,6 +7,7 @@ import (
 	"github.com/hashicorp/go-plugin"
 	"github.com/tliron/khutulun/api"
 	"github.com/tliron/khutulun/util"
+	"github.com/tliron/kutil/logging"
 	"github.com/tliron/kutil/logging/sink"
 	"github.com/tliron/kutil/protobuf"
 	"google.golang.org/grpc"
@@ -142,7 +143,7 @@ func (self *RunnableClient) Runnable() (Runnable, error) {
 		if runnable, err := protocol.Dispense("runnable"); err == nil {
 			return runnable.(Runnable), nil
 		} else {
-			protocol.Close()
+			logging.CallAndLogError(protocol.Close, "close", log)
 			return nil, err
 		}
 	} else {

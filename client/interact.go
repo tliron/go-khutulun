@@ -108,7 +108,7 @@ func (self *Client) Interact(identifier []string, stdin io.Reader, stdout io.Wri
 	}
 }
 
-func (self *Client) InteractRelay(server api.Conductor_InteractServer, start *api.Interaction_Start) error {
+func (self *Client) InteractRelay(server api.Host_InteractServer, start *api.Interaction_Start) error {
 	context, cancel := self.newContextWithCancel()
 	defer cancel()
 

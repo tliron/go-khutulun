@@ -50,9 +50,9 @@
                     <i class="fa fa-lg fa-truck" aria-hidden="true"></i>
                     Runnables
                 </button>
-                <button id="networking-tab" class="nav-link" data-bs-target="#networking" type="button" role="tab" aria-controls="networking" aria-selected="false">
+                <button id="connections-tab" class="nav-link" data-bs-target="#connections" type="button" role="tab" aria-controls="connections" aria-selected="false">
                     <i class="fa fa-lg fa-sitemap" aria-hidden="true"></i>
-                    Networking
+                    Connections
                 </button>
                 <button id="storage-tab" class="nav-link" data-bs-target="#storage" type="button" role="tab" aria-controls="storage" aria-selected="false">
                     <i class="fa fa-lg fa-briefcase" aria-hidden="true"></i>
@@ -115,6 +115,7 @@
                                 <th scope="col">Namespace</th>
                                 <th scope="col">Name</th>
                                 <th scope="col">Description</th>
+                                <th scope="col">Host</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -123,8 +124,22 @@
 
                 </div>
 
-                <div id="networking" class="tab-pane fade" role="tabpanel" aria-labelledby="networking-tab">
-                    <h1>Networking</h1>
+                <div id="connections" class="tab-pane fade" role="tabpanel" aria-labelledby="connections-tab">
+
+                    <h1>Connections</h1>
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th scope="col">Namespace</th>
+                                <th scope="col">Name</th>
+                                <th scope="col">Description</th>
+                                <th scope="col">Host</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+
                 </div>
 
                 <div id="storage" class="tab-pane fade" role="tabpanel" aria-labelledby="storage-tab">
@@ -183,7 +198,19 @@
                 </div>
 
                 <div id="hosts" class="tab-pane fade" role="tabpanel" aria-labelledby="hosts-tab">
+
                     <h1>Hosts</h1>
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th scope="col">Name</th>
+                                <th scope="col">gRPC Address</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+
                 </div>
 
                 <div id="users" class="tab-pane fade" role="tabpanel" aria-labelledby="users-tab">

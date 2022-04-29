@@ -1,4 +1,4 @@
-package conductor
+package host
 
 import (
 	"github.com/tliron/kutil/ard"
@@ -6,7 +6,7 @@ import (
 	cloutpkg "github.com/tliron/puccini/clout"
 )
 
-func (self *Conductor) Schedule() {
+func (self *Host) Schedule() {
 	reconcile := NewReconcile()
 
 	if identifiers, err := self.ListPackages("", "clout"); err == nil {
@@ -21,7 +21,7 @@ func (self *Conductor) Schedule() {
 	self.HandleReconcile(reconcile)
 }
 
-func (self *Conductor) ScheduleService(namespace string, serviceName string) Reconcile {
+func (self *Host) ScheduleService(namespace string, serviceName string) Reconcile {
 	if namespace == "" {
 		namespace = "_"
 	}
@@ -44,7 +44,7 @@ func (self *Conductor) ScheduleService(namespace string, serviceName string) Rec
 	return NewReconcile()
 }
 
-func (self *Conductor) scheduleRunnables(namespace string, serviceName string, clout *cloutpkg.Clout) (Reconcile, bool) {
+func (self *Host) scheduleRunnables(namespace string, serviceName string, clout *cloutpkg.Clout) (Reconcile, bool) {
 	var coerced *cloutpkg.Clout
 	var err error
 	if coerced, err = clout.Copy(); err == nil {
@@ -57,7 +57,7 @@ func (self *Conductor) scheduleRunnables(namespace string, serviceName string, c
 		return nil, false
 	}
 
-	containers := self.getResources(coerced, "runnable")
+	containers := GetCloutContainers(coerced)
 	if len(containers) == 0 {
 		return nil, false
 	}

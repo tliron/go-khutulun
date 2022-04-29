@@ -11,7 +11,7 @@ node_types:
   Redundant:
     properties:
       count:
-        type: integer
+        type: Count
         default: 1
 
   # Runnable

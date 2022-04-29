@@ -1,8 +1,8 @@
-package conductor
+package host
 
 import "strings"
 
-func (self *Conductor) DeployService(templateNamespace string, templateName string, serviceNamespace string, serviceName string) error {
+func (self *Host) DeployService(templateNamespace string, templateName string, serviceNamespace string, serviceName string) error {
 	if _, problems, err := self.CompileTosca(templateNamespace, templateName, serviceNamespace, serviceName); err == nil {
 		reconcile := self.ScheduleService(serviceNamespace, serviceName)
 		self.HandleReconcile(reconcile)

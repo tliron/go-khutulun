@@ -11,18 +11,17 @@ func init() {
 }
 
 var hostAddCommand = &cobra.Command{
-	Use:   "add [NAME] [ADDRESS]",
+	Use:   "add [GOSSIP ADDRESS[:PORT]]",
 	Short: "Add a host to a cluster",
-	Args:  cobra.ExactArgs(2),
+	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		name := args[0]
-		address := args[1]
+		gossipAddress := args[0]
 
 		client, err := clientpkg.NewClientFromConfiguration(configurationPath, clusterName)
 		util.FailOnError(err)
 		util.OnExitError(client.Close)
 
-		err = client.AddHost(name, address)
+		err = client.AddHost(gossipAddress)
 		util.FailOnError(err)
 	},
 }

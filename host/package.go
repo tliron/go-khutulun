@@ -1,4 +1,4 @@
-package conductor
+package host
 
 import (
 	"io"
@@ -25,7 +25,7 @@ type PackageFile struct {
 	Executable bool
 }
 
-func (self *Conductor) ListPackages(namespace string, type_ string) ([]PackageIdentifier, error) {
+func (self *Host) ListPackages(namespace string, type_ string) ([]PackageIdentifier, error) {
 	if namespaces, err := self.namespaceToNamespaces(namespace); err == nil {
 		var identifiers []PackageIdentifier
 		for _, namespace_ := range namespaces {
@@ -52,7 +52,7 @@ func (self *Conductor) ListPackages(namespace string, type_ string) ([]PackageId
 	}
 }
 
-func (self *Conductor) ListPackageFiles(namespace string, type_ string, name string) ([]PackageFile, error) {
+func (self *Host) ListPackageFiles(namespace string, type_ string, name string) ([]PackageFile, error) {
 	if lock, err := self.lockPackage(namespace, type_, name, false); err == nil {
 		defer logging.CallAndLogError(lock.Unlock, "unlock", log)
 
@@ -81,7 +81,7 @@ func (self *Conductor) ListPackageFiles(namespace string, type_ string, name str
 	}
 }
 
-func (self *Conductor) ReadPackageFile(namespace string, type_ string, name string, path string) (fslock.Handle, io.ReadCloser, error) {
+func (self *Host) ReadPackageFile(namespace string, type_ string, name string, path string) (fslock.Handle, io.ReadCloser, error) {
 	if lock, err := self.lockPackage(namespace, type_, name, false); err == nil {
 		path = filepath.Join(self.getPackageDir(namespace, type_, name), path)
 		log.Debugf("reading from %q", path)
@@ -96,7 +96,7 @@ func (self *Conductor) ReadPackageFile(namespace string, type_ string, name stri
 	}
 }
 
-func (self *Conductor) DeletePackage(namespace string, type_ string, name string) error {
+func (self *Host) DeletePackage(namespace string, type_ string, name string) error {
 	if lock, err := self.lockPackage(namespace, type_, name, false); err == nil {
 		defer logging.CallAndLogError(lock.Unlock, "unlock", log)
 
@@ -109,22 +109,22 @@ func (self *Conductor) DeletePackage(namespace string, type_ string, name string
 	}
 }
 
-func (self *Conductor) getNamespaceDir(namespace string) string {
+func (self *Host) getNamespaceDir(namespace string) string {
 	if namespace == "" {
 		namespace = "_"
 	}
 	return filepath.Join(self.statePath, namespace)
 }
 
-func (self *Conductor) getPackageTypeDir(namespace string, type_ string) string {
+func (self *Host) getPackageTypeDir(namespace string, type_ string) string {
 	return filepath.Join(self.getNamespaceDir(namespace), type_)
 }
 
-func (self *Conductor) getPackageDir(namespace string, type_ string, name string) string {
+func (self *Host) getPackageDir(namespace string, type_ string, name string) string {
 	return filepath.Join(self.getPackageTypeDir(namespace, type_), name)
 }
 
-func (self *Conductor) getPackageMainFile(namespace string, type_ string, name string) string {
+func (self *Host) getPackageMainFile(namespace string, type_ string, name string) string {
 	dir := self.getPackageDir(namespace, type_, name)
 	switch type_ {
 	case "template":
@@ -159,7 +159,7 @@ func (self *Conductor) getPackageMainFile(namespace string, type_ string, name s
 	}
 }
 
-func (self *Conductor) lockPackage(namespace string, type_ string, name string, create bool) (fslock.Handle, error) {
+func (self *Host) lockPackage(namespace string, type_ string, name string, create bool) (fslock.Handle, error) {
 	path := filepath.Join(self.getPackageDir(namespace, type_, name), LOCK_FILE)
 	blocker := newBlocker(time.Second, 5)
 	if lock, err := fslock.LockSharedBlocking(path, blocker); err == nil {

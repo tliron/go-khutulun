@@ -1,4 +1,4 @@
-package conductor
+package host
 
 import (
 	"fmt"
@@ -67,7 +67,7 @@ func GetContainer(vertex *cloutpkg.Vertex, capabilityName string, capability any
 	return self
 }
 
-func GetContainers(vertex *cloutpkg.Vertex) []Container {
+func GetVertexContainers(vertex *cloutpkg.Vertex) []Container {
 	var containers []Container
 	if capabilities, ok := ard.NewNode(vertex.Properties).Get("capabilities").StringMap(); ok {
 		for capabilityName, capability := range capabilities {
@@ -77,6 +77,14 @@ func GetContainers(vertex *cloutpkg.Vertex) []Container {
 				}
 			}
 		}
+	}
+	return containers
+}
+
+func GetCloutContainers(clout *cloutpkg.Clout) []Container {
+	var containers []Container
+	for _, vertex := range clout.Vertexes {
+		containers = append(containers, GetVertexContainers(vertex)...)
 	}
 	return containers
 }

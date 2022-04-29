@@ -12,6 +12,7 @@ type Resource struct {
 	Service   string `json:"service" yaml:"service"`
 	Type      string `json:"type" yaml:"type"`
 	Name      string `json:"name" yaml:"name"`
+	Host      string `json:"host" yaml:"host"`
 }
 
 func (self *Client) ListResources(namespace string, serviceName string, type_ string) ([]Resource, error) {
@@ -36,6 +37,7 @@ func (self *Client) ListResources(namespace string, serviceName string, type_ st
 					Service:   identifier.Service.Name,
 					Type:      identifier.Type,
 					Name:      identifier.Name,
+					Host:      identifier.Host,
 				})
 			} else {
 				if err == io.EOF {
