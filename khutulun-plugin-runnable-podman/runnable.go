@@ -46,7 +46,7 @@ func (self *Runnable) Instantiate(config any) error {
 	if exists, err := utilpkg.FileExists(path); err == nil {
 		if exists {
 			log.Infof("systemd unit already exists: %q", path)
-			return nil
+			//return nil
 		} else {
 			log.Infof("systemd unit: %q", path)
 		}
@@ -57,7 +57,14 @@ func (self *Runnable) Instantiate(config any) error {
 	args := []string{"create", "--name=" + container.Name, "--replace"} // --tty?
 	args = append(args, container.CreateArguments...)
 	for _, port := range container.Ports {
-		args = append(args, fmt.Sprintf("--publish=%d:%d/%s", port.External, port.Internal, port.Protocol))
+		protocol := "tcp"
+		switch port.Protocol {
+		case "UDP":
+			protocol = "udp"
+		case "SCTP":
+			protocol = "sctp"
+		}
+		args = append(args, fmt.Sprintf("--publish=%d:%d/%s", port.External, port.Internal, protocol))
 	}
 	args = append(args, container.Reference)
 

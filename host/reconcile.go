@@ -28,6 +28,7 @@ func (self *Host) ReconcileService(namespace string, serviceName string) {
 
 		if err := self.CoerceClout(clout); err == nil {
 			self.reconcileRunnables(clout)
+			self.reconcileConnections(clout)
 		} else {
 			reconcileLog.Errorf("%s", err.Error())
 		}
@@ -64,6 +65,9 @@ func (self *Host) reconcileRunnables(clout *cloutpkg.Clout) {
 			}
 		}
 	}()
+}
+
+func (self *Host) reconcileConnections(clout *cloutpkg.Clout) {
 }
 
 //

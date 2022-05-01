@@ -29,14 +29,24 @@ func (self *Host) ScheduleService(namespace string, serviceName string) Reconcil
 	scheduleLog.Infof("scheduling service: %s, %s", namespace, serviceName)
 
 	if lock, clout, err := self.OpenClout(namespace, serviceName); err == nil {
-		reconcile, changed := self.scheduleRunnables(namespace, serviceName, clout)
-		if changed {
-			if err := self.SaveClout(namespace, serviceName, clout); err != nil {
+		if coerced, err := clout.Copy(); err == nil {
+			if err := self.CoerceClout(coerced); err == nil {
+				reconcile1, changed1 := self.scheduleRunnables(namespace, serviceName, clout, coerced)
+				reconcile2, changed2 := self.scheduleConnections(namespace, serviceName, clout, coerced)
+				if changed1 || changed2 {
+					if err := self.SaveClout(namespace, serviceName, clout); err != nil {
+						scheduleLog.Errorf("%s", err.Error())
+					}
+				}
+				logging.CallAndLogError(lock.Unlock, "unlock", scheduleLog)
+				reconcile1.Merge(reconcile2)
+				return reconcile1
+			} else {
 				scheduleLog.Errorf("%s", err.Error())
 			}
+		} else {
+			scheduleLog.Errorf("%s", err.Error())
 		}
-		logging.CallAndLogError(lock.Unlock, "unlock", scheduleLog)
-		return reconcile
 	} else {
 		scheduleLog.Errorf("%s", err.Error())
 	}
@@ -44,19 +54,7 @@ func (self *Host) ScheduleService(namespace string, serviceName string) Reconcil
 	return NewReconcile()
 }
 
-func (self *Host) scheduleRunnables(namespace string, serviceName string, clout *cloutpkg.Clout) (Reconcile, bool) {
-	var coerced *cloutpkg.Clout
-	var err error
-	if coerced, err = clout.Copy(); err == nil {
-		if err = self.CoerceClout(coerced); err != nil {
-			scheduleLog.Errorf("%s", err.Error())
-			return nil, false
-		}
-	} else {
-		scheduleLog.Errorf("%s", err.Error())
-		return nil, false
-	}
-
+func (self *Host) scheduleRunnables(namespace string, serviceName string, clout *cloutpkg.Clout, coerced *cloutpkg.Clout) (Reconcile, bool) {
 	containers := GetCloutContainers(coerced)
 	if len(containers) == 0 {
 		return nil, false
@@ -86,4 +84,9 @@ func (self *Host) scheduleRunnables(namespace string, serviceName string, clout 
 	}
 
 	return reconcile, changed
+}
+
+func (self *Host) scheduleConnections(namespace string, serviceName string, clout *cloutpkg.Clout, coerced *cloutpkg.Clout) (Reconcile, bool) {
+	reconcile := NewReconcile()
+	return reconcile, false
 }

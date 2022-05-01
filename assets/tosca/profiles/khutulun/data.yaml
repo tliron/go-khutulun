@@ -164,5 +164,5 @@ data_types:
       protocol:
         type: string
         constraints:
-        - valid_values: [ tcp, udp, sctp ]
-        default: tcp
+        - valid_values: [ TCP, UDP, SCTP ]
+        default: TCP

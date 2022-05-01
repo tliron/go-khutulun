@@ -5,6 +5,7 @@ HERE=$(dirname "$(readlink --canonicalize "$BASH_SOURCE")")
 . "$HERE/_env"
 
 khutulun plugin register runnable podman "$GOPATH/bin/khutulun-plugin-runnable-podman" --namespace=common
+#sleep 5
 khutulun profile register khutulun "$ROOT/assets/tosca/profiles/khutulun/" --namespace=common
 #khutulun profile register khutulun "$ROOT/khutulun.zip" --namespace=common
 khutulun template register hello "$ROOT/examples/hello-world/hello-world.yaml"

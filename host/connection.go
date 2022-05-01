@@ -8,11 +8,27 @@ import (
 	cloutpkg "github.com/tliron/puccini/clout"
 )
 
+//
+// Connection
+//
+
 type Connection struct {
 	plugin.Connection
 
 	vertexID      string
 	edgesOutIndex int
+}
+
+func (self *Connection) Find(clout *cloutpkg.Clout) (*cloutpkg.Edge, error) {
+	if vertex, ok := clout.Vertexes[self.vertexID]; ok {
+		if self.edgesOutIndex < len(vertex.EdgesOut) {
+			return vertex.EdgesOut[self.edgesOutIndex], nil
+		} else {
+			return nil, fmt.Errorf("vertex has too few edges: %s", self.vertexID)
+		}
+	} else {
+		return nil, fmt.Errorf("vertex not found: %s", self.vertexID)
+	}
 }
 
 func GetConnection(vertex *cloutpkg.Vertex, edgesOutIndex int, relationship any) Connection {

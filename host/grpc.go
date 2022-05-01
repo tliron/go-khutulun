@@ -254,9 +254,7 @@ func (self *GRPC) SetPackageFiles(server api.Host_SetPackageFilesServer) error {
 					if content, err := server.Recv(); err == nil {
 						if content.Start != nil {
 							if file != nil {
-								if err := file.Close(); err != nil {
-									grpcLog.Errorf("file close: %s", err.Error())
-								}
+								logging.CallAndLogError(file.Close, "file close", grpcLog)
 							}
 							return statuspkg.Error(codes.InvalidArgument, "received more than one message with \"start\"")
 						}
@@ -292,9 +290,7 @@ func (self *GRPC) SetPackageFiles(server api.Host_SetPackageFilesServer) error {
 						}
 
 						if _, err := file.Write(content.Bytes); err != nil {
-							if err := file.Close(); err != nil {
-								grpcLog.Errorf("file close: %s", err.Error())
-							}
+							logging.CallAndLogError(file.Close, "file close", grpcLog)
 							return statuspkg.Errorf(codes.Aborted, "%s", err.Error())
 						}
 					} else {
@@ -302,9 +298,7 @@ func (self *GRPC) SetPackageFiles(server api.Host_SetPackageFilesServer) error {
 							break
 						} else {
 							if file != nil {
-								if err := file.Close(); err != nil {
-									grpcLog.Errorf("file close: %s", err.Error())
-								}
+								logging.CallAndLogError(file.Close, "file close", grpcLog)
 							}
 							return statuspkg.Errorf(codes.Aborted, "%s", err.Error())
 						}
@@ -312,9 +306,7 @@ func (self *GRPC) SetPackageFiles(server api.Host_SetPackageFilesServer) error {
 				}
 
 				if file != nil {
-					if err := file.Close(); err != nil {
-						grpcLog.Errorf("file close: %s", err.Error())
-					}
+					logging.CallAndLogError(file.Close, "file close", grpcLog)
 				}
 
 				return nil

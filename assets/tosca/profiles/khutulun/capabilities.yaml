@@ -41,9 +41,19 @@ capability_types:
       host:
         type: string
 
-  Connectible:
+  Connectable:
     metadata:
-      khutulun.plugin: connectible
+      khutulun.plugin: connectable
+    description: >-
+      By default has no opinion on the semantics of incoming connections. For example, all connections could
+      share the same port and be sesssionless. Or, it could be the same port but require an authenticated
+      session. Or, an entirely new port could be opened for each connection, ensuring that each is isolated.
+    properties:
+      standby:
+        description: >-
+          When true will set up connectability even if there are no incoming connections.
+        type: boolean
+        default: false
 
   Storage:
     metadata:
@@ -76,10 +86,6 @@ capability_types:
         type: list
         entry_schema: string
         required: false
-      ports:
-        type: list
-        entry_schema: ContainerPort
-        required: false
 
   PristineContainer:
     derived_from: Container
@@ -108,14 +114,15 @@ capability_types:
   VirtualMachine:
     derived_from: Runnable
 
-  # Connectible
+  # Connectable
 
-  Exposable:
-    derived_from: Connectible
+  ContainerConnectable:
+    derived_from: Connectable
     properties:
-      expose:
-        type: boolean
-        default: false
+      ports:
+        type: list
+        entry_schema: ContainerPort
+        required: false
 
   # Storage
 

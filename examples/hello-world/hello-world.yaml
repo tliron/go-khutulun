@@ -14,12 +14,13 @@ topology_template:
 
   node_templates:
 
+    endpoint:
+      type: kh:Endpoint
+      requirements:
+      - connection: frontend
+
     frontend:
       type: kh:LoadBalancer
-      capabilities:
-        connectible:
-          properties:
-            expose: true
       requirements:
       - connection: web-server
 
@@ -32,10 +33,12 @@ topology_template:
           properties:
             image:
               reference: docker.io/nginx:1.21.6
+        connectable:
+          properties:
             ports:
             - external: 8080
               internal: 80
-              protocol: tcp
+              protocol: TCP
       requirements:
       - connection:
           node: database

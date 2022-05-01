@@ -35,7 +35,25 @@ func (self *Container) Find(clout *cloutpkg.Clout) (*cloutpkg.Vertex, any, error
 	}
 }
 
-func GetContainer(vertex *cloutpkg.Vertex, capabilityName string, capability any) Container {
+func GetContainerPorts(capability any) []plugin.Port {
+	var ports []plugin.Port
+	capabilityProperties, _ := ard.NewNode(capability).Get("properties").StringMap()
+	if ports_, ok := ard.NewNode(capabilityProperties).Get("ports").List(); ok {
+		for _, port := range ports_ {
+			external, _ := ard.NewNode(port).Get("external").Integer()
+			internal, _ := ard.NewNode(port).Get("internal").Integer()
+			protocol, _ := ard.NewNode(port).Get("protocol").String()
+			ports = append(ports, plugin.Port{
+				External: external,
+				Internal: internal,
+				Protocol: protocol,
+			})
+		}
+	}
+	return ports
+}
+
+func GetContainer(vertex *cloutpkg.Vertex, capabilityName string, capability any) *Container {
 	self := Container{
 		vertexID:       vertex.ID,
 		capabilityName: capabilityName,
@@ -51,24 +69,12 @@ func GetContainer(vertex *cloutpkg.Vertex, capabilityName string, capability any
 	}
 	self.Reference, _ = ard.NewNode(capabilityProperties).Get("image").Get("reference").String()
 	self.CreateArguments, _ = ard.NewNode(capabilityProperties).Get("create-arguments").StringList()
-	if ports, ok := ard.NewNode(capabilityProperties).Get("ports").List(); ok {
-		for _, port := range ports {
-			external, _ := ard.NewNode(port).Get("external").Integer()
-			internal, _ := ard.NewNode(port).Get("internal").Integer()
-			protocol, _ := ard.NewNode(port).Get("protocol").String()
-			self.Ports = append(self.Ports, plugin.Port{
-				External: external,
-				Internal: internal,
-				Protocol: protocol,
-			})
-		}
-	}
 
-	return self
+	return &self
 }
 
-func GetVertexContainers(vertex *cloutpkg.Vertex) []Container {
-	var containers []Container
+func GetVertexContainers(vertex *cloutpkg.Vertex) []*Container {
+	var containers []*Container
 	if capabilities, ok := ard.NewNode(vertex.Properties).Get("capabilities").StringMap(); ok {
 		for capabilityName, capability := range capabilities {
 			if types, ok := ard.NewNode(capability).Get("types").StringMap(); ok {
@@ -77,12 +83,23 @@ func GetVertexContainers(vertex *cloutpkg.Vertex) []Container {
 				}
 			}
 		}
+
+		for _, capability := range capabilities {
+			if types, ok := ard.NewNode(capability).Get("types").StringMap(); ok {
+				if _, ok := types["cloud.puccini.khutulun::ContainerConnectable"]; ok {
+					ports := GetContainerPorts(capability)
+					for _, container := range containers {
+						container.Ports = ports
+					}
+				}
+			}
+		}
 	}
 	return containers
 }
 
-func GetCloutContainers(clout *cloutpkg.Clout) []Container {
-	var containers []Container
+func GetCloutContainers(clout *cloutpkg.Clout) []*Container {
+	var containers []*Container
 	for _, vertex := range clout.Vertexes {
 		containers = append(containers, GetVertexContainers(vertex)...)
 	}

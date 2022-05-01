@@ -14,6 +14,16 @@ node_types:
         type: Count
         default: 1
 
+  Endpoint:
+    properties:
+      ingress:
+        type: boolean
+        default: false
+    requirements:
+    - connection:
+        capability: Connectable
+        relationship: Connection
+
   # Runnable
 
   Process:
@@ -24,10 +34,10 @@ node_types:
     capabilities:
       runnable:
         type: Process
-      connectible: Exposable
+      connectable: Connectable
     requirements:
     - connection:
-        capability: Connectible
+        capability: Connectable
         relationship: Connection
     - storage:
         capability: Storage
@@ -40,10 +50,10 @@ node_types:
         type: Events
     capabilities:
       runnable: Container
-      connectible: Exposable
+      connectable: ContainerConnectable
     requirements:
     - connection:
-        capability: Connectible
+        capability: Connectable
         relationship: Connection
     - storage:
         capability: Storage
@@ -77,10 +87,10 @@ node_types:
         type: Events
     capabilities:
       runnable: VirtualMachine
-      connectible: Connectible
+      connectable: Connectable
     requirements:
     - connection:
-        capability: Connectible
+        capability: Connectable
         relationship: Connection
     - storage:
         capability: Storage
