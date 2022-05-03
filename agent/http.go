@@ -1,4 +1,4 @@
-package host
+package agent
 
 import (
 	contextpkg "context"
@@ -21,16 +21,16 @@ type HTTP struct {
 
 	httpServer *http.Server
 	mux        *http.ServeMux
-	host       *Host
+	agent      *Agent
 }
 
-func NewHTTP(host *Host, protocol string, address string, port int) (*HTTP, error) {
+func NewHTTP(agent *Agent, protocol string, address string, port int) (*HTTP, error) {
 	self := HTTP{
 		Protocol: protocol,
 		Address:  address,
 		Port:     port,
 		mux:      http.NewServeMux(),
-		host:     host,
+		agent:    agent,
 	}
 
 	if filesystem, err := fspkg.New(); err == nil {
@@ -77,7 +77,7 @@ func (self *HTTP) Stop() error {
 }
 
 func (self *HTTP) listNamespaces(writer http.ResponseWriter, request *http.Request) {
-	if namespaces, err := self.host.ListNamespaces(); err == nil {
+	if namespaces, err := self.agent.ListNamespaces(); err == nil {
 		format.WriteJSON(namespaces, writer, "")
 	} else {
 		writer.WriteHeader(500)
@@ -88,7 +88,7 @@ func (self *HTTP) listPackages(writer http.ResponseWriter, request *http.Request
 	namespace := request.URL.Query().Get("namespace")
 	type_ := request.URL.Query().Get("type")
 	if type_ != "" {
-		if identifiers, err := self.host.ListPackages(namespace, type_); err == nil {
+		if identifiers, err := self.agent.ListPackages(namespace, type_); err == nil {
 			format.WriteJSON(identifiers, writer, "")
 		} else {
 			writer.WriteHeader(500)
@@ -103,7 +103,7 @@ func (self *HTTP) listResources(writer http.ResponseWriter, request *http.Reques
 	service := request.URL.Query().Get("service")
 	type_ := request.URL.Query().Get("type")
 	if type_ != "" {
-		if resources, err := self.host.ListResources(namespace, service, type_); err == nil {
+		if resources, err := self.agent.ListResources(namespace, service, type_); err == nil {
 			format.WriteJSON(resources, writer, "")
 		} else {
 			writer.WriteHeader(500)
@@ -114,8 +114,8 @@ func (self *HTTP) listResources(writer http.ResponseWriter, request *http.Reques
 }
 
 func (self *HTTP) listHosts(writer http.ResponseWriter, request *http.Request) {
-	if self.host.gossip != nil {
-		format.WriteJSON(self.host.gossip.ListHosts(), writer, "")
+	if self.agent.gossip != nil {
+		format.WriteJSON(self.agent.gossip.ListHosts(), writer, "")
 	} else {
 		writer.WriteHeader(500)
 	}

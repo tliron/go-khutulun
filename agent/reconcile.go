@@ -1,4 +1,4 @@
-package host
+package agent
 
 import (
 	"github.com/tliron/khutulun/plugin"
@@ -6,7 +6,7 @@ import (
 	cloutpkg "github.com/tliron/puccini/clout"
 )
 
-func (self *Host) Reconcile() {
+func (self *Agent) Reconcile() {
 	if identifiers, err := self.ListPackages("", "clout"); err == nil {
 		for _, identifier := range identifiers {
 			self.ReconcileService(identifier.Namespace, identifier.Name)
@@ -16,7 +16,7 @@ func (self *Host) Reconcile() {
 	}
 }
 
-func (self *Host) ReconcileService(namespace string, serviceName string) {
+func (self *Agent) ReconcileService(namespace string, serviceName string) {
 	if namespace == "" {
 		namespace = "_"
 	}
@@ -37,7 +37,7 @@ func (self *Host) ReconcileService(namespace string, serviceName string) {
 	}
 }
 
-func (self *Host) reconcileRunnables(clout *cloutpkg.Clout) {
+func (self *Agent) reconcileRunnables(clout *cloutpkg.Clout) {
 	containers := GetCloutContainers(clout)
 	if len(containers) == 0 {
 		return
@@ -67,7 +67,7 @@ func (self *Host) reconcileRunnables(clout *cloutpkg.Clout) {
 	}()
 }
 
-func (self *Host) reconcileConnections(clout *cloutpkg.Clout) {
+func (self *Agent) reconcileConnections(clout *cloutpkg.Clout) {
 }
 
 //
@@ -102,7 +102,7 @@ func (self Reconcile) Merge(reconcile Reconcile) bool {
 	return added
 }
 
-func (self *Host) HandleReconcile(reconcile Reconcile) {
+func (self *Agent) HandleReconcile(reconcile Reconcile) {
 	for host, identifiers := range reconcile {
 		if self.host == host {
 			for _, identifier := range identifiers.List {

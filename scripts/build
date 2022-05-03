@@ -19,5 +19,5 @@ function build () {
 }
 
 build khutulun
-build khutulun-host
+build khutulun-agent
 build khutulun-plugin-runnable-podman

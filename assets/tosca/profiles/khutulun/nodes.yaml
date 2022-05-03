@@ -59,16 +59,6 @@ node_types:
         capability: Storage
         relationship: Storage
 
-  PristineContainer:
-    derived_from: Container
-    capabilities:
-      runnable: PristineContainer
-
-  SystemContainer:
-    derived_from: Container
-    capabilities:
-      runnable: SystemContainer
-
   LoadBalancer:
     derived_from: Container
     capabilities:

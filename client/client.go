@@ -19,7 +19,7 @@ const TIMEOUT = 10 * time.Second
 
 type Client struct {
 	conn    *grpc.ClientConn
-	client  api.HostClient
+	client  api.AgentClient
 	context contextpkg.Context
 }
 
@@ -44,7 +44,7 @@ func NewClient(target string) (*Client, error) {
 	if conn, err := grpc.Dial(target, grpc.WithInsecure()); err == nil {
 		return &Client{
 			conn:    conn,
-			client:  api.NewHostClient(conn),
+			client:  api.NewAgentClient(conn),
 			context: contextpkg.Background(),
 		}, nil
 	} else {

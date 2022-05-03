@@ -1,4 +1,4 @@
-package host
+package agent
 
 import (
 	"io/fs"
@@ -78,16 +78,16 @@ func (self Dir) Equals(dir Dir) bool {
 //
 
 type Watcher struct {
-	host      *Host
+	agent     *Agent
 	watcher   *fsnotify.Watcher
 	onChanged OnChangedFunc
 	dirs      []Dir
 	lock      util.RWLocker
 }
 
-func NewWatcher(host *Host, onChanged OnChangedFunc) (*Watcher, error) {
+func NewWatcher(agent *Agent, onChanged OnChangedFunc) (*Watcher, error) {
 	var self = Watcher{
-		host:      host,
+		agent:     agent,
 		onChanged: onChanged,
 		lock:      util.NewDefaultRWLocker(),
 	}
@@ -189,7 +189,7 @@ func (self *Watcher) sync() error {
 	self.lock.Lock()
 	defer self.lock.Unlock()
 
-	return filepath.WalkDir(self.host.statePath, func(path string, entry fs.DirEntry, err error) error {
+	return filepath.WalkDir(self.agent.statePath, func(path string, entry fs.DirEntry, err error) error {
 		if isHidden(path) {
 			return fs.SkipDir
 		}
@@ -239,7 +239,7 @@ func (self *Watcher) remove(dir Dir) error {
 }
 
 func (self *Watcher) toDir(path string) Dir {
-	statePath := self.host.statePath
+	statePath := self.agent.statePath
 	length := len(statePath) + 1
 	if path == statePath {
 		path = ""
@@ -250,6 +250,6 @@ func (self *Watcher) toDir(path string) Dir {
 }
 
 func (self *Watcher) toPath(dir Dir) string {
-	segments := append([]string{self.host.statePath}, dir...)
+	segments := append([]string{self.agent.statePath}, dir...)
 	return filepath.Join(segments...)
 }

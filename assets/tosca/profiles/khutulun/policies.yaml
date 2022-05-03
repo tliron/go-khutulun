@@ -10,7 +10,7 @@ policy_types:
 
   Placement:
     properties:
-      member:
+      host:
         type: string
         required: false
       hints:
@@ -18,5 +18,5 @@ policy_types:
         entry_schema:
           type: string
           constraints:
-          - valid_values: [ Colocate ]
+          - valid_values: [ Colocate, Distribute ]
         required: false

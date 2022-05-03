@@ -1,4 +1,4 @@
-package host
+package agent
 
 import (
 	"fmt"
@@ -9,7 +9,7 @@ import (
 	"github.com/tliron/kutil/logging"
 )
 
-var log = logging.GetLogger("khutulun.host")
+var log = logging.GetLogger("khutulun.agent")
 var watcherLog = logging.GetLogger("khutulun.watcher")
 var grpcLog = logging.GetLogger("khutulun.grpc")
 var gossipLog = logging.GetLogger("khutulun.gossip")

@@ -1,4 +1,4 @@
-package host
+package agent
 
 import (
 	"os"
@@ -16,19 +16,19 @@ const (
 )
 
 //
-// Host
+// Agent
 //
 
-type Host struct {
+type Agent struct {
 	host       string
 	statePath  string
 	urlContext *urlpkg.Context
 	gossip     *Gossip
 }
 
-func NewHost(statePath string) (*Host, error) {
+func NewAgent(statePath string) (*Agent, error) {
 	if host, err := os.Hostname(); err == nil {
-		return &Host{
+		return &Agent{
 			host:       host,
 			statePath:  statePath,
 			urlContext: urlpkg.NewContext(),
@@ -38,12 +38,12 @@ func NewHost(statePath string) (*Host, error) {
 	}
 }
 
-func (self *Host) Release() error {
+func (self *Agent) Release() error {
 	return self.urlContext.Release()
 }
 
 // OnMessageFunc signature
-func (self *Host) onMessage(bytes []byte, broadcast bool) {
+func (self *Agent) onMessage(bytes []byte, broadcast bool) {
 	if message, _, err := ard.DecodeJSON(util.BytesToString(bytes), false); err == nil {
 		go self.handleMessage(message, broadcast)
 	} else {
@@ -51,7 +51,7 @@ func (self *Host) onMessage(bytes []byte, broadcast bool) {
 	}
 }
 
-func (self *Host) handleMessage(message any, broadcast bool) {
+func (self *Agent) handleMessage(message any, broadcast bool) {
 	command, _ := ard.NewNode(message).Get("command").String()
 
 	if broadcast {

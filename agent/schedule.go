@@ -1,12 +1,15 @@
-package host
+package agent
 
 import (
+	"os"
+
 	"github.com/tliron/kutil/ard"
+	"github.com/tliron/kutil/format"
 	"github.com/tliron/kutil/logging"
 	cloutpkg "github.com/tliron/puccini/clout"
 )
 
-func (self *Host) Schedule() {
+func (self *Agent) Schedule() {
 	reconcile := NewReconcile()
 
 	if identifiers, err := self.ListPackages("", "clout"); err == nil {
@@ -21,7 +24,7 @@ func (self *Host) Schedule() {
 	self.HandleReconcile(reconcile)
 }
 
-func (self *Host) ScheduleService(namespace string, serviceName string) Reconcile {
+func (self *Agent) ScheduleService(namespace string, serviceName string) Reconcile {
 	if namespace == "" {
 		namespace = "_"
 	}
@@ -54,7 +57,7 @@ func (self *Host) ScheduleService(namespace string, serviceName string) Reconcil
 	return NewReconcile()
 }
 
-func (self *Host) scheduleRunnables(namespace string, serviceName string, clout *cloutpkg.Clout, coerced *cloutpkg.Clout) (Reconcile, bool) {
+func (self *Agent) scheduleRunnables(namespace string, serviceName string, clout *cloutpkg.Clout, coerced *cloutpkg.Clout) (Reconcile, bool) {
 	containers := GetCloutContainers(coerced)
 	if len(containers) == 0 {
 		return nil, false
@@ -86,7 +89,14 @@ func (self *Host) scheduleRunnables(namespace string, serviceName string, clout 
 	return reconcile, changed
 }
 
-func (self *Host) scheduleConnections(namespace string, serviceName string, clout *cloutpkg.Clout, coerced *cloutpkg.Clout) (Reconcile, bool) {
+func (self *Agent) scheduleConnections(namespace string, serviceName string, clout *cloutpkg.Clout, coerced *cloutpkg.Clout) (Reconcile, bool) {
+	connections := GetCloutConnections(coerced)
+	if len(connections) == 0 {
+		return nil, false
+	}
+
+	format.PrintYAML(connections, os.Stdout, false, false)
+
 	reconcile := NewReconcile()
 	return reconcile, false
 }

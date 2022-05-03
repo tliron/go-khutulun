@@ -1,4 +1,4 @@
-package host
+package agent
 
 import (
 	"fmt"
@@ -29,7 +29,7 @@ type Server struct {
 	BroadcastAddress   string // https://en.wikipedia.org/wiki/Multicast_address
 	BroadcastPort      int
 
-	host        *Host
+	agent       *Agent
 	grpc        *GRPC
 	http        *HTTP
 	gossip      *Gossip
@@ -39,9 +39,9 @@ type Server struct {
 	ticker      *Ticker
 }
 
-func NewServer(host *Host) *Server {
+func NewServer(agent *Agent) *Server {
 	return &Server{
-		host: host,
+		agent: agent,
 	}
 }
 
@@ -49,7 +49,7 @@ func (self *Server) Start(watcher bool, ticker bool) error {
 	var err error
 
 	if watcher {
-		if self.watcher, err = NewWatcher(self.host, func(change Change, identifier []string) {
+		if self.watcher, err = NewWatcher(self.agent, func(change Change, identifier []string) {
 			if change != Changed {
 				fmt.Printf("%s %v\n", change.String(), identifier)
 			}
@@ -62,7 +62,7 @@ func (self *Server) Start(watcher bool, ticker bool) error {
 	}
 
 	if self.GRPCPort != 0 {
-		self.grpc = NewGRPC(self.host, self.GRPCProtocol, self.GRPCAddress, self.GRPCPort)
+		self.grpc = NewGRPC(self.agent, self.GRPCProtocol, self.GRPCAddress, self.GRPCPort)
 		if err := self.grpc.Start(); err != nil {
 			self.Stop()
 			return err
@@ -71,7 +71,7 @@ func (self *Server) Start(watcher bool, ticker bool) error {
 
 	if self.HTTPPort != 0 {
 		var err error
-		if self.http, err = NewHTTP(self.host, self.HTTPProtocol, self.HTTPAddress, self.HTTPPort); err == nil {
+		if self.http, err = NewHTTP(self.agent, self.HTTPProtocol, self.HTTPAddress, self.HTTPPort); err == nil {
 			if err := self.http.Start(); err != nil {
 				self.Stop()
 				return err
@@ -84,7 +84,7 @@ func (self *Server) Start(watcher bool, ticker bool) error {
 
 	if self.GossipPort != 0 {
 		self.gossip = NewGossip(self.GossipAddress, self.GossipPort)
-		self.gossip.onMessage = self.host.onMessage
+		self.gossip.onMessage = self.agent.onMessage
 		if self.grpc != nil {
 			self.gossip.meta = util.StringToBytes(fmt.Sprintf("[%s]:%d", self.grpc.Address, self.grpc.Port))
 		}
@@ -92,7 +92,7 @@ func (self *Server) Start(watcher bool, ticker bool) error {
 			self.Stop()
 			return err
 		}
-		self.host.gossip = self.gossip
+		self.agent.gossip = self.gossip
 	}
 
 	if self.BroadcastPort != 0 {
@@ -105,7 +105,7 @@ func (self *Server) Start(watcher bool, ticker bool) error {
 		}
 
 		if self.receiver, err = NewReceiver(self.BroadcastProtocol, self.BroadcastInterface, self.BroadcastAddress, self.BroadcastPort, func(address *net.UDPAddr, message []byte) {
-			self.host.onMessage(message, true)
+			self.agent.onMessage(message, true)
 		}); err != nil {
 			self.Stop()
 			return err

@@ -1,4 +1,4 @@
-package host
+package agent
 
 import (
 	"github.com/tliron/kutil/logging"
@@ -10,7 +10,7 @@ import (
 	"github.com/tliron/puccini/tosca/parser"
 )
 
-func (self *Host) ParseTosca(templateNamespace string, templateName string) (*normal.ServiceTemplate, *problemspkg.Problems, error) {
+func (self *Agent) ParseTosca(templateNamespace string, templateName string) (*normal.ServiceTemplate, *problemspkg.Problems, error) {
 	parserContext := parser.NewContext()
 
 	profilePath := self.getPackageTypeDir(templateNamespace, "profile")
@@ -45,7 +45,7 @@ func (self *Host) ParseTosca(templateNamespace string, templateName string) (*no
 	}
 }
 
-func (self *Host) CompileTosca(templateNamespace string, templateName string, serviceNamespace string, serviceName string) (*cloutpkg.Clout, *problemspkg.Problems, error) {
+func (self *Agent) CompileTosca(templateNamespace string, templateName string, serviceNamespace string, serviceName string) (*cloutpkg.Clout, *problemspkg.Problems, error) {
 	if serviceTemplate, problems, err := self.ParseTosca(templateNamespace, templateName); err == nil {
 		if clout, err := serviceTemplate.Compile(false); err == nil {
 			js.Resolve(clout, problems, self.urlContext, true, "yaml", true, false, false)

@@ -7,7 +7,7 @@ import "google/protobuf/struct.proto";
 
 option go_package = "github.com/tliron/khutulun/api";
 
-service Host {
+service Agent {
     rpc getVersion(google.protobuf.Empty) returns (Version);
     rpc listHosts(google.protobuf.Empty) returns (stream HostIdentifier);
     rpc addHost(AddHost) returns (google.protobuf.Empty);
@@ -28,6 +28,8 @@ service Host {
 }
 
 service Plugin {
+    //rpc schedule(Config) returns (google.protobuf.Empty);
+    //rpc reconcile(Config) returns (google.protobuf.Empty);
     rpc instantiate(Config) returns (google.protobuf.Empty);
     rpc interact(stream Interaction) returns (stream Interaction);
 }

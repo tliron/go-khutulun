@@ -19,47 +19,47 @@ import (
 // Requires gRPC-Go v1.32.0 or later.
 const _ = grpc.SupportPackageIsVersion7
 
-// HostClient is the client API for Host service.
+// AgentClient is the client API for Agent service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
-type HostClient interface {
+type AgentClient interface {
 	GetVersion(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*Version, error)
-	ListHosts(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (Host_ListHostsClient, error)
+	ListHosts(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (Agent_ListHostsClient, error)
 	AddHost(ctx context.Context, in *AddHost, opts ...grpc.CallOption) (*emptypb.Empty, error)
-	ListNamespaces(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (Host_ListNamespacesClient, error)
-	ListPackages(ctx context.Context, in *ListPackages, opts ...grpc.CallOption) (Host_ListPackagesClient, error)
-	ListPackageFiles(ctx context.Context, in *PackageIdentifier, opts ...grpc.CallOption) (Host_ListPackageFilesClient, error)
-	GetPackageFiles(ctx context.Context, in *GetPackageFiles, opts ...grpc.CallOption) (Host_GetPackageFilesClient, error)
-	SetPackageFiles(ctx context.Context, opts ...grpc.CallOption) (Host_SetPackageFilesClient, error)
+	ListNamespaces(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (Agent_ListNamespacesClient, error)
+	ListPackages(ctx context.Context, in *ListPackages, opts ...grpc.CallOption) (Agent_ListPackagesClient, error)
+	ListPackageFiles(ctx context.Context, in *PackageIdentifier, opts ...grpc.CallOption) (Agent_ListPackageFilesClient, error)
+	GetPackageFiles(ctx context.Context, in *GetPackageFiles, opts ...grpc.CallOption) (Agent_GetPackageFilesClient, error)
+	SetPackageFiles(ctx context.Context, opts ...grpc.CallOption) (Agent_SetPackageFilesClient, error)
 	RemovePackage(ctx context.Context, in *PackageIdentifier, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	DeployService(ctx context.Context, in *DeployService, opts ...grpc.CallOption) (*emptypb.Empty, error)
-	ListResources(ctx context.Context, in *ListResources, opts ...grpc.CallOption) (Host_ListResourcesClient, error)
-	Interact(ctx context.Context, opts ...grpc.CallOption) (Host_InteractClient, error)
+	ListResources(ctx context.Context, in *ListResources, opts ...grpc.CallOption) (Agent_ListResourcesClient, error)
+	Interact(ctx context.Context, opts ...grpc.CallOption) (Agent_InteractClient, error)
 }
 
-type hostClient struct {
+type agentClient struct {
 	cc grpc.ClientConnInterface
 }
 
-func NewHostClient(cc grpc.ClientConnInterface) HostClient {
-	return &hostClient{cc}
+func NewAgentClient(cc grpc.ClientConnInterface) AgentClient {
+	return &agentClient{cc}
 }
 
-func (c *hostClient) GetVersion(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*Version, error) {
+func (c *agentClient) GetVersion(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*Version, error) {
 	out := new(Version)
-	err := c.cc.Invoke(ctx, "/khutulun.Host/getVersion", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/khutulun.Agent/getVersion", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *hostClient) ListHosts(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (Host_ListHostsClient, error) {
-	stream, err := c.cc.NewStream(ctx, &Host_ServiceDesc.Streams[0], "/khutulun.Host/listHosts", opts...)
+func (c *agentClient) ListHosts(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (Agent_ListHostsClient, error) {
+	stream, err := c.cc.NewStream(ctx, &Agent_ServiceDesc.Streams[0], "/khutulun.Agent/listHosts", opts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &hostListHostsClient{stream}
+	x := &agentListHostsClient{stream}
 	if err := x.ClientStream.SendMsg(in); err != nil {
 		return nil, err
 	}
@@ -69,16 +69,16 @@ func (c *hostClient) ListHosts(ctx context.Context, in *emptypb.Empty, opts ...g
 	return x, nil
 }
 
-type Host_ListHostsClient interface {
+type Agent_ListHostsClient interface {
 	Recv() (*HostIdentifier, error)
 	grpc.ClientStream
 }
 
-type hostListHostsClient struct {
+type agentListHostsClient struct {
 	grpc.ClientStream
 }
 
-func (x *hostListHostsClient) Recv() (*HostIdentifier, error) {
+func (x *agentListHostsClient) Recv() (*HostIdentifier, error) {
 	m := new(HostIdentifier)
 	if err := x.ClientStream.RecvMsg(m); err != nil {
 		return nil, err
@@ -86,21 +86,21 @@ func (x *hostListHostsClient) Recv() (*HostIdentifier, error) {
 	return m, nil
 }
 
-func (c *hostClient) AddHost(ctx context.Context, in *AddHost, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+func (c *agentClient) AddHost(ctx context.Context, in *AddHost, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	out := new(emptypb.Empty)
-	err := c.cc.Invoke(ctx, "/khutulun.Host/addHost", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/khutulun.Agent/addHost", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *hostClient) ListNamespaces(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (Host_ListNamespacesClient, error) {
-	stream, err := c.cc.NewStream(ctx, &Host_ServiceDesc.Streams[1], "/khutulun.Host/listNamespaces", opts...)
+func (c *agentClient) ListNamespaces(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (Agent_ListNamespacesClient, error) {
+	stream, err := c.cc.NewStream(ctx, &Agent_ServiceDesc.Streams[1], "/khutulun.Agent/listNamespaces", opts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &hostListNamespacesClient{stream}
+	x := &agentListNamespacesClient{stream}
 	if err := x.ClientStream.SendMsg(in); err != nil {
 		return nil, err
 	}
@@ -110,16 +110,16 @@ func (c *hostClient) ListNamespaces(ctx context.Context, in *emptypb.Empty, opts
 	return x, nil
 }
 
-type Host_ListNamespacesClient interface {
+type Agent_ListNamespacesClient interface {
 	Recv() (*Namespace, error)
 	grpc.ClientStream
 }
 
-type hostListNamespacesClient struct {
+type agentListNamespacesClient struct {
 	grpc.ClientStream
 }
 
-func (x *hostListNamespacesClient) Recv() (*Namespace, error) {
+func (x *agentListNamespacesClient) Recv() (*Namespace, error) {
 	m := new(Namespace)
 	if err := x.ClientStream.RecvMsg(m); err != nil {
 		return nil, err
@@ -127,12 +127,12 @@ func (x *hostListNamespacesClient) Recv() (*Namespace, error) {
 	return m, nil
 }
 
-func (c *hostClient) ListPackages(ctx context.Context, in *ListPackages, opts ...grpc.CallOption) (Host_ListPackagesClient, error) {
-	stream, err := c.cc.NewStream(ctx, &Host_ServiceDesc.Streams[2], "/khutulun.Host/listPackages", opts...)
+func (c *agentClient) ListPackages(ctx context.Context, in *ListPackages, opts ...grpc.CallOption) (Agent_ListPackagesClient, error) {
+	stream, err := c.cc.NewStream(ctx, &Agent_ServiceDesc.Streams[2], "/khutulun.Agent/listPackages", opts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &hostListPackagesClient{stream}
+	x := &agentListPackagesClient{stream}
 	if err := x.ClientStream.SendMsg(in); err != nil {
 		return nil, err
 	}
@@ -142,16 +142,16 @@ func (c *hostClient) ListPackages(ctx context.Context, in *ListPackages, opts ..
 	return x, nil
 }
 
-type Host_ListPackagesClient interface {
+type Agent_ListPackagesClient interface {
 	Recv() (*PackageIdentifier, error)
 	grpc.ClientStream
 }
 
-type hostListPackagesClient struct {
+type agentListPackagesClient struct {
 	grpc.ClientStream
 }
 
-func (x *hostListPackagesClient) Recv() (*PackageIdentifier, error) {
+func (x *agentListPackagesClient) Recv() (*PackageIdentifier, error) {
 	m := new(PackageIdentifier)
 	if err := x.ClientStream.RecvMsg(m); err != nil {
 		return nil, err
@@ -159,12 +159,12 @@ func (x *hostListPackagesClient) Recv() (*PackageIdentifier, error) {
 	return m, nil
 }
 
-func (c *hostClient) ListPackageFiles(ctx context.Context, in *PackageIdentifier, opts ...grpc.CallOption) (Host_ListPackageFilesClient, error) {
-	stream, err := c.cc.NewStream(ctx, &Host_ServiceDesc.Streams[3], "/khutulun.Host/listPackageFiles", opts...)
+func (c *agentClient) ListPackageFiles(ctx context.Context, in *PackageIdentifier, opts ...grpc.CallOption) (Agent_ListPackageFilesClient, error) {
+	stream, err := c.cc.NewStream(ctx, &Agent_ServiceDesc.Streams[3], "/khutulun.Agent/listPackageFiles", opts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &hostListPackageFilesClient{stream}
+	x := &agentListPackageFilesClient{stream}
 	if err := x.ClientStream.SendMsg(in); err != nil {
 		return nil, err
 	}
@@ -174,16 +174,16 @@ func (c *hostClient) ListPackageFiles(ctx context.Context, in *PackageIdentifier
 	return x, nil
 }
 
-type Host_ListPackageFilesClient interface {
+type Agent_ListPackageFilesClient interface {
 	Recv() (*PackageFile, error)
 	grpc.ClientStream
 }
 
-type hostListPackageFilesClient struct {
+type agentListPackageFilesClient struct {
 	grpc.ClientStream
 }
 
-func (x *hostListPackageFilesClient) Recv() (*PackageFile, error) {
+func (x *agentListPackageFilesClient) Recv() (*PackageFile, error) {
 	m := new(PackageFile)
 	if err := x.ClientStream.RecvMsg(m); err != nil {
 		return nil, err
@@ -191,12 +191,12 @@ func (x *hostListPackageFilesClient) Recv() (*PackageFile, error) {
 	return m, nil
 }
 
-func (c *hostClient) GetPackageFiles(ctx context.Context, in *GetPackageFiles, opts ...grpc.CallOption) (Host_GetPackageFilesClient, error) {
-	stream, err := c.cc.NewStream(ctx, &Host_ServiceDesc.Streams[4], "/khutulun.Host/getPackageFiles", opts...)
+func (c *agentClient) GetPackageFiles(ctx context.Context, in *GetPackageFiles, opts ...grpc.CallOption) (Agent_GetPackageFilesClient, error) {
+	stream, err := c.cc.NewStream(ctx, &Agent_ServiceDesc.Streams[4], "/khutulun.Agent/getPackageFiles", opts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &hostGetPackageFilesClient{stream}
+	x := &agentGetPackageFilesClient{stream}
 	if err := x.ClientStream.SendMsg(in); err != nil {
 		return nil, err
 	}
@@ -206,16 +206,16 @@ func (c *hostClient) GetPackageFiles(ctx context.Context, in *GetPackageFiles, o
 	return x, nil
 }
 
-type Host_GetPackageFilesClient interface {
+type Agent_GetPackageFilesClient interface {
 	Recv() (*PackageContent, error)
 	grpc.ClientStream
 }
 
-type hostGetPackageFilesClient struct {
+type agentGetPackageFilesClient struct {
 	grpc.ClientStream
 }
 
-func (x *hostGetPackageFilesClient) Recv() (*PackageContent, error) {
+func (x *agentGetPackageFilesClient) Recv() (*PackageContent, error) {
 	m := new(PackageContent)
 	if err := x.ClientStream.RecvMsg(m); err != nil {
 		return nil, err
@@ -223,30 +223,30 @@ func (x *hostGetPackageFilesClient) Recv() (*PackageContent, error) {
 	return m, nil
 }
 
-func (c *hostClient) SetPackageFiles(ctx context.Context, opts ...grpc.CallOption) (Host_SetPackageFilesClient, error) {
-	stream, err := c.cc.NewStream(ctx, &Host_ServiceDesc.Streams[5], "/khutulun.Host/setPackageFiles", opts...)
+func (c *agentClient) SetPackageFiles(ctx context.Context, opts ...grpc.CallOption) (Agent_SetPackageFilesClient, error) {
+	stream, err := c.cc.NewStream(ctx, &Agent_ServiceDesc.Streams[5], "/khutulun.Agent/setPackageFiles", opts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &hostSetPackageFilesClient{stream}
+	x := &agentSetPackageFilesClient{stream}
 	return x, nil
 }
 
-type Host_SetPackageFilesClient interface {
+type Agent_SetPackageFilesClient interface {
 	Send(*PackageContent) error
 	CloseAndRecv() (*emptypb.Empty, error)
 	grpc.ClientStream
 }
 
-type hostSetPackageFilesClient struct {
+type agentSetPackageFilesClient struct {
 	grpc.ClientStream
 }
 
-func (x *hostSetPackageFilesClient) Send(m *PackageContent) error {
+func (x *agentSetPackageFilesClient) Send(m *PackageContent) error {
 	return x.ClientStream.SendMsg(m)
 }
 
-func (x *hostSetPackageFilesClient) CloseAndRecv() (*emptypb.Empty, error) {
+func (x *agentSetPackageFilesClient) CloseAndRecv() (*emptypb.Empty, error) {
 	if err := x.ClientStream.CloseSend(); err != nil {
 		return nil, err
 	}
@@ -257,30 +257,30 @@ func (x *hostSetPackageFilesClient) CloseAndRecv() (*emptypb.Empty, error) {
 	return m, nil
 }
 
-func (c *hostClient) RemovePackage(ctx context.Context, in *PackageIdentifier, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+func (c *agentClient) RemovePackage(ctx context.Context, in *PackageIdentifier, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	out := new(emptypb.Empty)
-	err := c.cc.Invoke(ctx, "/khutulun.Host/removePackage", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/khutulun.Agent/removePackage", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *hostClient) DeployService(ctx context.Context, in *DeployService, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+func (c *agentClient) DeployService(ctx context.Context, in *DeployService, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	out := new(emptypb.Empty)
-	err := c.cc.Invoke(ctx, "/khutulun.Host/deployService", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/khutulun.Agent/deployService", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *hostClient) ListResources(ctx context.Context, in *ListResources, opts ...grpc.CallOption) (Host_ListResourcesClient, error) {
-	stream, err := c.cc.NewStream(ctx, &Host_ServiceDesc.Streams[6], "/khutulun.Host/listResources", opts...)
+func (c *agentClient) ListResources(ctx context.Context, in *ListResources, opts ...grpc.CallOption) (Agent_ListResourcesClient, error) {
+	stream, err := c.cc.NewStream(ctx, &Agent_ServiceDesc.Streams[6], "/khutulun.Agent/listResources", opts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &hostListResourcesClient{stream}
+	x := &agentListResourcesClient{stream}
 	if err := x.ClientStream.SendMsg(in); err != nil {
 		return nil, err
 	}
@@ -290,16 +290,16 @@ func (c *hostClient) ListResources(ctx context.Context, in *ListResources, opts 
 	return x, nil
 }
 
-type Host_ListResourcesClient interface {
+type Agent_ListResourcesClient interface {
 	Recv() (*ResourceIdentifier, error)
 	grpc.ClientStream
 }
 
-type hostListResourcesClient struct {
+type agentListResourcesClient struct {
 	grpc.ClientStream
 }
 
-func (x *hostListResourcesClient) Recv() (*ResourceIdentifier, error) {
+func (x *agentListResourcesClient) Recv() (*ResourceIdentifier, error) {
 	m := new(ResourceIdentifier)
 	if err := x.ClientStream.RecvMsg(m); err != nil {
 		return nil, err
@@ -307,30 +307,30 @@ func (x *hostListResourcesClient) Recv() (*ResourceIdentifier, error) {
 	return m, nil
 }
 
-func (c *hostClient) Interact(ctx context.Context, opts ...grpc.CallOption) (Host_InteractClient, error) {
-	stream, err := c.cc.NewStream(ctx, &Host_ServiceDesc.Streams[7], "/khutulun.Host/interact", opts...)
+func (c *agentClient) Interact(ctx context.Context, opts ...grpc.CallOption) (Agent_InteractClient, error) {
+	stream, err := c.cc.NewStream(ctx, &Agent_ServiceDesc.Streams[7], "/khutulun.Agent/interact", opts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &hostInteractClient{stream}
+	x := &agentInteractClient{stream}
 	return x, nil
 }
 
-type Host_InteractClient interface {
+type Agent_InteractClient interface {
 	Send(*Interaction) error
 	Recv() (*Interaction, error)
 	grpc.ClientStream
 }
 
-type hostInteractClient struct {
+type agentInteractClient struct {
 	grpc.ClientStream
 }
 
-func (x *hostInteractClient) Send(m *Interaction) error {
+func (x *agentInteractClient) Send(m *Interaction) error {
 	return x.ClientStream.SendMsg(m)
 }
 
-func (x *hostInteractClient) Recv() (*Interaction, error) {
+func (x *agentInteractClient) Recv() (*Interaction, error) {
 	m := new(Interaction)
 	if err := x.ClientStream.RecvMsg(m); err != nil {
 		return nil, err
@@ -338,238 +338,238 @@ func (x *hostInteractClient) Recv() (*Interaction, error) {
 	return m, nil
 }
 
-// HostServer is the server API for Host service.
-// All implementations must embed UnimplementedHostServer
+// AgentServer is the server API for Agent service.
+// All implementations must embed UnimplementedAgentServer
 // for forward compatibility
-type HostServer interface {
+type AgentServer interface {
 	GetVersion(context.Context, *emptypb.Empty) (*Version, error)
-	ListHosts(*emptypb.Empty, Host_ListHostsServer) error
+	ListHosts(*emptypb.Empty, Agent_ListHostsServer) error
 	AddHost(context.Context, *AddHost) (*emptypb.Empty, error)
-	ListNamespaces(*emptypb.Empty, Host_ListNamespacesServer) error
-	ListPackages(*ListPackages, Host_ListPackagesServer) error
-	ListPackageFiles(*PackageIdentifier, Host_ListPackageFilesServer) error
-	GetPackageFiles(*GetPackageFiles, Host_GetPackageFilesServer) error
-	SetPackageFiles(Host_SetPackageFilesServer) error
+	ListNamespaces(*emptypb.Empty, Agent_ListNamespacesServer) error
+	ListPackages(*ListPackages, Agent_ListPackagesServer) error
+	ListPackageFiles(*PackageIdentifier, Agent_ListPackageFilesServer) error
+	GetPackageFiles(*GetPackageFiles, Agent_GetPackageFilesServer) error
+	SetPackageFiles(Agent_SetPackageFilesServer) error
 	RemovePackage(context.Context, *PackageIdentifier) (*emptypb.Empty, error)
 	DeployService(context.Context, *DeployService) (*emptypb.Empty, error)
-	ListResources(*ListResources, Host_ListResourcesServer) error
-	Interact(Host_InteractServer) error
-	mustEmbedUnimplementedHostServer()
+	ListResources(*ListResources, Agent_ListResourcesServer) error
+	Interact(Agent_InteractServer) error
+	mustEmbedUnimplementedAgentServer()
 }
 
-// UnimplementedHostServer must be embedded to have forward compatible implementations.
-type UnimplementedHostServer struct {
+// UnimplementedAgentServer must be embedded to have forward compatible implementations.
+type UnimplementedAgentServer struct {
 }
 
-func (UnimplementedHostServer) GetVersion(context.Context, *emptypb.Empty) (*Version, error) {
+func (UnimplementedAgentServer) GetVersion(context.Context, *emptypb.Empty) (*Version, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetVersion not implemented")
 }
-func (UnimplementedHostServer) ListHosts(*emptypb.Empty, Host_ListHostsServer) error {
+func (UnimplementedAgentServer) ListHosts(*emptypb.Empty, Agent_ListHostsServer) error {
 	return status.Errorf(codes.Unimplemented, "method ListHosts not implemented")
 }
-func (UnimplementedHostServer) AddHost(context.Context, *AddHost) (*emptypb.Empty, error) {
+func (UnimplementedAgentServer) AddHost(context.Context, *AddHost) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddHost not implemented")
 }
-func (UnimplementedHostServer) ListNamespaces(*emptypb.Empty, Host_ListNamespacesServer) error {
+func (UnimplementedAgentServer) ListNamespaces(*emptypb.Empty, Agent_ListNamespacesServer) error {
 	return status.Errorf(codes.Unimplemented, "method ListNamespaces not implemented")
 }
-func (UnimplementedHostServer) ListPackages(*ListPackages, Host_ListPackagesServer) error {
+func (UnimplementedAgentServer) ListPackages(*ListPackages, Agent_ListPackagesServer) error {
 	return status.Errorf(codes.Unimplemented, "method ListPackages not implemented")
 }
-func (UnimplementedHostServer) ListPackageFiles(*PackageIdentifier, Host_ListPackageFilesServer) error {
+func (UnimplementedAgentServer) ListPackageFiles(*PackageIdentifier, Agent_ListPackageFilesServer) error {
 	return status.Errorf(codes.Unimplemented, "method ListPackageFiles not implemented")
 }
-func (UnimplementedHostServer) GetPackageFiles(*GetPackageFiles, Host_GetPackageFilesServer) error {
+func (UnimplementedAgentServer) GetPackageFiles(*GetPackageFiles, Agent_GetPackageFilesServer) error {
 	return status.Errorf(codes.Unimplemented, "method GetPackageFiles not implemented")
 }
-func (UnimplementedHostServer) SetPackageFiles(Host_SetPackageFilesServer) error {
+func (UnimplementedAgentServer) SetPackageFiles(Agent_SetPackageFilesServer) error {
 	return status.Errorf(codes.Unimplemented, "method SetPackageFiles not implemented")
 }
-func (UnimplementedHostServer) RemovePackage(context.Context, *PackageIdentifier) (*emptypb.Empty, error) {
+func (UnimplementedAgentServer) RemovePackage(context.Context, *PackageIdentifier) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RemovePackage not implemented")
 }
-func (UnimplementedHostServer) DeployService(context.Context, *DeployService) (*emptypb.Empty, error) {
+func (UnimplementedAgentServer) DeployService(context.Context, *DeployService) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeployService not implemented")
 }
-func (UnimplementedHostServer) ListResources(*ListResources, Host_ListResourcesServer) error {
+func (UnimplementedAgentServer) ListResources(*ListResources, Agent_ListResourcesServer) error {
 	return status.Errorf(codes.Unimplemented, "method ListResources not implemented")
 }
-func (UnimplementedHostServer) Interact(Host_InteractServer) error {
+func (UnimplementedAgentServer) Interact(Agent_InteractServer) error {
 	return status.Errorf(codes.Unimplemented, "method Interact not implemented")
 }
-func (UnimplementedHostServer) mustEmbedUnimplementedHostServer() {}
+func (UnimplementedAgentServer) mustEmbedUnimplementedAgentServer() {}
 
-// UnsafeHostServer may be embedded to opt out of forward compatibility for this service.
-// Use of this interface is not recommended, as added methods to HostServer will
+// UnsafeAgentServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to AgentServer will
 // result in compilation errors.
-type UnsafeHostServer interface {
-	mustEmbedUnimplementedHostServer()
+type UnsafeAgentServer interface {
+	mustEmbedUnimplementedAgentServer()
 }
 
-func RegisterHostServer(s grpc.ServiceRegistrar, srv HostServer) {
-	s.RegisterService(&Host_ServiceDesc, srv)
+func RegisterAgentServer(s grpc.ServiceRegistrar, srv AgentServer) {
+	s.RegisterService(&Agent_ServiceDesc, srv)
 }
 
-func _Host_GetVersion_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Agent_GetVersion_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(emptypb.Empty)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(HostServer).GetVersion(ctx, in)
+		return srv.(AgentServer).GetVersion(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/khutulun.Host/getVersion",
+		FullMethod: "/khutulun.Agent/getVersion",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(HostServer).GetVersion(ctx, req.(*emptypb.Empty))
+		return srv.(AgentServer).GetVersion(ctx, req.(*emptypb.Empty))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Host_ListHosts_Handler(srv interface{}, stream grpc.ServerStream) error {
+func _Agent_ListHosts_Handler(srv interface{}, stream grpc.ServerStream) error {
 	m := new(emptypb.Empty)
 	if err := stream.RecvMsg(m); err != nil {
 		return err
 	}
-	return srv.(HostServer).ListHosts(m, &hostListHostsServer{stream})
+	return srv.(AgentServer).ListHosts(m, &agentListHostsServer{stream})
 }
 
-type Host_ListHostsServer interface {
+type Agent_ListHostsServer interface {
 	Send(*HostIdentifier) error
 	grpc.ServerStream
 }
 
-type hostListHostsServer struct {
+type agentListHostsServer struct {
 	grpc.ServerStream
 }
 
-func (x *hostListHostsServer) Send(m *HostIdentifier) error {
+func (x *agentListHostsServer) Send(m *HostIdentifier) error {
 	return x.ServerStream.SendMsg(m)
 }
 
-func _Host_AddHost_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Agent_AddHost_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(AddHost)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(HostServer).AddHost(ctx, in)
+		return srv.(AgentServer).AddHost(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/khutulun.Host/addHost",
+		FullMethod: "/khutulun.Agent/addHost",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(HostServer).AddHost(ctx, req.(*AddHost))
+		return srv.(AgentServer).AddHost(ctx, req.(*AddHost))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Host_ListNamespaces_Handler(srv interface{}, stream grpc.ServerStream) error {
+func _Agent_ListNamespaces_Handler(srv interface{}, stream grpc.ServerStream) error {
 	m := new(emptypb.Empty)
 	if err := stream.RecvMsg(m); err != nil {
 		return err
 	}
-	return srv.(HostServer).ListNamespaces(m, &hostListNamespacesServer{stream})
+	return srv.(AgentServer).ListNamespaces(m, &agentListNamespacesServer{stream})
 }
 
-type Host_ListNamespacesServer interface {
+type Agent_ListNamespacesServer interface {
 	Send(*Namespace) error
 	grpc.ServerStream
 }
 
-type hostListNamespacesServer struct {
+type agentListNamespacesServer struct {
 	grpc.ServerStream
 }
 
-func (x *hostListNamespacesServer) Send(m *Namespace) error {
+func (x *agentListNamespacesServer) Send(m *Namespace) error {
 	return x.ServerStream.SendMsg(m)
 }
 
-func _Host_ListPackages_Handler(srv interface{}, stream grpc.ServerStream) error {
+func _Agent_ListPackages_Handler(srv interface{}, stream grpc.ServerStream) error {
 	m := new(ListPackages)
 	if err := stream.RecvMsg(m); err != nil {
 		return err
 	}
-	return srv.(HostServer).ListPackages(m, &hostListPackagesServer{stream})
+	return srv.(AgentServer).ListPackages(m, &agentListPackagesServer{stream})
 }
 
-type Host_ListPackagesServer interface {
+type Agent_ListPackagesServer interface {
 	Send(*PackageIdentifier) error
 	grpc.ServerStream
 }
 
-type hostListPackagesServer struct {
+type agentListPackagesServer struct {
 	grpc.ServerStream
 }
 
-func (x *hostListPackagesServer) Send(m *PackageIdentifier) error {
+func (x *agentListPackagesServer) Send(m *PackageIdentifier) error {
 	return x.ServerStream.SendMsg(m)
 }
 
-func _Host_ListPackageFiles_Handler(srv interface{}, stream grpc.ServerStream) error {
+func _Agent_ListPackageFiles_Handler(srv interface{}, stream grpc.ServerStream) error {
 	m := new(PackageIdentifier)
 	if err := stream.RecvMsg(m); err != nil {
 		return err
 	}
-	return srv.(HostServer).ListPackageFiles(m, &hostListPackageFilesServer{stream})
+	return srv.(AgentServer).ListPackageFiles(m, &agentListPackageFilesServer{stream})
 }
 
-type Host_ListPackageFilesServer interface {
+type Agent_ListPackageFilesServer interface {
 	Send(*PackageFile) error
 	grpc.ServerStream
 }
 
-type hostListPackageFilesServer struct {
+type agentListPackageFilesServer struct {
 	grpc.ServerStream
 }
 
-func (x *hostListPackageFilesServer) Send(m *PackageFile) error {
+func (x *agentListPackageFilesServer) Send(m *PackageFile) error {
 	return x.ServerStream.SendMsg(m)
 }
 
-func _Host_GetPackageFiles_Handler(srv interface{}, stream grpc.ServerStream) error {
+func _Agent_GetPackageFiles_Handler(srv interface{}, stream grpc.ServerStream) error {
 	m := new(GetPackageFiles)
 	if err := stream.RecvMsg(m); err != nil {
 		return err
 	}
-	return srv.(HostServer).GetPackageFiles(m, &hostGetPackageFilesServer{stream})
+	return srv.(AgentServer).GetPackageFiles(m, &agentGetPackageFilesServer{stream})
 }
 
-type Host_GetPackageFilesServer interface {
+type Agent_GetPackageFilesServer interface {
 	Send(*PackageContent) error
 	grpc.ServerStream
 }
 
-type hostGetPackageFilesServer struct {
+type agentGetPackageFilesServer struct {
 	grpc.ServerStream
 }
 
-func (x *hostGetPackageFilesServer) Send(m *PackageContent) error {
+func (x *agentGetPackageFilesServer) Send(m *PackageContent) error {
 	return x.ServerStream.SendMsg(m)
 }
 
-func _Host_SetPackageFiles_Handler(srv interface{}, stream grpc.ServerStream) error {
-	return srv.(HostServer).SetPackageFiles(&hostSetPackageFilesServer{stream})
+func _Agent_SetPackageFiles_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(AgentServer).SetPackageFiles(&agentSetPackageFilesServer{stream})
 }
 
-type Host_SetPackageFilesServer interface {
+type Agent_SetPackageFilesServer interface {
 	SendAndClose(*emptypb.Empty) error
 	Recv() (*PackageContent, error)
 	grpc.ServerStream
 }
 
-type hostSetPackageFilesServer struct {
+type agentSetPackageFilesServer struct {
 	grpc.ServerStream
 }
 
-func (x *hostSetPackageFilesServer) SendAndClose(m *emptypb.Empty) error {
+func (x *agentSetPackageFilesServer) SendAndClose(m *emptypb.Empty) error {
 	return x.ServerStream.SendMsg(m)
 }
 
-func (x *hostSetPackageFilesServer) Recv() (*PackageContent, error) {
+func (x *agentSetPackageFilesServer) Recv() (*PackageContent, error) {
 	m := new(PackageContent)
 	if err := x.ServerStream.RecvMsg(m); err != nil {
 		return nil, err
@@ -577,82 +577,82 @@ func (x *hostSetPackageFilesServer) Recv() (*PackageContent, error) {
 	return m, nil
 }
 
-func _Host_RemovePackage_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Agent_RemovePackage_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(PackageIdentifier)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(HostServer).RemovePackage(ctx, in)
+		return srv.(AgentServer).RemovePackage(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/khutulun.Host/removePackage",
+		FullMethod: "/khutulun.Agent/removePackage",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(HostServer).RemovePackage(ctx, req.(*PackageIdentifier))
+		return srv.(AgentServer).RemovePackage(ctx, req.(*PackageIdentifier))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Host_DeployService_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Agent_DeployService_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(DeployService)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(HostServer).DeployService(ctx, in)
+		return srv.(AgentServer).DeployService(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/khutulun.Host/deployService",
+		FullMethod: "/khutulun.Agent/deployService",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(HostServer).DeployService(ctx, req.(*DeployService))
+		return srv.(AgentServer).DeployService(ctx, req.(*DeployService))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Host_ListResources_Handler(srv interface{}, stream grpc.ServerStream) error {
+func _Agent_ListResources_Handler(srv interface{}, stream grpc.ServerStream) error {
 	m := new(ListResources)
 	if err := stream.RecvMsg(m); err != nil {
 		return err
 	}
-	return srv.(HostServer).ListResources(m, &hostListResourcesServer{stream})
+	return srv.(AgentServer).ListResources(m, &agentListResourcesServer{stream})
 }
 
-type Host_ListResourcesServer interface {
+type Agent_ListResourcesServer interface {
 	Send(*ResourceIdentifier) error
 	grpc.ServerStream
 }
 
-type hostListResourcesServer struct {
+type agentListResourcesServer struct {
 	grpc.ServerStream
 }
 
-func (x *hostListResourcesServer) Send(m *ResourceIdentifier) error {
+func (x *agentListResourcesServer) Send(m *ResourceIdentifier) error {
 	return x.ServerStream.SendMsg(m)
 }
 
-func _Host_Interact_Handler(srv interface{}, stream grpc.ServerStream) error {
-	return srv.(HostServer).Interact(&hostInteractServer{stream})
+func _Agent_Interact_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(AgentServer).Interact(&agentInteractServer{stream})
 }
 
-type Host_InteractServer interface {
+type Agent_InteractServer interface {
 	Send(*Interaction) error
 	Recv() (*Interaction, error)
 	grpc.ServerStream
 }
 
-type hostInteractServer struct {
+type agentInteractServer struct {
 	grpc.ServerStream
 }
 
-func (x *hostInteractServer) Send(m *Interaction) error {
+func (x *agentInteractServer) Send(m *Interaction) error {
 	return x.ServerStream.SendMsg(m)
 }
 
-func (x *hostInteractServer) Recv() (*Interaction, error) {
+func (x *agentInteractServer) Recv() (*Interaction, error) {
 	m := new(Interaction)
 	if err := x.ServerStream.RecvMsg(m); err != nil {
 		return nil, err
@@ -660,69 +660,69 @@ func (x *hostInteractServer) Recv() (*Interaction, error) {
 	return m, nil
 }
 
-// Host_ServiceDesc is the grpc.ServiceDesc for Host service.
+// Agent_ServiceDesc is the grpc.ServiceDesc for Agent service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
-var Host_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "khutulun.Host",
-	HandlerType: (*HostServer)(nil),
+var Agent_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "khutulun.Agent",
+	HandlerType: (*AgentServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
 			MethodName: "getVersion",
-			Handler:    _Host_GetVersion_Handler,
+			Handler:    _Agent_GetVersion_Handler,
 		},
 		{
 			MethodName: "addHost",
-			Handler:    _Host_AddHost_Handler,
+			Handler:    _Agent_AddHost_Handler,
 		},
 		{
 			MethodName: "removePackage",
-			Handler:    _Host_RemovePackage_Handler,
+			Handler:    _Agent_RemovePackage_Handler,
 		},
 		{
 			MethodName: "deployService",
-			Handler:    _Host_DeployService_Handler,
+			Handler:    _Agent_DeployService_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{
 		{
 			StreamName:    "listHosts",
-			Handler:       _Host_ListHosts_Handler,
+			Handler:       _Agent_ListHosts_Handler,
 			ServerStreams: true,
 		},
 		{
 			StreamName:    "listNamespaces",
-			Handler:       _Host_ListNamespaces_Handler,
+			Handler:       _Agent_ListNamespaces_Handler,
 			ServerStreams: true,
 		},
 		{
 			StreamName:    "listPackages",
-			Handler:       _Host_ListPackages_Handler,
+			Handler:       _Agent_ListPackages_Handler,
 			ServerStreams: true,
 		},
 		{
 			StreamName:    "listPackageFiles",
-			Handler:       _Host_ListPackageFiles_Handler,
+			Handler:       _Agent_ListPackageFiles_Handler,
 			ServerStreams: true,
 		},
 		{
 			StreamName:    "getPackageFiles",
-			Handler:       _Host_GetPackageFiles_Handler,
+			Handler:       _Agent_GetPackageFiles_Handler,
 			ServerStreams: true,
 		},
 		{
 			StreamName:    "setPackageFiles",
-			Handler:       _Host_SetPackageFiles_Handler,
+			Handler:       _Agent_SetPackageFiles_Handler,
 			ClientStreams: true,
 		},
 		{
 			StreamName:    "listResources",
-			Handler:       _Host_ListResources_Handler,
+			Handler:       _Agent_ListResources_Handler,
 			ServerStreams: true,
 		},
 		{
 			StreamName:    "interact",
-			Handler:       _Host_Interact_Handler,
+			Handler:       _Agent_Interact_Handler,
 			ServerStreams: true,
 			ClientStreams: true,
 		},
@@ -734,6 +734,8 @@ var Host_ServiceDesc = grpc.ServiceDesc{
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type PluginClient interface {
+	//rpc schedule(Config) returns (google.protobuf.Empty);
+	//rpc reconcile(Config) returns (google.protobuf.Empty);
 	Instantiate(ctx context.Context, in *Config, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	Interact(ctx context.Context, opts ...grpc.CallOption) (Plugin_InteractClient, error)
 }
@@ -790,6 +792,8 @@ func (x *pluginInteractClient) Recv() (*Interaction, error) {
 // All implementations must embed UnimplementedPluginServer
 // for forward compatibility
 type PluginServer interface {
+	//rpc schedule(Config) returns (google.protobuf.Empty);
+	//rpc reconcile(Config) returns (google.protobuf.Empty);
 	Instantiate(context.Context, *Config) (*emptypb.Empty, error)
 	Interact(Plugin_InteractServer) error
 	mustEmbedUnimplementedPluginServer()

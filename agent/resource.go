@@ -1,4 +1,4 @@
-package host
+package agent
 
 import (
 	"os"
@@ -15,7 +15,7 @@ type ResourceIdentifier struct {
 	Host      string `json:"host" yaml:"host"`
 }
 
-func (self *Host) ListResources(namespace string, serviceName string, type_ string) ([]ResourceIdentifier, error) {
+func (self *Agent) ListResources(namespace string, serviceName string, type_ string) ([]ResourceIdentifier, error) {
 	var resources []ResourceIdentifier
 
 	var packages []PackageIdentifier

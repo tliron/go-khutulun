@@ -1,4 +1,4 @@
-package host
+package agent
 
 import (
 	"fmt"
@@ -14,6 +14,9 @@ import (
 
 type Connection struct {
 	plugin.Connection
+
+	Source *Container
+	Target *Container
 
 	vertexID      string
 	edgesOutIndex int
@@ -31,18 +34,28 @@ func (self *Connection) Find(clout *cloutpkg.Clout) (*cloutpkg.Edge, error) {
 	}
 }
 
-func GetConnection(vertex *cloutpkg.Vertex, edgesOutIndex int, relationship any) Connection {
+func GetConnection(vertex *cloutpkg.Vertex, edgesOutIndex int, edge *cloutpkg.Edge) Connection {
 	self := Connection{
 		vertexID:      vertex.ID,
 		edgesOutIndex: edgesOutIndex,
 	}
 
-	name, _ := ard.NewNode(relationship).Get("name").String()
+	name, _ := ard.NewNode(edge.Properties).Get("name").String()
 	self.Name = fmt.Sprintf("%s:%d", name, edgesOutIndex)
-	relationshipAttributes, _ := ard.NewNode(relationship).Get("attributes").StringMap()
+	relationshipAttributes, _ := ard.NewNode(edge.Properties).Get("attributes").StringMap()
 	self.IP, _ = ard.NewNode(relationshipAttributes).Get("ip").String()
 	port, _ := ard.NewNode(relationshipAttributes).Get("port").Integer()
 	self.Port = int(port)
+
+	if sources := GetVertexContainers(vertex); len(sources) > 0 {
+		self.Source = sources[0]
+	}
+
+	if edge.Target != nil {
+		if targets := GetVertexContainers(edge.Target); len(targets) > 0 {
+			self.Target = targets[0]
+		}
+	}
 
 	return self
 }
@@ -52,7 +65,7 @@ func GetVertexConnections(vertex *cloutpkg.Vertex) []Connection {
 	for index, edge := range vertex.EdgesOut {
 		if types, ok := ard.NewNode(edge.Properties).Get("types").StringMap(); ok {
 			if _, ok := types["cloud.puccini.khutulun::IPPort"]; ok {
-				connections = append(connections, GetConnection(vertex, index, edge.Properties))
+				connections = append(connections, GetConnection(vertex, index, edge))
 			}
 		}
 	}

@@ -1,10 +1,10 @@
 [Unit]
-Description=Khutulun Host
+Description=Khutulun Agent
 After=network-online.target
 Wants=network-online.target
 
 [Service]
-ExecStart=/mnt/khutulun/common/plugin/host/host server -v
+ExecStart=/mnt/khutulun/common/plugin/agent/agent server --simple -v
 
 [Install]
 WantedBy=default.target

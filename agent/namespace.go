@@ -1,11 +1,11 @@
-package host
+package agent
 
 import (
 	"io/ioutil"
 	"os"
 )
 
-func (self *Host) ListNamespaces() ([]string, error) {
+func (self *Agent) ListNamespaces() ([]string, error) {
 	if files, err := ioutil.ReadDir(self.statePath); err == nil {
 		var names []string
 		for _, file := range files {
@@ -24,7 +24,7 @@ func (self *Host) ListNamespaces() ([]string, error) {
 	}
 }
 
-func (self *Host) namespaceToNamespaces(namespace string) ([]string, error) {
+func (self *Agent) namespaceToNamespaces(namespace string) ([]string, error) {
 	if namespace == "" {
 		return self.ListNamespaces()
 	} else {
