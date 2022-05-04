@@ -730,57 +730,57 @@ var Agent_ServiceDesc = grpc.ServiceDesc{
 	Metadata: "khutulun.proto",
 }
 
-// PluginClient is the client API for Plugin service.
+// DelegateClient is the client API for Delegate service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
-type PluginClient interface {
-	//rpc schedule(Config) returns (google.protobuf.Empty);
-	//rpc reconcile(Config) returns (google.protobuf.Empty);
+type DelegateClient interface {
+	//rpc schedule(Clouts) returns (Clout);
+	//rpc reconcile(Clouts) returns (Clout);
 	Instantiate(ctx context.Context, in *Config, opts ...grpc.CallOption) (*emptypb.Empty, error)
-	Interact(ctx context.Context, opts ...grpc.CallOption) (Plugin_InteractClient, error)
+	Interact(ctx context.Context, opts ...grpc.CallOption) (Delegate_InteractClient, error)
 }
 
-type pluginClient struct {
+type delegateClient struct {
 	cc grpc.ClientConnInterface
 }
 
-func NewPluginClient(cc grpc.ClientConnInterface) PluginClient {
-	return &pluginClient{cc}
+func NewDelegateClient(cc grpc.ClientConnInterface) DelegateClient {
+	return &delegateClient{cc}
 }
 
-func (c *pluginClient) Instantiate(ctx context.Context, in *Config, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+func (c *delegateClient) Instantiate(ctx context.Context, in *Config, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	out := new(emptypb.Empty)
-	err := c.cc.Invoke(ctx, "/khutulun.Plugin/instantiate", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/khutulun.Delegate/instantiate", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *pluginClient) Interact(ctx context.Context, opts ...grpc.CallOption) (Plugin_InteractClient, error) {
-	stream, err := c.cc.NewStream(ctx, &Plugin_ServiceDesc.Streams[0], "/khutulun.Plugin/interact", opts...)
+func (c *delegateClient) Interact(ctx context.Context, opts ...grpc.CallOption) (Delegate_InteractClient, error) {
+	stream, err := c.cc.NewStream(ctx, &Delegate_ServiceDesc.Streams[0], "/khutulun.Delegate/interact", opts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &pluginInteractClient{stream}
+	x := &delegateInteractClient{stream}
 	return x, nil
 }
 
-type Plugin_InteractClient interface {
+type Delegate_InteractClient interface {
 	Send(*Interaction) error
 	Recv() (*Interaction, error)
 	grpc.ClientStream
 }
 
-type pluginInteractClient struct {
+type delegateInteractClient struct {
 	grpc.ClientStream
 }
 
-func (x *pluginInteractClient) Send(m *Interaction) error {
+func (x *delegateInteractClient) Send(m *Interaction) error {
 	return x.ClientStream.SendMsg(m)
 }
 
-func (x *pluginInteractClient) Recv() (*Interaction, error) {
+func (x *delegateInteractClient) Recv() (*Interaction, error) {
 	m := new(Interaction)
 	if err := x.ClientStream.RecvMsg(m); err != nil {
 		return nil, err
@@ -788,77 +788,77 @@ func (x *pluginInteractClient) Recv() (*Interaction, error) {
 	return m, nil
 }
 
-// PluginServer is the server API for Plugin service.
-// All implementations must embed UnimplementedPluginServer
+// DelegateServer is the server API for Delegate service.
+// All implementations must embed UnimplementedDelegateServer
 // for forward compatibility
-type PluginServer interface {
-	//rpc schedule(Config) returns (google.protobuf.Empty);
-	//rpc reconcile(Config) returns (google.protobuf.Empty);
+type DelegateServer interface {
+	//rpc schedule(Clouts) returns (Clout);
+	//rpc reconcile(Clouts) returns (Clout);
 	Instantiate(context.Context, *Config) (*emptypb.Empty, error)
-	Interact(Plugin_InteractServer) error
-	mustEmbedUnimplementedPluginServer()
+	Interact(Delegate_InteractServer) error
+	mustEmbedUnimplementedDelegateServer()
 }
 
-// UnimplementedPluginServer must be embedded to have forward compatible implementations.
-type UnimplementedPluginServer struct {
+// UnimplementedDelegateServer must be embedded to have forward compatible implementations.
+type UnimplementedDelegateServer struct {
 }
 
-func (UnimplementedPluginServer) Instantiate(context.Context, *Config) (*emptypb.Empty, error) {
+func (UnimplementedDelegateServer) Instantiate(context.Context, *Config) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Instantiate not implemented")
 }
-func (UnimplementedPluginServer) Interact(Plugin_InteractServer) error {
+func (UnimplementedDelegateServer) Interact(Delegate_InteractServer) error {
 	return status.Errorf(codes.Unimplemented, "method Interact not implemented")
 }
-func (UnimplementedPluginServer) mustEmbedUnimplementedPluginServer() {}
+func (UnimplementedDelegateServer) mustEmbedUnimplementedDelegateServer() {}
 
-// UnsafePluginServer may be embedded to opt out of forward compatibility for this service.
-// Use of this interface is not recommended, as added methods to PluginServer will
+// UnsafeDelegateServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to DelegateServer will
 // result in compilation errors.
-type UnsafePluginServer interface {
-	mustEmbedUnimplementedPluginServer()
+type UnsafeDelegateServer interface {
+	mustEmbedUnimplementedDelegateServer()
 }
 
-func RegisterPluginServer(s grpc.ServiceRegistrar, srv PluginServer) {
-	s.RegisterService(&Plugin_ServiceDesc, srv)
+func RegisterDelegateServer(s grpc.ServiceRegistrar, srv DelegateServer) {
+	s.RegisterService(&Delegate_ServiceDesc, srv)
 }
 
-func _Plugin_Instantiate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Delegate_Instantiate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(Config)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(PluginServer).Instantiate(ctx, in)
+		return srv.(DelegateServer).Instantiate(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/khutulun.Plugin/instantiate",
+		FullMethod: "/khutulun.Delegate/instantiate",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(PluginServer).Instantiate(ctx, req.(*Config))
+		return srv.(DelegateServer).Instantiate(ctx, req.(*Config))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Plugin_Interact_Handler(srv interface{}, stream grpc.ServerStream) error {
-	return srv.(PluginServer).Interact(&pluginInteractServer{stream})
+func _Delegate_Interact_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(DelegateServer).Interact(&delegateInteractServer{stream})
 }
 
-type Plugin_InteractServer interface {
+type Delegate_InteractServer interface {
 	Send(*Interaction) error
 	Recv() (*Interaction, error)
 	grpc.ServerStream
 }
 
-type pluginInteractServer struct {
+type delegateInteractServer struct {
 	grpc.ServerStream
 }
 
-func (x *pluginInteractServer) Send(m *Interaction) error {
+func (x *delegateInteractServer) Send(m *Interaction) error {
 	return x.ServerStream.SendMsg(m)
 }
 
-func (x *pluginInteractServer) Recv() (*Interaction, error) {
+func (x *delegateInteractServer) Recv() (*Interaction, error) {
 	m := new(Interaction)
 	if err := x.ServerStream.RecvMsg(m); err != nil {
 		return nil, err
@@ -866,22 +866,22 @@ func (x *pluginInteractServer) Recv() (*Interaction, error) {
 	return m, nil
 }
 
-// Plugin_ServiceDesc is the grpc.ServiceDesc for Plugin service.
+// Delegate_ServiceDesc is the grpc.ServiceDesc for Delegate service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
-var Plugin_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "khutulun.Plugin",
-	HandlerType: (*PluginServer)(nil),
+var Delegate_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "khutulun.Delegate",
+	HandlerType: (*DelegateServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
 			MethodName: "instantiate",
-			Handler:    _Plugin_Instantiate_Handler,
+			Handler:    _Delegate_Instantiate_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{
 		{
 			StreamName:    "interact",
-			Handler:       _Plugin_Interact_Handler,
+			Handler:       _Delegate_Interact_Handler,
 			ServerStreams: true,
 			ClientStreams: true,
 		},

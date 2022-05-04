@@ -9,7 +9,7 @@ import (
 
 	"github.com/tliron/khutulun/api"
 	clientpkg "github.com/tliron/khutulun/client"
-	"github.com/tliron/khutulun/plugin"
+	delegatepkg "github.com/tliron/khutulun/delegate"
 	"github.com/tliron/khutulun/util"
 	"github.com/tliron/kutil/logging"
 	"google.golang.org/grpc"
@@ -421,11 +421,11 @@ func (self *GRPC) Interact(server api.Agent_InteractServer) error {
 			name := "runnable.podman"
 			command := self.agent.getPackageMainFile("common", "plugin", name)
 
-			client := plugin.NewRunnableClient(name, command)
+			client := delegatepkg.NewDelegatePluginClient(name, command)
 			defer client.Close()
 
-			if runnable, err := client.Runnable(); err == nil {
-				if err := runnable.Interact(server, start); err == nil {
+			if delegate, err := client.Delegate(); err == nil {
+				if err := delegate.Interact(server, start); err == nil {
 					return nil
 				} else {
 					return statuspkg.Errorf(codes.Aborted, "%s", err.Error())

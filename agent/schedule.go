@@ -1,10 +1,7 @@
 package agent
 
 import (
-	"os"
-
 	"github.com/tliron/kutil/ard"
-	"github.com/tliron/kutil/format"
 	"github.com/tliron/kutil/logging"
 	cloutpkg "github.com/tliron/puccini/clout"
 )
@@ -95,7 +92,7 @@ func (self *Agent) scheduleConnections(namespace string, serviceName string, clo
 		return nil, false
 	}
 
-	format.PrintYAML(connections, os.Stdout, false, false)
+	//format.PrintYAML(connections, os.Stdout, false, false)
 
 	reconcile := NewReconcile()
 	return reconcile, false

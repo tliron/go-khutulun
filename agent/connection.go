@@ -3,7 +3,7 @@ package agent
 import (
 	"fmt"
 
-	"github.com/tliron/khutulun/plugin"
+	"github.com/tliron/khutulun/delegate"
 	"github.com/tliron/kutil/ard"
 	cloutpkg "github.com/tliron/puccini/clout"
 )
@@ -13,7 +13,7 @@ import (
 //
 
 type Connection struct {
-	plugin.Connection
+	delegate.Connection
 
 	Source *Container
 	Target *Container

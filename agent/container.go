@@ -3,7 +3,7 @@ package agent
 import (
 	"fmt"
 
-	"github.com/tliron/khutulun/plugin"
+	"github.com/tliron/khutulun/delegate"
 	"github.com/tliron/kutil/ard"
 	cloutpkg "github.com/tliron/puccini/clout"
 )
@@ -13,7 +13,7 @@ import (
 //
 
 type Container struct {
-	plugin.Container
+	delegate.Container
 
 	vertexID       string
 	capabilityName string
@@ -35,15 +35,15 @@ func (self *Container) Find(clout *cloutpkg.Clout) (*cloutpkg.Vertex, any, error
 	}
 }
 
-func GetContainerPorts(capability any) []plugin.Port {
-	var ports []plugin.Port
+func GetContainerPorts(capability any) []delegate.Port {
+	var ports []delegate.Port
 	capabilityProperties, _ := ard.NewNode(capability).Get("properties").StringMap()
 	if ports_, ok := ard.NewNode(capabilityProperties).Get("ports").List(); ok {
 		for _, port := range ports_ {
 			external, _ := ard.NewNode(port).Get("external").Integer()
 			internal, _ := ard.NewNode(port).Get("internal").Integer()
 			protocol, _ := ard.NewNode(port).Get("protocol").String()
-			ports = append(ports, plugin.Port{
+			ports = append(ports, delegate.Port{
 				External: external,
 				Internal: internal,
 				Protocol: protocol,

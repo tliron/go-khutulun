@@ -1,7 +1,7 @@
 package agent
 
 import (
-	"github.com/tliron/khutulun/plugin"
+	delegatepkg "github.com/tliron/khutulun/delegate"
 	"github.com/tliron/kutil/logging"
 	cloutpkg "github.com/tliron/puccini/clout"
 )
@@ -44,22 +44,22 @@ func (self *Agent) reconcileRunnables(clout *cloutpkg.Clout) {
 	}
 
 	go func() {
-		var runnable plugin.Runnable
+		var delegate delegatepkg.Delegate
 		for _, container := range containers {
 			if self.host == container.Host {
-				if runnable == nil {
+				if delegate == nil {
 					name := "runnable.podman"
 					command := self.getPackageMainFile("common", "plugin", name)
-					client := plugin.NewRunnableClient(name, command)
+					client := delegatepkg.NewDelegatePluginClient(name, command)
 					defer client.Close()
 					var err error
-					if runnable, err = client.Runnable(); err != nil {
+					if delegate, err = client.Delegate(); err != nil {
 						reconcileLog.Errorf("plugin: %s", err.Error())
 						return
 					}
 				}
 
-				if err := runnable.Instantiate(container.Container); err != nil {
+				if err := delegate.Instantiate(container.Container); err != nil {
 					reconcileLog.Errorf("instantiate: %s", err.Error())
 				}
 			}

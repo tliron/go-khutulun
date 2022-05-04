@@ -27,11 +27,20 @@ service Agent {
     rpc interact(stream Interaction) returns (stream Interaction);
 }
 
-service Plugin {
-    //rpc schedule(Config) returns (google.protobuf.Empty);
-    //rpc reconcile(Config) returns (google.protobuf.Empty);
+service Delegate {
+    //rpc schedule(Clouts) returns (Clout);
+    //rpc reconcile(Clouts) returns (Clout);
     rpc instantiate(Config) returns (google.protobuf.Empty);
     rpc interact(stream Interaction) returns (stream Interaction);
+}
+
+message Clout {
+    string yaml = 1;
+}
+
+message Clouts {
+    Clout clout = 1;
+    Clout coerced = 2;
 }
 
 message Config {

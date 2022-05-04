@@ -1,4 +1,4 @@
-package plugin
+package delegate
 
 import (
 	"github.com/hashicorp/go-plugin"

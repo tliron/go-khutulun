@@ -26,14 +26,15 @@ form a service mesh, and modify the topologies to which they belong ("Day 2" and
 pattern"). There are tools for injecting discovered data into configuration files and environment
 variables to allow "legacy" applications to participate in the mesh.
 
-Plugins
--------
+Delegates
+---------
 
-Khutulun is modular and extensible. Resource types are handled by a cooperative ecosystem of plugins,
-the main plugin types being for running compute workloads, for networking, and for storage. Plugins
-can call other plugins and can themselves be implemented as workloads on the cluster.
+Khutulun is modular and extensible. Resource types are handled by a cooperative ecosystem of
+delegates, the main delegate types being for running compute workloads, for networking, and for
+storage. Delegates can call other delegates. They can be implemented as in-process plugins,
+services, and even packaged into workloads on the cluster.
 
-Some included resource types and plugins:
+Some included resource types and delegates:
 
 * Bare processes: self-contained or otherwise installable executables and scripts
 * Containers using [Podman](https://podman.io/) or 
@@ -50,7 +51,7 @@ experience as well as resilience in the case of failures and restarts.
 
 Note that Khutulun does not demand that every container (pod) have its own IP address in an
 internal network. (Very much unlike Kubernetes.) If desired this feature could be implemented by
-a networking plugin.
+a networking delegate.
 
 Clusters
 --------
@@ -90,9 +91,9 @@ FAQ
 ### Why TOSCA?
 
 TOSCA is an open standard with broad industry support. It is, as of version 2.0, a pure
-object-oriented language that relies on "profiles", or type libraries, that can work with plugins
-to provide specific implementations. Khutulun comes with its own TOSCA profile and ecosystem of
-plugins. You are encouraged to add your own.
+object-oriented language that relies on "profiles", or type libraries, that in Khutulun can work
+with delegates to provide specific implementations. Khutulun comes with its own TOSCA profile and
+ecosystem of delegates. You are encouraged to add your own.
 
 One of the hallmarks of TOSCA is that every service is a topological graph. Moreover, the edges
 of the graph are first-class citizens. This killer feature supercharges your modeling power for the

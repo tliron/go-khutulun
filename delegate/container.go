@@ -1,4 +1,4 @@
-package plugin
+package delegate
 
 type Container struct {
 	Host            string

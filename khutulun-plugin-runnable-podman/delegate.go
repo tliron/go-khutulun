@@ -9,7 +9,7 @@ import (
 	"strings"
 
 	"github.com/tliron/khutulun/api"
-	"github.com/tliron/khutulun/plugin"
+	"github.com/tliron/khutulun/delegate"
 	"github.com/tliron/khutulun/util"
 	"github.com/tliron/kutil/protobuf"
 	utilpkg "github.com/tliron/kutil/util"
@@ -20,17 +20,17 @@ import (
 const servicePrefix = "khutulun"
 
 //
-// Runnable
+// ServiceDelegate
 //
 
-type Runnable struct{}
+type Delegate struct{}
 
 // systemctl --machine user@.host --user
 // https://superuser.com/a/1461905
 
-// plugin.Runnable interface
-func (self *Runnable) Instantiate(config any) error {
-	var container plugin.Container
+// plugin.Delegate interface
+func (self *Delegate) Instantiate(config any) error {
+	var container delegate.Container
 	if err := protobuf.UnpackStringMap(config, &container); err != nil {
 		return err
 	}
@@ -120,8 +120,8 @@ func (self *Runnable) Instantiate(config any) error {
 	return nil
 }
 
-// plugin.Runnable interface
-func (self *Runnable) Interact(server util.Interactor, start *api.Interaction_Start) error {
+// plugin.Delegate interface
+func (self *Delegate) Interact(server util.Interactor, start *api.Interaction_Start) error {
 	if len(start.Identifier) != 4 {
 		return statuspkg.Errorf(codes.InvalidArgument, "malformed identifier for runnable: %s", start.Identifier)
 	}

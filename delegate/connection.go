@@ -1,4 +1,4 @@
-package plugin
+package delegate
 
 type Connection struct {
 	Name string
