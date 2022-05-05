@@ -20,7 +20,7 @@ func (self *Client) ListNamespaces() ([]string, error) {
 				if err == io.EOF {
 					break
 				} else {
-					return nil, util.UnpackGrpcError(err)
+					return nil, util.UnpackGRPCError(err)
 				}
 			}
 
@@ -29,6 +29,6 @@ func (self *Client) ListNamespaces() ([]string, error) {
 
 		return namespaces, nil
 	} else {
-		return nil, util.UnpackGrpcError(err)
+		return nil, util.UnpackGRPCError(err)
 	}
 }

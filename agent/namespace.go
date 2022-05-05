@@ -3,6 +3,8 @@ package agent
 import (
 	"io/ioutil"
 	"os"
+
+	"github.com/tliron/kutil/util"
 )
 
 func (self *Agent) ListNamespaces() ([]string, error) {
@@ -10,7 +12,7 @@ func (self *Agent) ListNamespaces() ([]string, error) {
 		var names []string
 		for _, file := range files {
 			name := file.Name()
-			if file.IsDir() && !isHidden(name) {
+			if file.IsDir() && !util.IsFileHidden(name) {
 				names = append(names, name)
 			}
 		}

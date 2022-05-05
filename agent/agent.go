@@ -54,21 +54,17 @@ func (self *Agent) onMessage(bytes []byte, broadcast bool) {
 func (self *Agent) handleMessage(message any, broadcast bool) {
 	command, _ := ard.NewNode(message).Get("command").String()
 
-	if broadcast {
-		log.Infof("received broadcast message: %s()", command)
-	} else {
-		log.Infof("received message: %s()", command)
-	}
-
 	switch command {
 	case ADD_HOST:
 		address, _ := ard.NewNode(message).Get("address").String()
+		log.Infof("received addHost(%q)", address)
 		if err := self.gossip.AddHosts([]string{address}); err != nil {
 			log.Errorf("%s", err.Error())
 		}
 
 	case RECONCILE_SERVICES:
 		identifiers, _ := ard.NewNode(message).Get("identifiers").List()
+		log.Info("received reconcileServices(...)")
 		for _, identifier := range identifiers {
 			namespace, _ := ard.NewNode(identifier).Get("namespace").String()
 			name, _ := ard.NewNode(identifier).Get("name").String()

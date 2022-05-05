@@ -118,7 +118,7 @@ func (self *Watcher) Start() {
 				}
 
 				// Ignore hidden files
-				if isHidden(event.Name) {
+				if util.IsFileHidden(event.Name) {
 					continue
 				}
 
@@ -190,7 +190,7 @@ func (self *Watcher) sync() error {
 	defer self.lock.Unlock()
 
 	return filepath.WalkDir(self.agent.statePath, func(path string, entry fs.DirEntry, err error) error {
-		if isHidden(path) {
+		if util.IsFileHidden(path) {
 			return fs.SkipDir
 		}
 		if entry.IsDir() {

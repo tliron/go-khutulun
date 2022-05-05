@@ -2,6 +2,8 @@ package agent
 
 import (
 	"fmt"
+	"strconv"
+	"strings"
 
 	"github.com/tliron/khutulun/delegate"
 	"github.com/tliron/kutil/ard"
@@ -37,8 +39,8 @@ func (self *Container) Find(clout *cloutpkg.Clout) (*cloutpkg.Vertex, any, error
 
 func GetContainerPorts(capability any) []delegate.Port {
 	var ports []delegate.Port
-	capabilityProperties, _ := ard.NewNode(capability).Get("properties").StringMap()
-	if ports_, ok := ard.NewNode(capabilityProperties).Get("ports").List(); ok {
+	capabilityAttributes, _ := ard.NewNode(capability).Get("attributes").StringMap()
+	if ports_, ok := ard.NewNode(capabilityAttributes).Get("ports").List(); ok {
 		for _, port := range ports_ {
 			external, _ := ard.NewNode(port).Get("external").Integer()
 			internal, _ := ard.NewNode(port).Get("internal").Integer()
@@ -68,6 +70,18 @@ func GetContainer(vertex *cloutpkg.Vertex, capabilityName string, capability any
 		self.Name, _ = ard.NewNode(vertex.Properties).Get("name").String()
 	}
 	self.Reference, _ = ard.NewNode(capabilityProperties).Get("image").Get("reference").String()
+	if self.Reference == "" {
+		host, _ := ard.NewNode(capabilityProperties).Get("image").Get("host").String()
+		port, _ := ard.NewNode(capabilityProperties).Get("image").Get("port").Integer()
+		repository, _ := ard.NewNode(capabilityProperties).Get("image").Get("repository").String()
+		image, _ := ard.NewNode(capabilityProperties).Get("image").Get("image").String()
+		tag, _ := ard.NewNode(capabilityProperties).Get("image").Get("tag").String()
+		digestAlgorithm, _ := ard.NewNode(capabilityProperties).Get("image").Get("digest-algorithm").String()
+		digestHex, _ := ard.NewNode(capabilityProperties).Get("image").Get("digest-hex").String()
+		if image != "" {
+			self.Reference = formatImageReference(host, int(port), repository, image, tag, digestAlgorithm, digestHex)
+		}
+	}
 	self.CreateArguments, _ = ard.NewNode(capabilityProperties).Get("create-arguments").StringList()
 
 	return &self
@@ -104,4 +118,35 @@ func GetCloutContainers(clout *cloutpkg.Clout) []*Container {
 		containers = append(containers, GetVertexContainers(vertex)...)
 	}
 	return containers
+}
+
+func formatImageReference(host string, port int, repository string, image string, tag string, digestAlgorithm string, digestHex string) string {
+	// [host[:port]/][repository/]image[:tag][@digest-algorithm:digest-hex]
+	var s strings.Builder
+	if host != "" {
+		s.WriteString(host)
+		if port != 0 {
+			s.WriteRune(':')
+			s.WriteString(strconv.Itoa(port))
+		}
+		s.WriteRune('/')
+	}
+	if repository != "" {
+		s.WriteString(repository)
+		s.WriteRune('/')
+	}
+	s.WriteString(image)
+	if tag != "" {
+		s.WriteRune(':')
+		s.WriteString(tag)
+	}
+	if digestAlgorithm != "" {
+		s.WriteRune('@')
+		s.WriteString(digestAlgorithm)
+		if digestHex != "" {
+			s.WriteRune(':')
+			s.WriteString(digestHex)
+		}
+	}
+	return s.String()
 }

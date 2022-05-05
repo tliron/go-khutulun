@@ -11,5 +11,5 @@ import (
 
 type Delegate interface {
 	Instantiate(config any) error
-	Interact(server util.Interactor, start *api.Interaction_Start) error
+	Interact(server util.GRPCInteractor, start *api.Interaction_Start) error
 }

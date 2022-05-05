@@ -1,9 +1,11 @@
 package util
 
 import (
+	contextpkg "context"
 	"errors"
 	"fmt"
 	"io"
+	execpkg "os/exec"
 
 	"github.com/tliron/khutulun/api"
 	"github.com/tliron/kutil/exec"
@@ -43,10 +45,13 @@ func NewCommand(start *api.Interaction_Start, log logging.Logger) *exec.Command 
 	return command
 }
 
-func StartCommand(command *exec.Command, server Interactor, log logging.Logger) error {
-	process, err := command.Start()
+func StartCommand(command *exec.Command, server GRPCInteractor, log logging.Logger) error {
+	context, cancel := contextpkg.WithCancel(contextpkg.Background())
+	defer cancel()
+
+	process, err := command.Start(context)
 	if err != nil {
-		return statuspkg.Errorf(codes.Aborted, "%s", err.Error())
+		return statuspkg.Error(codes.Aborted, err.Error())
 	}
 	defer process.Close()
 
@@ -110,15 +115,12 @@ func StartCommand(command *exec.Command, server Interactor, log logging.Logger) 
 					log.Info("client closed")
 					err = nil
 				} else {
-					if status, ok := statuspkg.FromError(err); ok {
-						if status.Code() == codes.Canceled {
-							// We're OK with canceling
-							log.Infof("client canceled")
-							err = nil
-						}
+					if statuspkg.Code(err) == codes.Canceled {
+						// We're OK with canceling
+						log.Infof("client canceled")
+						err = nil
 					}
 				}
-				process.Kill()
 				command.Stop(err)
 				return
 			}
@@ -130,7 +132,20 @@ func StartCommand(command *exec.Command, server Interactor, log logging.Logger) 
 	log.Info("interaction ended")
 	if err == nil {
 		return nil
+	} else if err_, ok := err.(*execpkg.ExitError); ok {
+		status := statuspkg.New(codes.Aborted, "execution error")
+		if status_, err := status.WithDetails(&api.InteractionErrorDetails{
+			ExitCode: int32(err_.ExitCode()),
+			Stderr:   err_.Stderr,
+		}); err == nil {
+			status = status_
+		} else {
+			panic(err)
+		}
+		return status.Err()
+	} else if _, ok := statuspkg.FromError(err); ok {
+		return err
 	} else {
-		return statuspkg.Errorf(codes.Aborted, "%s", err.Error())
+		return statuspkg.Error(codes.Aborted, err.Error())
 	}
 }

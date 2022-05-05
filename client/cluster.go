@@ -60,6 +60,6 @@ func (self *Client) AddHost(gossipAddress string) error {
 	if _, err := self.client.AddHost(context, &api.AddHost{GossipAddress: gossipAddress}); err == nil {
 		return nil
 	} else {
-		return util.UnpackGrpcError(err)
+		return util.UnpackGRPCError(err)
 	}
 }

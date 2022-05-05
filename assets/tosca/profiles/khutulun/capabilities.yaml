@@ -108,11 +108,10 @@ capability_types:
 
   ContainerConnectable:
     derived_from: Connectable
-    properties:
+    attributes:
       ports:
         type: list
         entry_schema: ContainerPort
-        required: false
 
   # Storage
 

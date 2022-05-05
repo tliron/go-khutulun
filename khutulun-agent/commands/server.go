@@ -1,6 +1,8 @@
 package commands
 
 import (
+	"os"
+
 	"github.com/spf13/cobra"
 	agentpkg "github.com/tliron/khutulun/agent"
 	cobrautil "github.com/tliron/kutil/cobra"
@@ -20,19 +22,40 @@ var broadcastProtocol string
 var broadcastAddress string
 var broadcastPort int
 
+var defaultTcpProtocol = "tcp"
+var defaultUdpProtocol = "udp"
+var defaultAddress = "::"
+var defaultBroadcastAddress = "ff02::1"
+
 func init() {
+	switch os.Getenv("IP_VERSION") {
+	case "6":
+		defaultTcpProtocol = "tcp6"
+		defaultUdpProtocol = "udp6"
+
+	case "4":
+		defaultTcpProtocol = "tcp4"
+		defaultUdpProtocol = "udp4"
+		defaultAddress = "0.0.0.0"
+		defaultBroadcastAddress = "239.0.0.1"
+
+	case "4dual":
+		defaultAddress = "0.0.0.0"
+		defaultBroadcastAddress = "239.0.0.1"
+	}
+
 	rootCommand.AddCommand(serverCommand)
 	serverCommand.Flags().StringVarP(&statePath, "state-path", "p", "/mnt/khutulun", "state path")
-	serverCommand.Flags().StringVarP(&grpcProtocol, "grpc-protocol", "", "tcp", "gRPC protocol (\"tcp\", \"tcp6\", or \"tcp4\")")
-	serverCommand.Flags().StringVarP(&grpcAddress, "grpc-address", "", "::", "gRPC address")
+	serverCommand.Flags().StringVarP(&grpcProtocol, "grpc-protocol", "", defaultTcpProtocol, "gRPC protocol (\"tcp\", \"tcp6\", or \"tcp4\")")
+	serverCommand.Flags().StringVarP(&grpcAddress, "grpc-address", "", defaultAddress, "gRPC address")
 	serverCommand.Flags().IntVarP(&grpcPort, "grpc-port", "", 8181, "gRPC port")
-	serverCommand.Flags().StringVarP(&httpProtocol, "http-protocol", "", "tcp", "HTTP protocol (\"tcp\", \"tcp6\", or \"tcp4\")")
-	serverCommand.Flags().StringVarP(&httpAddress, "http-address", "", "::", "HTTP address")
+	serverCommand.Flags().StringVarP(&httpProtocol, "http-protocol", "", defaultTcpProtocol, "HTTP protocol (\"tcp\", \"tcp6\", or \"tcp4\")")
+	serverCommand.Flags().StringVarP(&httpAddress, "http-address", "", defaultAddress, "HTTP address")
 	serverCommand.Flags().IntVarP(&httpPort, "http-port", "", 8182, "HTTP port")
-	serverCommand.Flags().StringVarP(&gossipAddress, "gossip-address", "", "::", "gossip address")
+	serverCommand.Flags().StringVarP(&gossipAddress, "gossip-address", "", defaultAddress, "gossip address")
 	serverCommand.Flags().IntVarP(&gossipPort, "gossip-port", "", 8183, "gossip port")
-	serverCommand.Flags().StringVarP(&broadcastProtocol, "broadcast-protocol", "", "udp4", "broadcast protocol (\"udp6\", or \"udp4\")")
-	serverCommand.Flags().StringVarP(&broadcastAddress, "broadcast-address", "", "239.0.0.1", "broadcast address")
+	serverCommand.Flags().StringVarP(&broadcastProtocol, "broadcast-protocol", "", defaultUdpProtocol, "broadcast protocol (\"udp\", \"udp6\", or \"udp4\")")
+	serverCommand.Flags().StringVarP(&broadcastAddress, "broadcast-address", "", defaultBroadcastAddress, "broadcast address")
 	serverCommand.Flags().IntVarP(&broadcastPort, "broadcast-port", "", 8184, "broadcast port")
 
 	cobrautil.SetFlagsFromEnvironment("KHUTULUN_CONDUCTOR_", serverCommand)

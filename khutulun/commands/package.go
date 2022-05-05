@@ -7,7 +7,6 @@ import (
 	"path/filepath"
 
 	clientpkg "github.com/tliron/khutulun/client"
-	khutulunutil "github.com/tliron/khutulun/util"
 	formatpkg "github.com/tliron/kutil/format"
 	"github.com/tliron/kutil/terminal"
 	urlpkg "github.com/tliron/kutil/url"
@@ -83,7 +82,7 @@ func registerPackage(namespace string, type_ string, args []string) {
 					Reader: reader,
 					PackageFile: clientpkg.PackageFile{
 						Path:       path[length:],
-						Executable: khutulunutil.IsExecutable(stat.Mode()),
+						Executable: util.IsFileExecutable(stat.Mode()),
 					},
 				})
 			}
@@ -125,7 +124,7 @@ func registerPackage(namespace string, type_ string, args []string) {
 								Reader: reader,
 								PackageFile: clientpkg.PackageFile{
 									Path:       file.Name,
-									Executable: khutulunutil.IsExecutable(file.Mode()),
+									Executable: util.IsFileExecutable(file.Mode()),
 								},
 							})
 						}
@@ -140,7 +139,7 @@ func registerPackage(namespace string, type_ string, args []string) {
 					Reader: reader,
 					PackageFile: clientpkg.PackageFile{
 						Path:       filepath.Base(path),
-						Executable: khutulunutil.IsExecutable(stat.Mode()),
+						Executable: util.IsFileExecutable(stat.Mode()),
 					},
 				})
 			}

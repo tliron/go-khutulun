@@ -152,3 +152,8 @@ message Interaction {
     bytes bytes = 3;
     Size size = 4;
 }
+
+message InteractionErrorDetails {
+    int32 exitCode = 1;
+    bytes stderr = 2;
+}

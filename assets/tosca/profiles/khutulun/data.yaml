@@ -7,6 +7,11 @@ data_types:
     constraints:
     - greater_or_equal: 0
 
+  Hex:
+    derived_from: string
+    constraints:
+    - pattern: ^([A-Fa-f0-9][A-Fa-f0-9])*$
+
   IPAddress:
     derived_from: string
     constraints:
@@ -152,13 +157,14 @@ data_types:
         type: string
         required: false
       digest-hex:
-        type: string
+        type: Hex
         required: false
 
   ContainerPort:
     properties:
       external:
         type: AssignablePort
+        required: false
       internal:
         type: AssignablePort
       protocol:

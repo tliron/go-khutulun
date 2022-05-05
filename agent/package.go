@@ -8,8 +8,8 @@ import (
 	"time"
 
 	"github.com/danjacques/gofslock/fslock"
-	"github.com/tliron/khutulun/util"
 	"github.com/tliron/kutil/logging"
+	"github.com/tliron/kutil/util"
 )
 
 const LOCK_FILE = ".lock"
@@ -32,7 +32,7 @@ func (self *Agent) ListPackages(namespace string, type_ string) ([]PackageIdenti
 			if files, err := os.ReadDir(self.getPackageTypeDir(namespace_, type_)); err == nil {
 				for _, file := range files {
 					name := file.Name()
-					if file.IsDir() && !isHidden(name) {
+					if file.IsDir() && !util.IsFileHidden(name) {
 						identifiers = append(identifiers, PackageIdentifier{
 							Namespace: namespace_,
 							Type:      type_,
@@ -143,7 +143,7 @@ func (self *Agent) getPackageMainFile(namespace string, type_ string, name strin
 			for _, entry := range entries {
 				path := filepath.Join(dir, entry.Name())
 				if stat, err := os.Stat(path); err == nil {
-					if util.IsExecutable(stat.Mode()) {
+					if util.IsFileExecutable(stat.Mode()) {
 						return path
 					}
 				}

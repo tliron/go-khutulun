@@ -67,7 +67,7 @@ func (self *DelegateGRPCClient) Instantiate(config any) error {
 }
 
 // Delegate interface
-func (self *DelegateGRPCClient) Interact(server util.Interactor, start *api.Interaction_Start) error {
+func (self *DelegateGRPCClient) Interact(server util.GRPCInteractor, start *api.Interaction_Start) error {
 	if client, err := self.client.Interact(self.context); err == nil {
 		return util.InteractRelay(server, client, start, log)
 	} else {

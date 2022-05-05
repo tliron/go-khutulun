@@ -53,12 +53,12 @@ func (self *GRPC) Start() error {
 	api.RegisterAgentServer(self.grpcServer, self)
 
 	var err error
-	if self.Address, err = toReachableAddress(self.Address); err != nil {
+	if self.Address, err = util.ToReachableAddress(self.Address); err != nil {
 		return err
 	}
 
 	start := func(address string) error {
-		if listener, err := newListener(self.Protocol, address, self.Port); err == nil {
+		if listener, err := util.NewListener(self.Protocol, address, self.Port); err == nil {
 			grpcLog.Noticef("starting server on: %s", listener.Addr().String())
 			go func() {
 				if err := self.grpcServer.Serve(listener); err != nil {
@@ -72,8 +72,15 @@ func (self *GRPC) Start() error {
 	}
 
 	if self.Local {
-		if err := start("localhost"); err != nil {
-			return err
+		if (self.Protocol == "tcp") || (self.Protocol == "tcp6") {
+			if err := start("::1"); err != nil {
+				return err
+			}
+		}
+		if (self.Protocol == "tcp") || (self.Protocol == "tcp4") {
+			if err := start("127.0.0.1"); err != nil {
+				return err
+			}
 		}
 	}
 
@@ -407,11 +414,7 @@ func (self *GRPC) Interact(server api.Agent_InteractServer) error {
 				grpcLog.Infof("relay interaction to %s", relay)
 				err = client.InteractRelay(server, start)
 				grpcLog.Info("interaction ended")
-				if err == nil {
-					return nil
-				} else {
-					return statuspkg.Errorf(codes.Aborted, "%s", err.Error())
-				}
+				return err
 			}
 		},
 
@@ -425,11 +428,7 @@ func (self *GRPC) Interact(server api.Agent_InteractServer) error {
 			defer client.Close()
 
 			if delegate, err := client.Delegate(); err == nil {
-				if err := delegate.Interact(server, start); err == nil {
-					return nil
-				} else {
-					return statuspkg.Errorf(codes.Aborted, "%s", err.Error())
-				}
+				return delegate.Interact(server, start)
 			} else {
 				return statuspkg.Errorf(codes.Aborted, "%s", err.Error())
 			}

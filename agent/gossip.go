@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/hashicorp/memberlist"
+	khutulunutil "github.com/tliron/khutulun/util"
 	"github.com/tliron/kutil/format"
 	"github.com/tliron/kutil/logging"
 	"github.com/tliron/kutil/logging/sink"
@@ -35,7 +36,7 @@ func NewGossip(address string, port int) *Gossip {
 func (self *Gossip) Start() error {
 	var err error
 
-	if self.Address, err = toReachableAddress(self.Address); err != nil {
+	if self.Address, err = khutulunutil.ToReachableAddress(self.Address); err != nil {
 		return err
 	}
 
@@ -47,7 +48,7 @@ func (self *Gossip) Start() error {
 	config.Events = sink.NewMemberlistEventLog(gossipLog)
 	config.Logger = sink.NewMemberlistStandardLog([]string{"khutulun", "memberlist"})
 
-	gossipLog.Noticef("starting server on: [%s]:%d", config.BindAddr, config.BindPort)
+	gossipLog.Noticef("starting server on: %s", khutulunutil.JoinAddressPort(config.BindAddr, config.BindPort))
 	if self.members, err = memberlist.Create(config); err == nil {
 		self.queue = &memberlist.TransmitLimitedQueue{
 			NumNodes: func() int {

@@ -1,18 +1,13 @@
 package commands
 
 import (
-	"os"
-
 	"github.com/spf13/cobra"
-	clientpkg "github.com/tliron/khutulun/client"
-	"github.com/tliron/kutil/exec"
-	"github.com/tliron/kutil/terminal"
-	"github.com/tliron/kutil/util"
 )
 
 func init() {
 	hostCommand.AddCommand(hostInteractCommand)
 	hostInteractCommand.Flags().BoolVarP(&pseudoTerminal, "terminal", "t", false, "whether to create a pseudo-terminal")
+	hostInteractCommand.Flags().BoolVarP(&forwardExitCode, "forward", "e", true, "whether to forward the remote exit code")
 }
 
 var hostInteractCommand = &cobra.Command{
@@ -27,20 +22,6 @@ var hostInteractCommand = &cobra.Command{
 			command = args[1:]
 		}
 
-		client, err := clientpkg.NewClientFromConfiguration(configurationPath, clusterName)
-		util.FailOnError(err)
-		util.OnExitError(client.Close)
-
-		var terminal_ *exec.Terminal
-		if pseudoTerminal {
-			terminal_, err = exec.NewTerminal()
-			util.FailOnError(err)
-			util.OnExitError(terminal_.Close)
-		}
-
-		identifier := []string{"host", hostName}
-		environment := map[string]string{"TERM": os.Getenv("TERM")}
-		err = client.Interact(identifier, os.Stdin, terminal.Stdout, terminal.Stderr, terminal_, environment, command...)
-		util.FailOnError(err)
+		interact([]string{"host", hostName}, command)
 	},
 }

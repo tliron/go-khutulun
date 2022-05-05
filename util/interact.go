@@ -11,7 +11,7 @@ import (
 
 type InteractFunc func(start *api.Interaction_Start) error
 
-func Interact(server Interactor, interact map[string]InteractFunc) error {
+func Interact(server GRPCInteractor, interact map[string]InteractFunc) error {
 	if first, err := server.Recv(); err == nil {
 		if first.Start != nil {
 			if len(first.Start.Identifier) == 0 {
@@ -32,7 +32,7 @@ func Interact(server Interactor, interact map[string]InteractFunc) error {
 	}
 }
 
-func InteractRelay(server Interactor, client Interactor, start *api.Interaction_Start, log logging.Logger) error {
+func InteractRelay(server GRPCInteractor, client GRPCInteractor, start *api.Interaction_Start, log logging.Logger) error {
 	if err := client.Send(&api.Interaction{Start: start}); err != nil {
 		return err
 	}
@@ -47,16 +47,12 @@ func InteractRelay(server Interactor, client Interactor, start *api.Interaction_
 			} else {
 				if err == io.EOF {
 					log.Info("client closed")
+				} else if statuspkg.Code(err) == codes.Canceled {
+					// We're OK with canceling
+					log.Infof("client canceled")
 				} else {
-					if status, ok := statuspkg.FromError(err); ok {
-						if status.Code() == codes.Canceled {
-							// We're OK with canceling
-							log.Infof("client canceled")
-							return
-						}
-					}
+					log.Errorf("client receive: %s", err.Error())
 				}
-				log.Errorf("client receive: %s", err.Error())
 				return
 			}
 		}

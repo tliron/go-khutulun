@@ -4,6 +4,7 @@ import (
 	"errors"
 	"net"
 
+	khutulunutil "github.com/tliron/khutulun/util"
 	"github.com/tliron/kutil/format"
 	"github.com/tliron/kutil/util"
 )
@@ -16,27 +17,31 @@ const DEFAULT_MAX_MESSAGE_SIZE = 8192
 
 type Broadcaster struct {
 	protocol   string
-	address    *net.UDPAddr
+	address    string
+	port       int
 	connection *net.UDPConn
 }
 
-func NewBroadcaster(protocol string, address string, port int) (*Broadcaster, error) {
-	self := Broadcaster{
+func NewBroadcaster(protocol string, address string, port int) *Broadcaster {
+	return &Broadcaster{
 		protocol: protocol,
-	}
-	var err error
-	if self.address, err = newUdpAddr(protocol, address, port); err == nil {
-		//fmt.Printf("BROADCSTER ZONE: %s\n", self.address.Zone)
-		return &self, nil
-	} else {
-		return nil, err
+		address:  address,
+		port:     port,
 	}
 }
 
 func (self *Broadcaster) Start() error {
-	var err error
-	self.connection, err = net.DialUDP(self.protocol, nil, self.address)
-	return err
+	if address, err := khutulunutil.ToBroadcastAddress(self.address); err == nil {
+		if udpAddr, err := khutulunutil.NewUDPAddr(self.protocol, address, self.port); err == nil {
+			broadcastLog.Noticef("starting broadcaster on: %s", udpAddr.String())
+			self.connection, err = net.DialUDP(self.protocol, nil, udpAddr)
+			return err
+		} else {
+			return err
+		}
+	} else {
+		return err
+	}
 }
 
 func (self *Broadcaster) Stop() error {
@@ -57,7 +62,7 @@ func (self *Broadcaster) SendJSON(message any) error {
 
 func (self *Broadcaster) Send(message []byte) error {
 	if self.connection != nil {
-		gossipLog.Debugf("sending broadcast: %s", message)
+		broadcastLog.Debugf("sending broadcast: %s", message)
 		_, err := self.connection.Write(message)
 		return err
 	} else {
@@ -88,53 +93,36 @@ type Receiver struct {
 
 	protocol       string
 	inter          *net.Interface
-	address        *net.UDPAddr
+	address        string
+	port           int
 	receive        ReceiveFunc
 	connection     *net.UDPConn
 	maxMessageSize int
 }
 
-func NewReceiver(protocol string, inter *net.Interface, address string, port int, receive ReceiveFunc) (*Receiver, error) {
-	self := Receiver{
+func NewReceiver(protocol string, inter *net.Interface, address string, port int, receive ReceiveFunc) *Receiver {
+	return &Receiver{
 		protocol:       protocol,
 		inter:          inter,
+		address:        address,
+		port:           port,
 		receive:        receive,
 		maxMessageSize: DEFAULT_MAX_MESSAGE_SIZE,
-	}
-	var err error
-	if self.address, err = newUdpAddr(protocol, address, port); err == nil {
-		//fmt.Printf("RECEIVER ZONE: %s\n", self.address.Zone)
-		return &self, nil
-	} else {
-		return nil, err
 	}
 }
 
 func (self *Receiver) Start() error {
-	var err error
-	if self.connection, err = net.ListenMulticastUDP(self.protocol, self.inter, self.address); err == nil {
-		self.connection.SetReadBuffer(self.maxMessageSize)
-
-		go func() {
-			buffer := make([]byte, self.maxMessageSize)
-			for {
-				if count, address, err := self.connection.ReadFromUDP(buffer); err == nil {
-					if self.ignore(address) {
-						gossipLog.Debugf("ignoring broadcast from: %s", address.String())
-						continue
-					}
-
-					message := buffer[:count]
-					gossipLog.Debugf("received broadcast: %s", message)
-					self.receive(address, message)
-				} else {
-					gossipLog.Info("receiver closed")
-					return
-				}
+	if address, err := khutulunutil.NewUDPAddr(self.protocol, self.address, self.port); err == nil {
+		broadcastLog.Noticef("starting receiver on: %s", address.String())
+		if self.connection, err = net.ListenMulticastUDP(self.protocol, self.inter, address); err == nil {
+			if err := self.connection.SetReadBuffer(self.maxMessageSize); err != nil {
+				return err
 			}
-		}()
-
-		return nil
+			go self.read()
+			return nil
+		} else {
+			return err
+		}
 	} else {
 		return err
 	}
@@ -148,9 +136,28 @@ func (self *Receiver) Stop() error {
 	}
 }
 
+func (self *Receiver) read() {
+	buffer := make([]byte, self.maxMessageSize)
+	for {
+		if count, address, err := self.connection.ReadFromUDP(buffer); err == nil {
+			if self.ignore(address) {
+				broadcastLog.Debugf("ignoring broadcast from: %s", address.String())
+				continue
+			}
+
+			message := buffer[:count]
+			broadcastLog.Debugf("received broadcast: %s", message)
+			self.receive(address, message)
+		} else {
+			broadcastLog.Info("receiver closed")
+			return
+		}
+	}
+}
+
 func (self *Receiver) ignore(address *net.UDPAddr) bool {
-	for _, ignore_ := range self.Ignore {
-		if address.IP.Equal(ignore_.IP) && (address.Port == ignore_.Port) && (address.Zone == ignore_.Zone) {
+	for _, ignore := range self.Ignore {
+		if khutulunutil.IsUDPAddrEqual(address, ignore) {
 			return true
 		}
 	}

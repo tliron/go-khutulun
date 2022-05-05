@@ -6,13 +6,12 @@ import (
 	"os/exec"
 	"os/user"
 	"path/filepath"
-	"strings"
 
 	"github.com/tliron/khutulun/api"
 	"github.com/tliron/khutulun/delegate"
-	"github.com/tliron/khutulun/util"
+	khutulunutil "github.com/tliron/khutulun/util"
 	"github.com/tliron/kutil/protobuf"
-	utilpkg "github.com/tliron/kutil/util"
+	"github.com/tliron/kutil/util"
 	"google.golang.org/grpc/codes"
 	statuspkg "google.golang.org/grpc/status"
 )
@@ -43,7 +42,7 @@ func (self *Delegate) Instantiate(config any) error {
 	}
 
 	path := filepath.Join(user_.HomeDir, ".config", "systemd", "user", serviceName)
-	if exists, err := utilpkg.FileExists(path); err == nil {
+	if exists, err := util.DoesFileExist(path); err == nil {
 		if exists {
 			log.Infof("systemd unit already exists: %q", path)
 			//return nil
@@ -68,7 +67,7 @@ func (self *Delegate) Instantiate(config any) error {
 	}
 	args = append(args, container.Reference)
 
-	log.Infof("podman %s", strings.Join(args, " "))
+	log.Infof("podman %s", util.Joinq(args, " "))
 	command := exec.Command("/usr/bin/podman", args...)
 	if err := command.Run(); err != nil {
 		return fmt.Errorf("podman create: %w", err)
@@ -87,7 +86,7 @@ func (self *Delegate) Instantiate(config any) error {
 	defer file.Close()
 
 	args = []string{"generate", "systemd", "--new", "--name", "--container-prefix=" + servicePrefix, "--restart-policy=always", container.Name}
-	log.Infof("podman %s", strings.Join(args, " "))
+	log.Infof("podman %s", util.Joinq(args, " "))
 	command = exec.Command("/usr/bin/podman", args...)
 	command.Stdout = file
 	if err := command.Run(); err != nil {
@@ -121,7 +120,7 @@ func (self *Delegate) Instantiate(config any) error {
 }
 
 // plugin.Delegate interface
-func (self *Delegate) Interact(server util.Interactor, start *api.Interaction_Start) error {
+func (self *Delegate) Interact(server khutulunutil.GRPCInteractor, start *api.Interaction_Start) error {
 	if len(start.Identifier) != 4 {
 		return statuspkg.Errorf(codes.InvalidArgument, "malformed identifier for runnable: %s", start.Identifier)
 	}
@@ -130,7 +129,7 @@ func (self *Delegate) Interact(server util.Interactor, start *api.Interaction_St
 	//serviceName := interaction.Start.Identifier[2]
 	resourceName := start.Identifier[3]
 
-	command := util.NewCommand(start, log)
+	command := khutulunutil.NewCommand(start, log)
 	args := append([]string{command.Name}, command.Args...)
 	command.Name = "/usr/bin/podman"
 	command.Args = []string{"exec"}
@@ -152,5 +151,5 @@ func (self *Delegate) Interact(server util.Interactor, start *api.Interaction_St
 	command.Args = append(command.Args, resourceName)
 	command.Args = append(command.Args, args...)
 
-	return util.StartCommand(command, server, log)
+	return khutulunutil.StartCommand(command, server, log)
 }

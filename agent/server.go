@@ -5,6 +5,7 @@ import (
 	"net"
 	"time"
 
+	khutulunutil "github.com/tliron/khutulun/util"
 	"github.com/tliron/kutil/logging"
 	"github.com/tliron/kutil/util"
 )
@@ -86,7 +87,7 @@ func (self *Server) Start(watcher bool, ticker bool) error {
 		self.gossip = NewGossip(self.GossipAddress, self.GossipPort)
 		self.gossip.onMessage = self.agent.onMessage
 		if self.grpc != nil {
-			self.gossip.meta = util.StringToBytes(fmt.Sprintf("[%s]:%d", self.grpc.Address, self.grpc.Port))
+			self.gossip.meta = util.StringToBytes(khutulunutil.JoinAddressPort(self.grpc.Address, self.grpc.Port))
 		}
 		if err := self.gossip.Start(); err != nil {
 			self.Stop()
@@ -96,20 +97,14 @@ func (self *Server) Start(watcher bool, ticker bool) error {
 	}
 
 	if self.BroadcastPort != 0 {
-		if self.broadcaster, err = NewBroadcaster(self.BroadcastProtocol, self.BroadcastAddress, self.BroadcastPort); err != nil {
-			self.Stop()
-			return err
-		}
+		self.broadcaster = NewBroadcaster(self.BroadcastProtocol, self.BroadcastAddress, self.BroadcastPort)
 		if self.gossip != nil {
 			self.gossip.broadcaster = self.broadcaster
 		}
 
-		if self.receiver, err = NewReceiver(self.BroadcastProtocol, self.BroadcastInterface, self.BroadcastAddress, self.BroadcastPort, func(address *net.UDPAddr, message []byte) {
+		self.receiver = NewReceiver(self.BroadcastProtocol, self.BroadcastInterface, self.BroadcastAddress, self.BroadcastPort, func(address *net.UDPAddr, message []byte) {
 			self.agent.onMessage(message, true)
-		}); err != nil {
-			self.Stop()
-			return err
-		}
+		})
 
 		if err := self.broadcaster.Start(); err != nil {
 			self.Stop()

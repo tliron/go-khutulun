@@ -43,13 +43,13 @@ func (self *Client) ListResources(namespace string, serviceName string, type_ st
 				if err == io.EOF {
 					break
 				} else {
-					return nil, util.UnpackGrpcError(err)
+					return nil, util.UnpackGRPCError(err)
 				}
 			}
 		}
 
 		return resources, nil
 	} else {
-		return nil, util.UnpackGrpcError(err)
+		return nil, util.UnpackGRPCError(err)
 	}
 }

@@ -34,10 +34,9 @@ topology_template:
             image:
               reference: docker.io/nginx:1.21.6
         connectable:
-          properties:
+          attributes:
             ports:
-            - external: 8080
-              internal: 80
+            - internal: 80
               protocol: TCP
       requirements:
       - connection:
