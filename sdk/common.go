@@ -1,4 +1,4 @@
-package util
+package sdk
 
 import (
 	"github.com/tliron/khutulun/api"

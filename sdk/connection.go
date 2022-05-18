@@ -1,9 +1,8 @@
-package agent
+package sdk
 
 import (
 	"fmt"
 
-	"github.com/tliron/khutulun/delegate"
 	"github.com/tliron/kutil/ard"
 	cloutpkg "github.com/tliron/puccini/clout"
 )
@@ -13,7 +12,9 @@ import (
 //
 
 type Connection struct {
-	delegate.Connection
+	Name string
+	IP   string
+	Port int
 
 	Source *Container
 	Target *Container

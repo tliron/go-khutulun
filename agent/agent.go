@@ -63,13 +63,13 @@ func (self *Agent) handleMessage(message any, broadcast bool) {
 		}
 
 	case RECONCILE_SERVICES:
-		identifiers, _ := ard.NewNode(message).Get("identifiers").List()
+		/*identifiers, _ := ard.NewNode(message).Get("identifiers").List()
 		log.Info("received reconcileServices(...)")
 		for _, identifier := range identifiers {
 			namespace, _ := ard.NewNode(identifier).Get("namespace").String()
 			name, _ := ard.NewNode(identifier).Get("name").String()
 			self.ReconcileService(namespace, name)
-		}
+		}*/
 
 	default:
 		log.Errorf("received unsupported message: %s", message)

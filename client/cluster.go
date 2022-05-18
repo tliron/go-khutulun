@@ -4,7 +4,7 @@ import (
 	"io"
 
 	"github.com/tliron/khutulun/api"
-	"github.com/tliron/khutulun/util"
+	"github.com/tliron/khutulun/sdk"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
@@ -60,6 +60,6 @@ func (self *Client) AddHost(gossipAddress string) error {
 	if _, err := self.client.AddHost(context, &api.AddHost{GossipAddress: gossipAddress}); err == nil {
 		return nil
 	} else {
-		return util.UnpackGRPCError(err)
+		return sdk.UnpackGRPCError(err)
 	}
 }

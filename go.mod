@@ -3,13 +3,18 @@ module github.com/tliron/khutulun
 go 1.18
 
 require (
+	github.com/charmbracelet/bubbletea v0.20.0
 	github.com/danjacques/gofslock v0.0.0-20220131014315-6e321f4509c8
+	github.com/fogleman/ease v0.0.0-20170301025033-8da417bf1776
 	github.com/fsnotify/fsnotify v1.5.4
 	github.com/hashicorp/go-plugin v1.4.4
 	github.com/hashicorp/memberlist v0.3.1
+	github.com/lucasb-eyer/go-colorful v1.2.0
+	github.com/muesli/reflow v0.3.0
+	github.com/muesli/termenv v0.11.1-0.20220212125758-44cd13922739
 	github.com/rakyll/statik v0.1.7
 	github.com/spf13/cobra v1.4.0
-	github.com/tliron/kutil v0.1.55
+	github.com/tliron/kutil v0.1.59
 	github.com/tliron/puccini v0.20.1
 	github.com/tliron/yamlkeys v1.3.5
 	google.golang.org/grpc v1.46.0
@@ -23,6 +28,7 @@ require (
 	github.com/acomagu/bufpipe v1.0.3 // indirect
 	github.com/armon/go-metrics v0.3.10 // indirect
 	github.com/beevik/etree v1.1.0 // indirect
+	github.com/containerd/console v1.0.3 // indirect
 	github.com/containerd/stargz-snapshotter/estargz v0.10.1 // indirect
 	github.com/coreos/go-systemd v0.0.0-20191104093116-d3cd4ed1dbcf // indirect
 	github.com/creack/pty v1.1.18 // indirect
@@ -61,15 +67,18 @@ require (
 	github.com/kortschak/utter v1.5.0 // indirect
 	github.com/mattn/go-colorable v0.1.12 // indirect
 	github.com/mattn/go-isatty v0.0.14 // indirect
+	github.com/mattn/go-runewidth v0.0.13 // indirect
 	github.com/miekg/dns v1.1.41 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/mitchellh/go-testing-interface v1.0.0 // indirect
 	github.com/mitchellh/hashstructure/v2 v2.0.2 // indirect
+	github.com/muesli/ansi v0.0.0-20211018074035-2e021307bc4b // indirect
 	github.com/oklog/run v1.0.0 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.0.2 // indirect
 	github.com/petermattis/goid v0.0.0-20180202154549-b0b1615b78e5 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
+	github.com/rivo/uniseg v0.2.0 // indirect
 	github.com/sasha-s/go-deadlock v0.3.1 // indirect
 	github.com/sean-/seed v0.0.0-20170313163322-e2103e2c3529 // indirect
 	github.com/segmentio/ksuid v1.0.4 // indirect

@@ -10,7 +10,7 @@ import (
 	"github.com/tliron/khutulun/api"
 	clientpkg "github.com/tliron/khutulun/client"
 	delegatepkg "github.com/tliron/khutulun/delegate"
-	"github.com/tliron/khutulun/util"
+	"github.com/tliron/khutulun/sdk"
 	"github.com/tliron/kutil/logging"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -53,12 +53,12 @@ func (self *GRPC) Start() error {
 	api.RegisterAgentServer(self.grpcServer, self)
 
 	var err error
-	if self.Address, err = util.ToReachableAddress(self.Address); err != nil {
+	if self.Address, err = sdk.ToReachableAddress(self.Address); err != nil {
 		return err
 	}
 
 	start := func(address string) error {
-		if listener, err := util.NewListener(self.Protocol, address, self.Port); err == nil {
+		if listener, err := sdk.NewListener(self.Protocol, address, self.Port); err == nil {
 			grpcLog.Noticef("starting server on: %s", listener.Addr().String())
 			go func() {
 				if err := self.grpcServer.Serve(listener); err != nil {
@@ -381,7 +381,7 @@ func (self *GRPC) ListResources(listResources *api.ListResources, server api.Age
 func (self *GRPC) Interact(server api.Agent_InteractServer) error {
 	grpcLog.Info("interact()")
 
-	return util.Interact(server, map[string]util.InteractFunc{
+	return sdk.Interact(server, map[string]sdk.InteractFunc{
 		"host": func(start *api.Interaction_Start) error {
 			if len(start.Identifier) != 2 {
 				return statuspkg.Errorf(codes.InvalidArgument, "malformed identifier for host: %s", start.Identifier)
@@ -389,7 +389,7 @@ func (self *GRPC) Interact(server api.Agent_InteractServer) error {
 
 			host := start.Identifier[1]
 
-			command := util.NewCommand(start, grpcLog)
+			command := sdk.NewCommand(start, grpcLog)
 
 			var relay string
 			if self.agent.gossip != nil {
@@ -403,7 +403,7 @@ func (self *GRPC) Interact(server api.Agent_InteractServer) error {
 			}
 
 			if relay == "" {
-				return util.StartCommand(command, server, grpcLog)
+				return sdk.StartCommand(command, server, grpcLog)
 			} else {
 				client, err := clientpkg.NewClient(relay)
 				if err != nil {

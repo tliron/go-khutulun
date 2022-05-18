@@ -1,33 +1,8 @@
-package agent
+package main
 
 import (
 	"strings"
-
-	delegatepkg "github.com/tliron/khutulun/delegate"
 )
-
-func (self *Agent) DeployService(templateNamespace string, templateName string, serviceNamespace string, serviceName string) error {
-	var delegate delegatepkg.Delegate
-	var client *delegatepkg.DelegatePluginClient
-	var err error
-	if client, delegate, err = self.GetDelegate(); err == nil {
-		defer client.Close()
-	} else {
-		return err
-	}
-
-	if _, problems, err := self.CompileTosca(templateNamespace, templateName, serviceNamespace, serviceName); err == nil {
-		self.ProcessService(serviceNamespace, serviceName, delegate, "schedule")
-		self.ProcessService(serviceNamespace, serviceName, delegate, "reconcile")
-		return nil
-	} else {
-		if problems != nil {
-			return problems.WithError(nil, false)
-		} else {
-			return err
-		}
-	}
-}
 
 //
 // ServiceIdentifier

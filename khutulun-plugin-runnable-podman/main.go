@@ -1,6 +1,8 @@
 package main
 
 import (
+	"os"
+
 	"github.com/tliron/khutulun/delegate"
 	"github.com/tliron/kutil/logging"
 	"github.com/tliron/kutil/util"
@@ -11,7 +13,8 @@ import (
 func main() {
 	util.ExitOnSIGTERM()
 	logging.Configure(1, nil)
-	server := delegate.NewDelegatePluginServer(new(Delegate))
+	host, _ := os.Hostname()
+	server := delegate.NewDelegatePluginServer(&Delegate{host: host})
 	server.Start()
 	util.Exit(0)
 }

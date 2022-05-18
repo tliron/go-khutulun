@@ -28,19 +28,24 @@ service Agent {
 }
 
 service Delegate {
-    //rpc schedule(Clouts) returns (Clout);
-    //rpc reconcile(Clouts) returns (Clout);
-    rpc instantiate(Config) returns (google.protobuf.Empty);
+    rpc processService(ProcessService) returns (ProcessServiceResult);
+    //rpc instantiate(Config) returns (google.protobuf.Empty);
     rpc interact(stream Interaction) returns (stream Interaction);
+}
+
+message ProcessService {
+    ServiceIdentifier service = 1;
+    string Phase = 2;
+    Clout clout = 3;
+    Clout coerced = 4;
+}
+
+message ProcessServiceResult {
+    Clout clout = 1;
 }
 
 message Clout {
     string yaml = 1;
-}
-
-message Clouts {
-    Clout clout = 1;
-    Clout coerced = 2;
 }
 
 message Config {

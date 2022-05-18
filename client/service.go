@@ -2,7 +2,7 @@ package client
 
 import (
 	"github.com/tliron/khutulun/api"
-	"github.com/tliron/khutulun/util"
+	"github.com/tliron/khutulun/sdk"
 )
 
 func (self *Client) DeployService(serviceNamespace string, serviceName string, templateNamespace string, templateName string, inputs map[string]any) error {
@@ -22,5 +22,5 @@ func (self *Client) DeployService(serviceNamespace string, serviceName string, t
 	defer cancel()
 
 	_, err := self.client.DeployService(context, &deployService)
-	return util.UnpackGRPCError(err)
+	return sdk.UnpackGRPCError(err)
 }

@@ -4,7 +4,7 @@ import (
 	"io"
 
 	"github.com/tliron/khutulun/api"
-	"github.com/tliron/khutulun/util"
+	"github.com/tliron/khutulun/sdk"
 )
 
 type Resource struct {
@@ -43,13 +43,13 @@ func (self *Client) ListResources(namespace string, serviceName string, type_ st
 				if err == io.EOF {
 					break
 				} else {
-					return nil, util.UnpackGRPCError(err)
+					return nil, sdk.UnpackGRPCError(err)
 				}
 			}
 		}
 
 		return resources, nil
 	} else {
-		return nil, util.UnpackGRPCError(err)
+		return nil, sdk.UnpackGRPCError(err)
 	}
 }

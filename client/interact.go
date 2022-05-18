@@ -5,7 +5,7 @@ import (
 	"io"
 
 	"github.com/tliron/khutulun/api"
-	"github.com/tliron/khutulun/util"
+	"github.com/tliron/khutulun/sdk"
 	"github.com/tliron/kutil/exec"
 )
 
@@ -51,7 +51,7 @@ func (self *Client) Interact(identifier []string, stdin io.Reader, stdout io.Wri
 		}
 
 		if err := client.Send(&interaction); err != nil {
-			return util.UnpackGRPCError(err)
+			return sdk.UnpackGRPCError(err)
 		}
 
 		// Read and send stdin
@@ -97,14 +97,14 @@ func (self *Client) Interact(identifier []string, stdin io.Reader, stdout io.Wri
 				if err == io.EOF {
 					break
 				} else {
-					return util.UnpackGRPCError(err)
+					return sdk.UnpackGRPCError(err)
 				}
 			}
 		}
 
 		return nil
 	} else {
-		return util.UnpackGRPCError(err)
+		return sdk.UnpackGRPCError(err)
 	}
 }
 
@@ -113,7 +113,7 @@ func (self *Client) InteractRelay(server api.Agent_InteractServer, start *api.In
 	defer cancel()
 
 	if client, err := self.client.Interact(context); err == nil {
-		return util.InteractRelay(server, client, start, log)
+		return sdk.InteractRelay(server, client, start, log)
 	} else {
 		return err
 	}

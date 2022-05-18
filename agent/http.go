@@ -6,7 +6,7 @@ import (
 	"time"
 
 	fspkg "github.com/rakyll/statik/fs"
-	"github.com/tliron/khutulun/util"
+	"github.com/tliron/khutulun/sdk"
 	_ "github.com/tliron/khutulun/web"
 	"github.com/tliron/kutil/format"
 )
@@ -53,7 +53,7 @@ func NewHTTP(agent *Agent, protocol string, address string, port int) (*HTTP, er
 }
 
 func (self *HTTP) Start() error {
-	if listener, err := util.NewListener(self.Protocol, self.Address, self.Port); err == nil {
+	if listener, err := sdk.NewListener(self.Protocol, self.Address, self.Port); err == nil {
 		httpLog.Noticef("starting server on: %s", listener.Addr().String())
 		go func() {
 			if err := self.httpServer.Serve(listener); err != nil {

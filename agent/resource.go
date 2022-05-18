@@ -67,7 +67,9 @@ type Resource struct {
 }
 
 func getResources(clout *cloutpkg.Clout, type_ string) []Resource {
-	var resources []Resource
+	return nil
+
+	/*var resources []Resource
 
 	switch type_ {
 	case "runnable":
@@ -81,5 +83,5 @@ func getResources(clout *cloutpkg.Clout, type_ string) []Resource {
 		}
 	}
 
-	return resources
+	return resources*/
 }

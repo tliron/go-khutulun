@@ -2,7 +2,8 @@ package delegate
 
 import (
 	"github.com/tliron/khutulun/api"
-	"github.com/tliron/khutulun/util"
+	"github.com/tliron/khutulun/sdk"
+	cloutpkg "github.com/tliron/puccini/clout"
 )
 
 //
@@ -10,6 +11,7 @@ import (
 //
 
 type Delegate interface {
-	Instantiate(config any) error
-	Interact(server util.GRPCInteractor, start *api.Interaction_Start) error
+	ProcessService(namespace string, serviceName string, phase string, clout *cloutpkg.Clout, coercedClout *cloutpkg.Clout) (*cloutpkg.Clout, error)
+	//Instantiate(config any) error
+	Interact(server sdk.GRPCInteractor, start *api.Interaction_Start) error
 }

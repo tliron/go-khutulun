@@ -152,4 +152,4 @@ And [Puccini](https://puccini.cloud/) is the TOSCA processor that drives Khutulu
 
 * International level: "KOO-too-loon"
 * Cosmopolitan level: "CHOO-too-loon" ("ch" like in "Johann Sebastian Bach")
-* Expert level: Mongolian "Хотулун" ([video](https://www.youtube.com/watch?v=uP0BagZ-ZCE&t=58s))
+* Expert level: Modern Mongolian "Хотулун" ([video](https://www.youtube.com/watch?v=uP0BagZ-ZCE&t=58s))

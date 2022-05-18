@@ -8,7 +8,7 @@ import (
 
 	"github.com/tliron/khutulun/api"
 	"github.com/tliron/khutulun/configuration"
-	"github.com/tliron/khutulun/util"
+	"github.com/tliron/khutulun/sdk"
 	"google.golang.org/grpc"
 )
 
@@ -27,7 +27,7 @@ type Client struct {
 func NewClientFromConfiguration(configurationPath string, clusterName string) (*Client, error) {
 	if client, err := configuration.LoadOrNewClient(configurationPath); err == nil {
 		if cluster := client.GetCluster(clusterName); cluster != nil {
-			target := util.JoinAddressPort(cluster.IP, cluster.Port)
+			target := sdk.JoinAddressPort(cluster.IP, cluster.Port)
 			return NewClient(target)
 		} else {
 			if clusterName == "" {

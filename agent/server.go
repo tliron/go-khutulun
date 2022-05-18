@@ -5,7 +5,7 @@ import (
 	"net"
 	"time"
 
-	khutulunutil "github.com/tliron/khutulun/util"
+	"github.com/tliron/khutulun/sdk"
 	"github.com/tliron/kutil/logging"
 	"github.com/tliron/kutil/util"
 )
@@ -49,6 +49,9 @@ func NewServer(agent *Agent) *Server {
 func (self *Server) Start(watcher bool, ticker bool) error {
 	var err error
 
+	// TODO?
+	watcher = false
+
 	if watcher {
 		if self.watcher, err = NewWatcher(self.agent, func(change Change, identifier []string) {
 			if change != Changed {
@@ -87,7 +90,7 @@ func (self *Server) Start(watcher bool, ticker bool) error {
 		self.gossip = NewGossip(self.GossipAddress, self.GossipPort)
 		self.gossip.onMessage = self.agent.onMessage
 		if self.grpc != nil {
-			self.gossip.meta = util.StringToBytes(khutulunutil.JoinAddressPort(self.grpc.Address, self.grpc.Port))
+			self.gossip.meta = util.StringToBytes(sdk.JoinAddressPort(self.grpc.Address, self.grpc.Port))
 		}
 		if err := self.gossip.Start(); err != nil {
 			self.Stop()

@@ -4,7 +4,7 @@ import (
 	"io"
 
 	"github.com/tliron/khutulun/api"
-	"github.com/tliron/khutulun/util"
+	"github.com/tliron/khutulun/sdk"
 )
 
 const BUFFER_SIZE = 65536
@@ -43,7 +43,7 @@ func (self *Client) ListPackages(namespace string, type_ string) ([]PackageIdent
 				if err == io.EOF {
 					break
 				} else {
-					return nil, util.UnpackGRPCError(err)
+					return nil, sdk.UnpackGRPCError(err)
 				}
 			}
 
@@ -56,7 +56,7 @@ func (self *Client) ListPackages(namespace string, type_ string) ([]PackageIdent
 
 		return identifiers, nil
 	} else {
-		return nil, util.UnpackGRPCError(err)
+		return nil, sdk.UnpackGRPCError(err)
 	}
 }
 
@@ -83,14 +83,14 @@ func (self *Client) ListPackageFiles(namespace string, type_ string, name string
 				if err == io.EOF {
 					break
 				} else {
-					return nil, util.UnpackGRPCError(err)
+					return nil, sdk.UnpackGRPCError(err)
 				}
 			}
 		}
 
 		return packageFiles, nil
 	} else {
-		return nil, util.UnpackGRPCError(err)
+		return nil, sdk.UnpackGRPCError(err)
 	}
 }
 
@@ -114,14 +114,14 @@ func (self *Client) GetPackageFile(namespace string, type_ string, name string, 
 				if err == io.EOF {
 					break
 				} else {
-					return util.UnpackGRPCError(err)
+					return sdk.UnpackGRPCError(err)
 				}
 			}
 		}
 
 		return nil
 	} else {
-		return util.UnpackGRPCError(err)
+		return sdk.UnpackGRPCError(err)
 	}
 }
 
@@ -137,7 +137,7 @@ func (self *Client) SetPackageFiles(namespace string, type_ string, name string,
 		}
 
 		if err := client.Send(&api.PackageContent{Start: &api.PackageContent_Start{Identifier: &identifier}}); err != nil {
-			return util.UnpackGRPCError(err)
+			return sdk.UnpackGRPCError(err)
 		}
 
 		buffer := make([]byte, BUFFER_SIZE)
@@ -151,7 +151,7 @@ func (self *Client) SetPackageFiles(namespace string, type_ string, name string,
 			}
 
 			if err := client.Send(&content); err != nil {
-				return util.UnpackGRPCError(err)
+				return sdk.UnpackGRPCError(err)
 			}
 
 			for {
@@ -159,14 +159,14 @@ func (self *Client) SetPackageFiles(namespace string, type_ string, name string,
 				if count > 0 {
 					content = api.PackageContent{Bytes: buffer[:count]}
 					if err := client.Send(&content); err != nil {
-						return util.UnpackGRPCError(err)
+						return sdk.UnpackGRPCError(err)
 					}
 				}
 				if err != nil {
 					if err == io.EOF {
 						break
 					} else {
-						return util.UnpackGRPCError(err)
+						return sdk.UnpackGRPCError(err)
 					}
 				}
 			}
@@ -175,10 +175,10 @@ func (self *Client) SetPackageFiles(namespace string, type_ string, name string,
 		if _, err := client.CloseAndRecv(); err == io.EOF {
 			return nil
 		} else {
-			return util.UnpackGRPCError(err)
+			return sdk.UnpackGRPCError(err)
 		}
 	} else {
-		return util.UnpackGRPCError(err)
+		return sdk.UnpackGRPCError(err)
 	}
 }
 
@@ -193,5 +193,5 @@ func (self *Client) RemovePackage(namespace string, type_ string, name string) e
 	}
 
 	_, err := self.client.RemovePackage(context, &identifier)
-	return util.UnpackGRPCError(err)
+	return sdk.UnpackGRPCError(err)
 }

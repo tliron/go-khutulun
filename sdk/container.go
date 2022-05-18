@@ -1,11 +1,10 @@
-package agent
+package sdk
 
 import (
 	"fmt"
 	"strconv"
 	"strings"
 
-	"github.com/tliron/khutulun/delegate"
 	"github.com/tliron/kutil/ard"
 	cloutpkg "github.com/tliron/puccini/clout"
 )
@@ -15,10 +14,20 @@ import (
 //
 
 type Container struct {
-	delegate.Container
+	Host            string
+	Name            string
+	Reference       string
+	CreateArguments []string
+	Ports           []Port
 
 	vertexID       string
 	capabilityName string
+}
+
+type Port struct {
+	External int64
+	Internal int64
+	Protocol string
 }
 
 func (self *Container) Find(clout *cloutpkg.Clout) (*cloutpkg.Vertex, any, error) {
@@ -37,15 +46,15 @@ func (self *Container) Find(clout *cloutpkg.Clout) (*cloutpkg.Vertex, any, error
 	}
 }
 
-func GetContainerPorts(capability any) []delegate.Port {
-	var ports []delegate.Port
+func GetContainerPorts(capability any) []Port {
+	var ports []Port
 	capabilityAttributes, _ := ard.NewNode(capability).Get("attributes").StringMap()
 	if ports_, ok := ard.NewNode(capabilityAttributes).Get("ports").List(); ok {
 		for _, port := range ports_ {
 			external, _ := ard.NewNode(port).Get("external").Integer()
 			internal, _ := ard.NewNode(port).Get("internal").Integer()
 			protocol, _ := ard.NewNode(port).Get("protocol").String()
-			ports = append(ports, delegate.Port{
+			ports = append(ports, Port{
 				External: external,
 				Internal: internal,
 				Protocol: protocol,

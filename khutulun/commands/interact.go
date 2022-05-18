@@ -4,7 +4,7 @@ import (
 	"os"
 
 	clientpkg "github.com/tliron/khutulun/client"
-	khutulunutil "github.com/tliron/khutulun/util"
+	"github.com/tliron/khutulun/sdk"
 	"github.com/tliron/kutil/exec"
 	terminalpkg "github.com/tliron/kutil/terminal"
 	"github.com/tliron/kutil/util"
@@ -31,7 +31,7 @@ func interact(identifier []string, command []string) {
 		terminal.Close()
 	}
 
-	if details := khutulunutil.InteractionErrorDetails(err); details != nil {
+	if details := sdk.InteractionErrorDetails(err); details != nil {
 		terminalpkg.Stderr.Write(details.Stderr)
 		if forwardExitCode {
 			util.Exit(int(details.ExitCode))

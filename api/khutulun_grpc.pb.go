@@ -734,9 +734,8 @@ var Agent_ServiceDesc = grpc.ServiceDesc{
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type DelegateClient interface {
-	//rpc schedule(Clouts) returns (Clout);
-	//rpc reconcile(Clouts) returns (Clout);
-	Instantiate(ctx context.Context, in *Config, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	ProcessService(ctx context.Context, in *ProcessService, opts ...grpc.CallOption) (*ProcessServiceResult, error)
+	//rpc instantiate(Config) returns (google.protobuf.Empty);
 	Interact(ctx context.Context, opts ...grpc.CallOption) (Delegate_InteractClient, error)
 }
 
@@ -748,9 +747,9 @@ func NewDelegateClient(cc grpc.ClientConnInterface) DelegateClient {
 	return &delegateClient{cc}
 }
 
-func (c *delegateClient) Instantiate(ctx context.Context, in *Config, opts ...grpc.CallOption) (*emptypb.Empty, error) {
-	out := new(emptypb.Empty)
-	err := c.cc.Invoke(ctx, "/khutulun.Delegate/instantiate", in, out, opts...)
+func (c *delegateClient) ProcessService(ctx context.Context, in *ProcessService, opts ...grpc.CallOption) (*ProcessServiceResult, error) {
+	out := new(ProcessServiceResult)
+	err := c.cc.Invoke(ctx, "/khutulun.Delegate/processService", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -792,9 +791,8 @@ func (x *delegateInteractClient) Recv() (*Interaction, error) {
 // All implementations must embed UnimplementedDelegateServer
 // for forward compatibility
 type DelegateServer interface {
-	//rpc schedule(Clouts) returns (Clout);
-	//rpc reconcile(Clouts) returns (Clout);
-	Instantiate(context.Context, *Config) (*emptypb.Empty, error)
+	ProcessService(context.Context, *ProcessService) (*ProcessServiceResult, error)
+	//rpc instantiate(Config) returns (google.protobuf.Empty);
 	Interact(Delegate_InteractServer) error
 	mustEmbedUnimplementedDelegateServer()
 }
@@ -803,8 +801,8 @@ type DelegateServer interface {
 type UnimplementedDelegateServer struct {
 }
 
-func (UnimplementedDelegateServer) Instantiate(context.Context, *Config) (*emptypb.Empty, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Instantiate not implemented")
+func (UnimplementedDelegateServer) ProcessService(context.Context, *ProcessService) (*ProcessServiceResult, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ProcessService not implemented")
 }
 func (UnimplementedDelegateServer) Interact(Delegate_InteractServer) error {
 	return status.Errorf(codes.Unimplemented, "method Interact not implemented")
@@ -822,20 +820,20 @@ func RegisterDelegateServer(s grpc.ServiceRegistrar, srv DelegateServer) {
 	s.RegisterService(&Delegate_ServiceDesc, srv)
 }
 
-func _Delegate_Instantiate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Config)
+func _Delegate_ProcessService_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ProcessService)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(DelegateServer).Instantiate(ctx, in)
+		return srv.(DelegateServer).ProcessService(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/khutulun.Delegate/instantiate",
+		FullMethod: "/khutulun.Delegate/processService",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DelegateServer).Instantiate(ctx, req.(*Config))
+		return srv.(DelegateServer).ProcessService(ctx, req.(*ProcessService))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -874,8 +872,8 @@ var Delegate_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*DelegateServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "instantiate",
-			Handler:    _Delegate_Instantiate_Handler,
+			MethodName: "processService",
+			Handler:    _Delegate_ProcessService_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{
