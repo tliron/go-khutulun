@@ -7,6 +7,7 @@ import (
 	"os/user"
 	"path/filepath"
 
+	"github.com/tliron/khutulun/delegate"
 	"github.com/tliron/khutulun/sdk"
 	"github.com/tliron/kutil/util"
 	cloutpkg "github.com/tliron/puccini/clout"
@@ -15,10 +16,10 @@ import (
 // systemctl --machine user@.host --user
 // https://superuser.com/a/1461905
 
-func (self *Delegate) Reconcile(namespace string, serviceName string, clout *cloutpkg.Clout, coercedClout *cloutpkg.Clout) (*cloutpkg.Clout, error) {
-	containers := sdk.GetCloutContainers(clout)
+func (self *Delegate) Reconcile(namespace string, serviceName string, clout *cloutpkg.Clout, coercedClout *cloutpkg.Clout) (*cloutpkg.Clout, []delegate.Next, error) {
+	containers := sdk.GetCloutContainers(coercedClout)
 	if len(containers) == 0 {
-		return nil, nil
+		return nil, nil, nil
 	}
 
 	for _, container := range containers {
@@ -29,7 +30,7 @@ func (self *Delegate) Reconcile(namespace string, serviceName string, clout *clo
 		}
 	}
 
-	return nil, nil
+	return nil, nil, nil
 }
 
 func (self *Delegate) CreateContainer(container *sdk.Container) error {
@@ -66,7 +67,7 @@ func (self *Delegate) CreateContainer(container *sdk.Container) error {
 	}
 	args = append(args, container.Reference)
 
-	log.Infof("podman %s", util.Joinq(args, " "))
+	log.Infof("podman %s", util.JoinQuote(args, " "))
 	command := exec.Command("/usr/bin/podman", args...)
 	if err := command.Run(); err != nil {
 		return fmt.Errorf("podman create: %w", err)
@@ -85,7 +86,7 @@ func (self *Delegate) CreateContainer(container *sdk.Container) error {
 	defer file.Close()
 
 	args = []string{"generate", "systemd", "--new", "--name", "--container-prefix=" + servicePrefix, "--restart-policy=always", container.Name}
-	log.Infof("podman %s", util.Joinq(args, " "))
+	log.Infof("podman %s", util.JoinQuote(args, " "))
 	command = exec.Command("/usr/bin/podman", args...)
 	command.Stdout = file
 	if err := command.Run(); err != nil {
@@ -116,36 +117,4 @@ func (self *Delegate) CreateContainer(container *sdk.Container) error {
 	}
 
 	return nil
-}
-
-//
-// Reconcile
-//
-
-type Reconcile map[string]*ServiceIdentifiers
-
-func NewReconcile() Reconcile {
-	return make(map[string]*ServiceIdentifiers)
-}
-
-func (self Reconcile) Add(host string, identifier *ServiceIdentifier) bool {
-	var identifiers *ServiceIdentifiers
-	var ok bool
-	if identifiers, ok = self[host]; !ok {
-		identifiers = NewServiceIdentifiers()
-		self[host] = identifiers
-	}
-	return identifiers.Add(identifier)
-}
-
-func (self Reconcile) Merge(reconcile Reconcile) bool {
-	var added bool
-	for host, identifiers := range reconcile {
-		for _, identifier := range identifiers.List {
-			if self.Add(host, identifier) {
-				added = true
-			}
-		}
-	}
-	return added
 }

@@ -2,13 +2,14 @@ package agent
 
 import (
 	contextpkg "context"
+	"net"
 	"net/http"
 	"time"
 
 	fspkg "github.com/rakyll/statik/fs"
-	"github.com/tliron/khutulun/sdk"
 	_ "github.com/tliron/khutulun/web"
 	"github.com/tliron/kutil/format"
+	"github.com/tliron/kutil/util"
 )
 
 //
@@ -53,8 +54,8 @@ func NewHTTP(agent *Agent, protocol string, address string, port int) (*HTTP, er
 }
 
 func (self *HTTP) Start() error {
-	if listener, err := sdk.NewListener(self.Protocol, self.Address, self.Port); err == nil {
-		httpLog.Noticef("starting server on: %s", listener.Addr().String())
+	if listener, err := net.Listen(self.Protocol, util.JoinIPAddressPort(self.Address, self.Port)); err == nil {
+		httpLog.Noticef("starting server on %s", listener.Addr().String())
 		go func() {
 			if err := self.httpServer.Serve(listener); err != nil {
 				if err == http.ErrServerClosed {

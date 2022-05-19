@@ -1,6 +1,9 @@
 package main
 
-import cloutpkg "github.com/tliron/puccini/clout"
+import (
+	"github.com/tliron/khutulun/delegate"
+	cloutpkg "github.com/tliron/puccini/clout"
+)
 
 const servicePrefix = "khutulun"
 
@@ -13,7 +16,7 @@ type Delegate struct {
 }
 
 // delegate.Delegate interface
-func (self *Delegate) ProcessService(namespace string, serviceName string, phase string, clout *cloutpkg.Clout, coercedClout *cloutpkg.Clout) (*cloutpkg.Clout, error) {
+func (self *Delegate) ProcessService(namespace string, serviceName string, phase string, clout *cloutpkg.Clout, coercedClout *cloutpkg.Clout) (*cloutpkg.Clout, []delegate.Next, error) {
 	switch phase {
 	case "schedule":
 		return self.Schedule(namespace, serviceName, clout, coercedClout)

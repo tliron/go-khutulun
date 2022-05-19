@@ -3,6 +3,7 @@ package agent
 import (
 	"os"
 
+	delegatepkg "github.com/tliron/khutulun/delegate"
 	"github.com/tliron/kutil/logging"
 	cloutpkg "github.com/tliron/puccini/clout"
 )
@@ -37,16 +38,21 @@ func (self *Agent) ListResources(namespace string, serviceName string, type_ str
 	for _, package_ := range packages {
 		if lock, clout, err := self.OpenClout(package_.Namespace, package_.Name); err == nil {
 			logging.CallAndLogError(lock.Unlock, "unlock", log)
-
 			if err := self.CoerceClout(clout); err == nil {
-				for _, resource := range getResources(clout, type_) {
-					resources = append(resources, ResourceIdentifier{
-						Namespace: package_.Namespace,
-						Service:   package_.Name,
-						Type:      type_,
-						Name:      resource.name,
-						Host:      resource.host,
-					})
+				if resources_, err := self.getResources(package_.Namespace, package_.Name, clout, type_); err == nil {
+					for _, resource := range resources_ {
+						if resource.Type == type_ {
+							resources = append(resources, ResourceIdentifier{
+								Namespace: package_.Namespace,
+								Service:   package_.Name,
+								Type:      type_,
+								Name:      resource.Name,
+								Host:      resource.Host,
+							})
+						}
+					}
+				} else {
+					return nil, err
 				}
 			} else {
 				return nil, err
@@ -61,27 +67,15 @@ func (self *Agent) ListResources(namespace string, serviceName string, type_ str
 	return resources, nil
 }
 
-type Resource struct {
-	name string
-	host string
-}
-
-func getResources(clout *cloutpkg.Clout, type_ string) []Resource {
-	return nil
-
-	/*var resources []Resource
-
-	switch type_ {
-	case "runnable":
-		for _, container := range GetCloutContainers(clout) {
-			resources = append(resources, Resource{container.Name, container.Host})
-		}
-
-	case "connection":
-		for _, connection := range GetCloutConnections(clout) {
-			resources = append(resources, Resource{connection.Name, ""})
-		}
+func (self *Agent) getResources(namespace string, serviceName string, coercedClout *cloutpkg.Clout, type_ string) ([]delegatepkg.Resource, error) {
+	var delegate delegatepkg.Delegate
+	var client *delegatepkg.DelegatePluginClient
+	var err error
+	if client, delegate, err = self.GetDelegate(); err == nil {
+		defer client.Close()
+	} else {
+		return nil, err
 	}
 
-	return resources*/
+	return delegate.ListResources(namespace, serviceName, coercedClout)
 }

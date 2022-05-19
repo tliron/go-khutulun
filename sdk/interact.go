@@ -9,6 +9,12 @@ import (
 	statuspkg "google.golang.org/grpc/status"
 )
 
+// Both api.Agent_InteractServer and api.Agent_InteractClient
+type GRPCInteractor interface {
+	Send(*api.Interaction) error
+	Recv() (*api.Interaction, error)
+}
+
 type InteractFunc func(start *api.Interaction_Start) error
 
 func Interact(server GRPCInteractor, interact map[string]InteractFunc) error {
@@ -28,7 +34,7 @@ func Interact(server GRPCInteractor, interact map[string]InteractFunc) error {
 			return statuspkg.Error(codes.InvalidArgument, "first message must contain \"start\"")
 		}
 	} else {
-		return statuspkg.Errorf(codes.Aborted, "%s", err.Error())
+		return Aborted(err)
 	}
 }
 

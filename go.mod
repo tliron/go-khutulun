@@ -3,15 +3,13 @@ module github.com/tliron/khutulun
 go 1.18
 
 require (
+	github.com/charmbracelet/bubbles v0.10.3
 	github.com/charmbracelet/bubbletea v0.20.0
+	github.com/charmbracelet/lipgloss v0.5.0
 	github.com/danjacques/gofslock v0.0.0-20220131014315-6e321f4509c8
-	github.com/fogleman/ease v0.0.0-20170301025033-8da417bf1776
 	github.com/fsnotify/fsnotify v1.5.4
 	github.com/hashicorp/go-plugin v1.4.4
 	github.com/hashicorp/memberlist v0.3.1
-	github.com/lucasb-eyer/go-colorful v1.2.0
-	github.com/muesli/reflow v0.3.0
-	github.com/muesli/termenv v0.11.1-0.20220212125758-44cd13922739
 	github.com/rakyll/statik v0.1.7
 	github.com/spf13/cobra v1.4.0
 	github.com/tliron/kutil v0.1.59
@@ -65,6 +63,7 @@ require (
 	github.com/klauspost/compress v1.13.6 // indirect
 	github.com/klauspost/pgzip v1.2.5 // indirect
 	github.com/kortschak/utter v1.5.0 // indirect
+	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect
 	github.com/mattn/go-colorable v0.1.12 // indirect
 	github.com/mattn/go-isatty v0.0.14 // indirect
 	github.com/mattn/go-runewidth v0.0.13 // indirect
@@ -73,6 +72,8 @@ require (
 	github.com/mitchellh/go-testing-interface v1.0.0 // indirect
 	github.com/mitchellh/hashstructure/v2 v2.0.2 // indirect
 	github.com/muesli/ansi v0.0.0-20211018074035-2e021307bc4b // indirect
+	github.com/muesli/reflow v0.3.0 // indirect
+	github.com/muesli/termenv v0.11.1-0.20220212125758-44cd13922739 // indirect
 	github.com/oklog/run v1.0.0 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.0.2 // indirect

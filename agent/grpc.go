@@ -4,6 +4,7 @@ import (
 	contextpkg "context"
 	"io"
 	"io/fs"
+	"net"
 	"os"
 	"path/filepath"
 
@@ -12,6 +13,7 @@ import (
 	delegatepkg "github.com/tliron/khutulun/delegate"
 	"github.com/tliron/khutulun/sdk"
 	"github.com/tliron/kutil/logging"
+	"github.com/tliron/kutil/util"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	statuspkg "google.golang.org/grpc/status"
@@ -53,13 +55,13 @@ func (self *GRPC) Start() error {
 	api.RegisterAgentServer(self.grpcServer, self)
 
 	var err error
-	if self.Address, err = sdk.ToReachableAddress(self.Address); err != nil {
+	if self.Address, err = util.ToReachableIPAddress(self.Address); err != nil {
 		return err
 	}
 
 	start := func(address string) error {
-		if listener, err := sdk.NewListener(self.Protocol, address, self.Port); err == nil {
-			grpcLog.Noticef("starting server on: %s", listener.Addr().String())
+		if listener, err := net.Listen(self.Protocol, util.JoinIPAddressPort(address, self.Port)); err == nil {
+			grpcLog.Noticef("starting server on %s", listener.Addr().String())
 			go func() {
 				if err := self.grpcServer.Serve(listener); err != nil {
 					grpcLog.Errorf("%s", err.Error())
@@ -129,7 +131,7 @@ func (self *GRPC) AddHost(context contextpkg.Context, addHost *api.AddHost) (*em
 		if err := self.agent.gossip.AddHosts([]string{addHost.GossipAddress}); err == nil {
 			return new(emptypb.Empty), nil
 		} else {
-			return new(emptypb.Empty), statuspkg.Errorf(codes.Aborted, "%s", err.Error())
+			return new(emptypb.Empty), sdk.Aborted(err)
 		}
 	} else {
 		return new(emptypb.Empty), statuspkg.Error(codes.Aborted, "gossip not enabled")
@@ -143,12 +145,12 @@ func (self *GRPC) ListNamespaces(empty *emptypb.Empty, server api.Agent_ListName
 	if namespaces, err := self.agent.ListNamespaces(); err == nil {
 		for _, namespace := range namespaces {
 			if err := server.Send(&api.Namespace{Name: namespace}); err != nil {
-				return statuspkg.Errorf(codes.Aborted, "%s", err.Error())
+				return sdk.Aborted(err)
 			}
 		}
 		return nil
 	} else {
-		return statuspkg.Errorf(codes.Aborted, "%s", err.Error())
+		return sdk.Aborted(err)
 	}
 }
 
@@ -165,11 +167,11 @@ func (self *GRPC) ListPackages(listPackages *api.ListPackages, server api.Agent_
 			}
 
 			if err := server.Send(&identifier_); err != nil {
-				return statuspkg.Errorf(codes.Aborted, "%s", err.Error())
+				return sdk.Aborted(err)
 			}
 		}
 	} else {
-		return statuspkg.Errorf(codes.Aborted, "%s", err.Error())
+		return sdk.Aborted(err)
 	}
 
 	return nil
@@ -185,11 +187,11 @@ func (self *GRPC) ListPackageFiles(identifier *api.PackageIdentifier, server api
 				Path:       packageFile.Path,
 				Executable: packageFile.Executable,
 			}); err != nil {
-				return statuspkg.Errorf(codes.Aborted, "%s", err.Error())
+				return sdk.Aborted(err)
 			}
 		}
 	} else {
-		return statuspkg.Errorf(codes.Aborted, "%s", err.Error())
+		return sdk.Aborted(err)
 	}
 
 	return nil
@@ -215,7 +217,7 @@ func (self *GRPC) GetPackageFiles(getPackageFiles *api.GetPackageFiles, server a
 							if err := file.Close(); err != nil {
 								grpcLog.Errorf("file close: %s", err.Error())
 							}
-							return statuspkg.Errorf(codes.Aborted, "%s", err.Error())
+							return sdk.Aborted(err)
 						}
 					}
 					if err != nil {
@@ -225,7 +227,7 @@ func (self *GRPC) GetPackageFiles(getPackageFiles *api.GetPackageFiles, server a
 							if err := file.Close(); err != nil {
 								grpcLog.Errorf("file close: %s", err.Error())
 							}
-							return statuspkg.Errorf(codes.Aborted, "%s", err.Error())
+							return sdk.Aborted(err)
 						}
 					}
 				}
@@ -234,13 +236,13 @@ func (self *GRPC) GetPackageFiles(getPackageFiles *api.GetPackageFiles, server a
 					grpcLog.Errorf("file close: %s", err.Error())
 				}
 			} else {
-				return statuspkg.Errorf(codes.Aborted, "%s", err.Error())
+				return sdk.Aborted(err)
 			}
 		}
 
 		return nil
 	} else {
-		return statuspkg.Errorf(codes.Aborted, "%s", err.Error())
+		return sdk.Aborted(err)
 	}
 }
 
@@ -273,13 +275,13 @@ func (self *GRPC) SetPackageFiles(server api.Agent_SetPackageFilesServer) error 
 
 							if file != nil {
 								if err := file.Close(); err != nil {
-									return statuspkg.Errorf(codes.Aborted, "%s", err.Error())
+									return sdk.Aborted(err)
 								}
 								file = nil
 							}
 							path := filepath.Join(self.agent.getPackageDir(namespace, type_, name), content.File.Path)
 							if err := os.MkdirAll(filepath.Dir(path), 0777); err != nil {
-								return statuspkg.Errorf(codes.Aborted, "%s", err.Error())
+								return sdk.Aborted(err)
 							}
 
 							var mode fs.FileMode = 0666
@@ -288,7 +290,7 @@ func (self *GRPC) SetPackageFiles(server api.Agent_SetPackageFilesServer) error 
 							}
 
 							if file, err = os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, mode); err != nil {
-								return statuspkg.Errorf(codes.Aborted, "%s", err.Error())
+								return sdk.Aborted(err)
 							}
 						}
 
@@ -298,7 +300,7 @@ func (self *GRPC) SetPackageFiles(server api.Agent_SetPackageFilesServer) error 
 
 						if _, err := file.Write(content.Bytes); err != nil {
 							logging.CallAndLogError(file.Close, "file close", grpcLog)
-							return statuspkg.Errorf(codes.Aborted, "%s", err.Error())
+							return sdk.Aborted(err)
 						}
 					} else {
 						if err == io.EOF {
@@ -307,7 +309,7 @@ func (self *GRPC) SetPackageFiles(server api.Agent_SetPackageFilesServer) error 
 							if file != nil {
 								logging.CallAndLogError(file.Close, "file close", grpcLog)
 							}
-							return statuspkg.Errorf(codes.Aborted, "%s", err.Error())
+							return sdk.Aborted(err)
 						}
 					}
 				}
@@ -318,13 +320,13 @@ func (self *GRPC) SetPackageFiles(server api.Agent_SetPackageFilesServer) error 
 
 				return nil
 			} else {
-				return statuspkg.Errorf(codes.Aborted, "%s", err.Error())
+				return sdk.Aborted(err)
 			}
 		} else {
 			return statuspkg.Error(codes.InvalidArgument, "first message must contain \"start\"")
 		}
 	} else {
-		return statuspkg.Errorf(codes.Aborted, "%s", err.Error())
+		return sdk.Aborted(err)
 	}
 }
 
@@ -335,7 +337,7 @@ func (self *GRPC) RemovePackage(context contextpkg.Context, packageIdentifer *ap
 	if err := self.agent.DeletePackage(packageIdentifer.Namespace, packageIdentifer.Type.Name, packageIdentifer.Name); err == nil {
 		return new(emptypb.Empty), nil
 	} else {
-		return new(emptypb.Empty), statuspkg.Errorf(codes.Aborted, "%s", err.Error())
+		return new(emptypb.Empty), sdk.Aborted(err)
 	}
 }
 
@@ -346,7 +348,7 @@ func (self *GRPC) DeployService(context contextpkg.Context, deployService *api.D
 	if err := self.agent.DeployService(deployService.Template.Namespace, deployService.Template.Name, deployService.Service.Namespace, deployService.Service.Name); err == nil {
 		return new(emptypb.Empty), nil
 	} else {
-		return new(emptypb.Empty), statuspkg.Errorf(codes.Aborted, "%s", err.Error())
+		return new(emptypb.Empty), sdk.Aborted(err)
 	}
 }
 
@@ -367,11 +369,11 @@ func (self *GRPC) ListResources(listResources *api.ListResources, server api.Age
 			}
 
 			if err := server.Send(&identifier_); err != nil {
-				return statuspkg.Errorf(codes.Aborted, "%s", err.Error())
+				return sdk.Aborted(err)
 			}
 		}
 	} else {
-		return statuspkg.Errorf(codes.Aborted, "%s", err.Error())
+		return sdk.Aborted(err)
 	}
 
 	return nil
@@ -421,17 +423,16 @@ func (self *GRPC) Interact(server api.Agent_InteractServer) error {
 		"runnable": func(start *api.Interaction_Start) error {
 			// TODO: find host for runnable and relay if necessary
 
-			name := "runnable.podman"
-			command := self.agent.getPackageMainFile("common", "plugin", name)
-
-			client := delegatepkg.NewDelegatePluginClient(name, command)
-			defer client.Close()
-
-			if delegate, err := client.Delegate(); err == nil {
-				return delegate.Interact(server, start)
+			var delegate delegatepkg.Delegate
+			var client *delegatepkg.DelegatePluginClient
+			var err error
+			if client, delegate, err = self.agent.GetDelegate(); err == nil {
+				defer client.Close()
 			} else {
-				return statuspkg.Errorf(codes.Aborted, "%s", err.Error())
+				return sdk.Aborted(err)
 			}
+
+			return delegate.Interact(server, start)
 		},
 	})
 }

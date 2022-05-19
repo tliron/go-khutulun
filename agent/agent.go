@@ -11,8 +11,8 @@ import (
 type OnMessageFunc func(bytes []byte, broadcast bool)
 
 const (
-	ADD_HOST           = "khutulun.addHost"
-	RECONCILE_SERVICES = "khutulun.reconcileServices"
+	ADD_HOST        = "khutulun.addHost"
+	PROCESS_SERVICE = "khutulun.processService"
 )
 
 //
@@ -62,14 +62,12 @@ func (self *Agent) handleMessage(message any, broadcast bool) {
 			log.Errorf("%s", err.Error())
 		}
 
-	case RECONCILE_SERVICES:
-		/*identifiers, _ := ard.NewNode(message).Get("identifiers").List()
-		log.Info("received reconcileServices(...)")
-		for _, identifier := range identifiers {
-			namespace, _ := ard.NewNode(identifier).Get("namespace").String()
-			name, _ := ard.NewNode(identifier).Get("name").String()
-			self.ReconcileService(namespace, name)
-		}*/
+	case PROCESS_SERVICE:
+		namespace, _ := ard.NewNode(message).Get("namespace").String()
+		serviceName, _ := ard.NewNode(message).Get("serviceName").String()
+		phase, _ := ard.NewNode(message).Get("phase").String()
+		log.Infof("received processService(%q,%q,%q)", namespace, serviceName, phase)
+		self.ProcessService(namespace, serviceName, phase)
 
 	default:
 		log.Errorf("received unsupported message: %s", message)

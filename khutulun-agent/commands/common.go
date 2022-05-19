@@ -4,6 +4,6 @@ import (
 	"github.com/tliron/kutil/logging"
 )
 
-const toolName = "khutulun-host"
+const toolName = "khutulun-agent"
 
 var log = logging.GetLogger(toolName)

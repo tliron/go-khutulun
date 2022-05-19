@@ -39,12 +39,10 @@ func (self *Client) ListResources(namespace string, serviceName string, type_ st
 					Name:      identifier.Name,
 					Host:      identifier.Host,
 				})
+			} else if err == io.EOF {
+				break
 			} else {
-				if err == io.EOF {
-					break
-				} else {
-					return nil, sdk.UnpackGRPCError(err)
-				}
+				return nil, sdk.UnpackGRPCError(err)
 			}
 		}
 

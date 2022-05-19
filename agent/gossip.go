@@ -1,10 +1,10 @@
 package agent
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/hashicorp/memberlist"
-	"github.com/tliron/khutulun/sdk"
 	"github.com/tliron/kutil/format"
 	"github.com/tliron/kutil/logging"
 	"github.com/tliron/kutil/logging/sink"
@@ -36,7 +36,7 @@ func NewGossip(address string, port int) *Gossip {
 func (self *Gossip) Start() error {
 	var err error
 
-	if self.Address, err = sdk.ToReachableAddress(self.Address); err != nil {
+	if self.Address, err = util.ToReachableIPAddress(self.Address); err != nil {
 		return err
 	}
 
@@ -46,9 +46,9 @@ func (self *Gossip) Start() error {
 	config.AdvertisePort = self.Port
 	config.Delegate = self
 	config.Events = sink.NewMemberlistEventLog(gossipLog)
-	config.Logger = sink.NewMemberlistStandardLog([]string{"khutulun", "memberlist"})
+	config.Logger = sink.NewMemberlistStandardLog([]string{"memberlist"})
 
-	gossipLog.Noticef("starting server on: %s", sdk.JoinAddressPort(config.BindAddr, config.BindPort))
+	gossipLog.Noticef("starting server on %s", util.JoinIPAddressPort(config.BindAddr, config.BindPort))
 	if self.members, err = memberlist.Create(config); err == nil {
 		self.queue = &memberlist.TransmitLimitedQueue{
 			NumNodes: func() int {
@@ -119,20 +119,20 @@ func (self *Gossip) AddHosts(gossipAddresses []string) error {
 	return err
 }
 
-func (self *Gossip) SendJSON(host string, message any) (bool, error) {
+func (self *Gossip) SendJSON(host string, message any) error {
 	if code, err := format.EncodeJSON(message, ""); err == nil {
 		return self.Send(host, util.StringToBytes(code))
 	} else {
-		return false, err
+		return err
 	}
 }
 
-func (self *Gossip) Send(host string, message []byte) (bool, error) {
+func (self *Gossip) Send(host string, message []byte) error {
 	if node, ok := self.GetMember(host); ok {
 		gossipLog.Debugf("sending message to %s: %s", host, message)
-		return true, self.members.SendReliable(node, message)
+		return self.members.SendReliable(node, message)
 	} else {
-		return false, nil
+		return fmt.Errorf("member not found: %s", host)
 	}
 }
 

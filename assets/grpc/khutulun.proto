@@ -28,24 +28,37 @@ service Agent {
 }
 
 service Delegate {
+    rpc listResources(DelegateListResources) returns (stream ResourceIdentifier);
     rpc processService(ProcessService) returns (ProcessServiceResult);
-    //rpc instantiate(Config) returns (google.protobuf.Empty);
     rpc interact(stream Interaction) returns (stream Interaction);
+}
+
+message DelegateListResources {
+    ServiceIdentifier service = 1;
+    Clout coercedClout = 2;
 }
 
 message ProcessService {
     ServiceIdentifier service = 1;
-    string Phase = 2;
+    string phase = 2;
     Clout clout = 3;
-    Clout coerced = 4;
+    Clout coercedClout = 4;
 }
 
 message ProcessServiceResult {
     Clout clout = 1;
+    repeated NextService next = 2;
+}
+
+message NextService {
+    string host = 1;
+    ServiceIdentifier service = 2;
+    string phase = 3;
 }
 
 message Clout {
-    string yaml = 1;
+    bytes cbor = 1;
+    string yaml = 2;
 }
 
 message Config {

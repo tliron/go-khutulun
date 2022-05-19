@@ -88,6 +88,37 @@ Get It
 FAQ
 ---
 
+### What's wrong with Kubernetes?
+
+Kubernetes is delightfully minimalistic, as orchestrators go, but still makes some potentially costly
+decisions:
+
+* The requirement that every pod have its own IP address demands complex container networking
+  solutions and is a substantial obstacle for inter-cluster connectivity. For some use cases the cost
+  of this requirement is too high to bear. ([Multus](https://github.com/k8snetworkplumbingwg/multus-cni)
+  enables "side-loading" networking, but we still need a primary IP address on the Kubernetes
+  control plane.) Distributed storage solutions must also be made to participate in this networking
+  scheme.
+* Kubernetes is focused on one kind of runnable: pods of Docker-style containers. This means that we
+  also require a Docker-style container image repository (either external or internal to the cluster).
+  That's a not-insignficant cost. And what if we don't need or want to use containers? Sometimes we want
+  just bare processes, or virtual machines, or even other container technologies (e.g. systemd-nspawn).
+  (Yes, [KubeVirt](https://kubevirt.io/) enables VMs on Kubernetes, but they have to awkwardly dress up
+  as pods and participate in container networking.)
+* Kubernetes's resource data model, often represented as YAML manifests, has no relational
+  capabilities (except [ownership](https://kubernetes.io/docs/concepts/architecture/garbage-collection/)).
+  But cloud workloads are all about relationships, e.g. service meshes. This lack of topological
+  expressiveness is an obstacle to application and service modeling. (And, no,
+  [Helm charts](https://helm.sh/) are not graphs. Though, as an alternative, check out
+  [Turandot](https://turandot.puccini.cloud/), which brings TOSCA to Kubernetes.) Also, the Kubernetes
+  data model isn't easily extensible: custom resource definitions require admin access to set up and
+  custom resources do not behave exactly like built-in types.
+* Relying on etcd for cluster state limits its usability. Etcd documents have a maximum size of ~1KB.
+  If you need to share anything more substantial then you'll have to deploy your own solution.
+
+If none of the above is a problem for your use case then by all means stick to Kubernetes. Otherwise,
+try Khutulun, because it deliberately attempts to avoid these limitations.
+
 ### Why TOSCA?
 
 TOSCA is an open standard with broad industry support. It is, as of version 2.0, a pure

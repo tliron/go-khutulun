@@ -5,7 +5,6 @@ import (
 	"net"
 	"time"
 
-	"github.com/tliron/khutulun/sdk"
 	"github.com/tliron/kutil/logging"
 	"github.com/tliron/kutil/util"
 )
@@ -90,7 +89,7 @@ func (self *Server) Start(watcher bool, ticker bool) error {
 		self.gossip = NewGossip(self.GossipAddress, self.GossipPort)
 		self.gossip.onMessage = self.agent.onMessage
 		if self.grpc != nil {
-			self.gossip.meta = util.StringToBytes(sdk.JoinAddressPort(self.grpc.Address, self.grpc.Port))
+			self.gossip.meta = util.StringToBytes(util.JoinIPAddressPort(self.grpc.Address, self.grpc.Port))
 		}
 		if err := self.gossip.Start(); err != nil {
 			self.Stop()

@@ -16,9 +16,9 @@ var pluginCommand = &cobra.Command{
 }
 
 func getPluginArgs(args []string) []string {
-	args_ := []string{args[0] + "." + args[1]}
-	if len(args) > 2 {
-		args_ = append(args_, args[2:]...)
+	args_ := []string{args[0]}
+	if len(args) > 1 {
+		args_ = append(args_, args[1:]...)
 	}
 	return args_
 }

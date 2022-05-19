@@ -8,6 +8,14 @@ import (
 	statuspkg "google.golang.org/grpc/status"
 )
 
+func Abortedf(format string, args ...any) error {
+	return statuspkg.Errorf(codes.Aborted, format, args...)
+}
+
+func Aborted(err error) error {
+	return statuspkg.Errorf(codes.Aborted, "%s", err.Error())
+}
+
 type statusError struct {
 	status *statuspkg.Status
 }

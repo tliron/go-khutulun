@@ -2,9 +2,9 @@ package agent
 
 import (
 	"errors"
+	"fmt"
 	"net"
 
-	"github.com/tliron/khutulun/sdk"
 	"github.com/tliron/kutil/format"
 	"github.com/tliron/kutil/util"
 )
@@ -32,9 +32,9 @@ func NewBroadcaster(protocol string, address string, port int) *Broadcaster {
 }
 
 func (self *Broadcaster) Start() error {
-	if address, err := sdk.ToBroadcastAddress(self.address); err == nil {
-		if udpAddr, err := sdk.NewUDPAddr(self.Protocol, address, self.Port); err == nil {
-			broadcastLog.Noticef("starting broadcaster on: %s", udpAddr.String())
+	if address, err := util.ToBroadcastIPAddress(self.address); err == nil {
+		if udpAddr, err := net.ResolveUDPAddr(self.Protocol, util.JoinIPAddressPort(address, self.Port)); err == nil {
+			broadcastLog.Noticef("starting broadcaster on %s", udpAddr.String())
 			self.connection, err = net.DialUDP(self.Protocol, nil, udpAddr)
 			return err
 		} else {
@@ -64,8 +64,14 @@ func (self *Broadcaster) SendJSON(message any) error {
 func (self *Broadcaster) Send(message []byte) error {
 	if self.connection != nil {
 		broadcastLog.Debugf("sending broadcast: %s", message)
-		_, err := self.connection.Write(message)
-		return err
+		length := len(message)
+		if n, err := self.connection.Write(message); (err == nil) && (n == length) {
+			return nil
+		} else if err != nil {
+			return err
+		} else {
+			return fmt.Errorf("write %d bytes instead of %d", n, length)
+		}
 	} else {
 		return errors.New("not started")
 	}
@@ -113,8 +119,8 @@ func NewReceiver(protocol string, inter *net.Interface, address string, port int
 }
 
 func (self *Receiver) Start() error {
-	if address, err := sdk.NewUDPAddr(self.Protocol, self.Address, self.Port); err == nil {
-		broadcastLog.Noticef("starting receiver on: %s", address.String())
+	if address, err := net.ResolveUDPAddr(self.Protocol, util.JoinIPAddressPort(self.Address, self.Port)); err == nil {
+		broadcastLog.Noticef("starting receiver on %s", address.String())
 		if self.connection, err = net.ListenMulticastUDP(self.Protocol, self.Inter, address); err == nil {
 			if err := self.connection.SetReadBuffer(self.MaxMessageSize); err != nil {
 				return err
@@ -158,7 +164,7 @@ func (self *Receiver) read() {
 
 func (self *Receiver) ignore(address *net.UDPAddr) bool {
 	for _, ignore := range self.Ignore {
-		if sdk.IsUDPAddrEqual(address, ignore) {
+		if util.IsUDPAddrEqual(address, ignore) {
 			return true
 		}
 	}

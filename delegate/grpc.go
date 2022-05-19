@@ -2,14 +2,11 @@ package delegate
 
 import (
 	contextpkg "context"
-	"strings"
+	"io"
 
 	"github.com/tliron/khutulun/api"
 	"github.com/tliron/khutulun/sdk"
-	"github.com/tliron/kutil/format"
 	cloutpkg "github.com/tliron/puccini/clout"
-	"google.golang.org/grpc/codes"
-	statuspkg "google.golang.org/grpc/status"
 )
 
 //
@@ -27,29 +24,52 @@ func NewDelegateGRPCServer(implementation Delegate) *DelegateGRPCServer {
 }
 
 // api.DelegateServer interface
-func (self *DelegateGRPCServer) ProcessService(context contextpkg.Context, processService *api.ProcessService) (*api.ProcessServiceResult, error) {
-	if clout, err := cloutpkg.Read(strings.NewReader(processService.Clout.Yaml), "yaml"); err == nil {
-		if coercedClout, err := cloutpkg.Read(strings.NewReader(processService.Coerced.Yaml), "yaml"); err == nil {
-			if clout_, err := self.implementation.ProcessService(processService.Service.Namespace, processService.Service.Name, processService.Phase, clout, coercedClout); err == nil {
-				if clout_ != nil {
-					if clout__, err := format.Encode(clout_, "yaml", " ", false); err == nil {
-						return &api.ProcessServiceResult{
-							Clout: &api.Clout{Yaml: clout__},
-						}, nil
-					} else {
-						return new(api.ProcessServiceResult), statuspkg.Errorf(codes.Aborted, "%s", err.Error())
-					}
-				} else {
-					return new(api.ProcessServiceResult), nil
+func (self *DelegateGRPCServer) ListResources(listResources *api.DelegateListResources, server api.Delegate_ListResourcesServer) error {
+	if coercedClout, err := CloutFromAPI(listResources.CoercedClout); err == nil {
+		if resources, err := self.implementation.ListResources(listResources.Service.Namespace, listResources.Service.Name, coercedClout); err == nil {
+			for _, resource := range resources {
+				resource_ := api.ResourceIdentifier{
+					Service: &api.ServiceIdentifier{
+						Namespace: listResources.Service.Namespace,
+						Name:      listResources.Service.Name,
+					},
+					Type: resource.Type,
+					Name: resource.Name,
+					Host: resource.Host,
 				}
-			} else {
-				return nil, statuspkg.Errorf(codes.Aborted, "%s", err.Error())
+				if err := server.Send(&resource_); err != nil {
+					return sdk.Aborted(err)
+				}
 			}
 		} else {
-			return nil, statuspkg.Errorf(codes.Aborted, "%s", err.Error())
+			return sdk.Aborted(err)
 		}
 	} else {
-		return nil, statuspkg.Errorf(codes.Aborted, "%s", err.Error())
+		return sdk.Aborted(err)
+	}
+
+	return nil
+}
+
+// api.DelegateServer interface
+func (self *DelegateGRPCServer) ProcessService(context contextpkg.Context, processService *api.ProcessService) (*api.ProcessServiceResult, error) {
+	if clout, err := CloutFromAPI(processService.Clout); err == nil {
+		if coercedClout, err := CloutFromAPI(processService.CoercedClout); err == nil {
+			if clout_, next, err := self.implementation.ProcessService(processService.Service.Namespace, processService.Service.Name, processService.Phase, clout, coercedClout); err == nil {
+				var result api.ProcessServiceResult
+				if result.Clout, err = CloutToAPI(clout_); err != nil {
+					return new(api.ProcessServiceResult), sdk.Aborted(err)
+				}
+				result.Next = NextsToAPI(next)
+				return &result, nil
+			} else {
+				return new(api.ProcessServiceResult), sdk.Aborted(err)
+			}
+		} else {
+			return new(api.ProcessServiceResult), sdk.Aborted(err)
+		}
+	} else {
+		return new(api.ProcessServiceResult), sdk.Aborted(err)
 	}
 }
 
@@ -76,36 +96,70 @@ func NewDelegateGRPCClient(context contextpkg.Context, client api.DelegateClient
 }
 
 // Delegate interface
-func (self *DelegateGRPCClient) ProcessService(namespace string, serviceName string, phase string, clout *cloutpkg.Clout, coercedClout *cloutpkg.Clout) (*cloutpkg.Clout, error) {
-	if clout_, err := format.Encode(clout, "yaml", " ", false); err == nil {
-		if coercedClout_, err := format.Encode(coercedClout, "yaml", " ", false); err == nil {
+func (self *DelegateGRPCClient) ListResources(namespace string, serviceName string, coercedClout *cloutpkg.Clout) ([]Resource, error) {
+	if coercedClout_, err := CloutToAPI(coercedClout); err == nil {
+		listResources := api.DelegateListResources{
+			Service: &api.ServiceIdentifier{
+				Namespace: namespace,
+				Name:      serviceName,
+			},
+			CoercedClout: coercedClout_,
+		}
+		if client, err := self.client.ListResources(self.context, &listResources); err == nil {
+			var resources []Resource
+			for {
+				if resource, err := client.Recv(); err == nil {
+					resources = append(resources, Resource{
+						Type: resource.Type,
+						Name: resource.Name,
+						Host: resource.Host,
+					})
+				} else if err == io.EOF {
+					break
+				} else {
+					return nil, sdk.UnpackGRPCError(err)
+				}
+			}
+			return resources, nil
+		} else {
+			return nil, sdk.UnpackGRPCError(err)
+		}
+	} else {
+		return nil, err
+	}
+}
+
+// Delegate interface
+func (self *DelegateGRPCClient) ProcessService(namespace string, serviceName string, phase string, clout *cloutpkg.Clout, coercedClout *cloutpkg.Clout) (*cloutpkg.Clout, []Next, error) {
+	if clout_, err := CloutToAPI(clout); err == nil {
+		if coercedClout_, err := CloutToAPI(coercedClout); err == nil {
 			processService := api.ProcessService{
 				Service: &api.ServiceIdentifier{
 					Namespace: namespace,
 					Name:      serviceName,
 				},
-				Phase:   phase,
-				Clout:   &api.Clout{Yaml: clout_},
-				Coerced: &api.Clout{Yaml: coercedClout_},
+				Phase:        phase,
+				Clout:        clout_,
+				CoercedClout: coercedClout_,
 			}
 			if result, err := self.client.ProcessService(self.context, &processService); err == nil {
-				if (result != nil) && (result.Clout != nil) {
-					if clout__, err := cloutpkg.Read(strings.NewReader(result.Clout.Yaml), "yaml"); err == nil {
-						return clout__, nil
-					} else {
-						return nil, err
+				if result != nil {
+					var clout__ *cloutpkg.Clout
+					if clout__, err = CloutFromAPI(result.Clout); err != nil {
+						return nil, nil, err
 					}
+					return clout__, NextsFromAPI(result.Next), nil
 				} else {
-					return nil, nil
+					return nil, nil, nil
 				}
 			} else {
-				return nil, sdk.UnpackGRPCError(err)
+				return nil, nil, sdk.UnpackGRPCError(err)
 			}
 		} else {
-			return nil, err
+			return nil, nil, err
 		}
 	} else {
-		return nil, err
+		return nil, nil, err
 	}
 }
 

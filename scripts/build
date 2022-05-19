@@ -20,4 +20,4 @@ function build () {
 
 build khutulun
 build khutulun-agent
-build khutulun-plugin-runnable-podman
+build khutulun-delegate-podman

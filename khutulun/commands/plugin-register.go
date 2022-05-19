@@ -10,9 +10,9 @@ func init() {
 }
 
 var pluginRegisterCommand = &cobra.Command{
-	Use:   "register [PLUGIN TYPE] [PLUGIN NAME] [[CONTENT PATH or URL]]",
+	Use:   "register [PLUGIN NAME] [[CONTENT PATH or URL]]",
 	Short: "Register a plugin",
-	Args:  cobra.RangeArgs(2, 3),
+	Args:  cobra.RangeArgs(1, 2),
 	Run: func(cmd *cobra.Command, args []string) {
 		registerPackage(namespace, "plugin", getPluginArgs(args))
 	},
