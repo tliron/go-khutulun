@@ -46,7 +46,7 @@ func (self *Gossip) Start() error {
 	config.AdvertisePort = self.Port
 	config.Delegate = self
 	config.Events = sink.NewMemberlistEventLog(gossipLog)
-	config.Logger = sink.NewMemberlistStandardLog([]string{"memberlist"})
+	config.Logger = sink.NewMemberlistStandardLog([]string{"gossip"})
 
 	gossipLog.Noticef("starting server on %s", util.JoinIPAddressPort(config.BindAddr, config.BindPort))
 	if self.members, err = memberlist.Create(config); err == nil {
@@ -70,10 +70,7 @@ func (self *Gossip) Announce() error {
 		return nil
 	}
 
-	command := make(map[string]any)
-	command["command"] = ADD_HOST
-	command["address"] = self.LocalGossipAddress()
-	return self.broadcaster.SendJSON(command)
+	return self.broadcaster.SendJSON(NewAddHostCommand(self.LocalGossipAddress()))
 }
 
 func (self *Gossip) Stop() error {

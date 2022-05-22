@@ -3,11 +3,12 @@ module github.com/tliron/khutulun
 go 1.18
 
 require (
-	github.com/charmbracelet/bubbles v0.10.3
 	github.com/charmbracelet/bubbletea v0.20.0
 	github.com/charmbracelet/lipgloss v0.5.0
 	github.com/danjacques/gofslock v0.0.0-20220131014315-6e321f4509c8
+	github.com/evertras/bubble-table v0.12.0
 	github.com/fsnotify/fsnotify v1.5.4
+	github.com/fxamacker/cbor/v2 v2.4.0
 	github.com/hashicorp/go-plugin v1.4.4
 	github.com/hashicorp/memberlist v0.3.1
 	github.com/rakyll/statik v0.1.7
@@ -15,9 +16,9 @@ require (
 	github.com/tliron/kutil v0.1.59
 	github.com/tliron/puccini v0.20.1
 	github.com/tliron/yamlkeys v1.3.5
-	google.golang.org/grpc v1.46.0
+	google.golang.org/grpc v1.46.2
 	google.golang.org/protobuf v1.28.0
-	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
+	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (
@@ -25,7 +26,9 @@ require (
 	github.com/ProtonMail/go-crypto v0.0.0-20210428141323-04723f9f07d7 // indirect
 	github.com/acomagu/bufpipe v1.0.3 // indirect
 	github.com/armon/go-metrics v0.3.10 // indirect
+	github.com/atotto/clipboard v0.1.4 // indirect
 	github.com/beevik/etree v1.1.0 // indirect
+	github.com/charmbracelet/bubbles v0.10.3 // indirect
 	github.com/containerd/console v1.0.3 // indirect
 	github.com/containerd/stargz-snapshotter/estargz v0.10.1 // indirect
 	github.com/coreos/go-systemd v0.0.0-20191104093116-d3cd4ed1dbcf // indirect
@@ -38,7 +41,6 @@ require (
 	github.com/dop251/goja v0.0.0-20220501172647-e1eca0b61fa9 // indirect
 	github.com/emirpasic/gods v1.12.0 // indirect
 	github.com/fatih/color v1.13.0 // indirect
-	github.com/fxamacker/cbor/v2 v2.4.0 // indirect
 	github.com/go-git/gcfg v1.5.0 // indirect
 	github.com/go-git/go-billy/v5 v5.3.1 // indirect
 	github.com/go-git/go-git/v5 v5.4.2 // indirect

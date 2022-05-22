@@ -138,7 +138,7 @@ func (self *Agent) getPackageMainFile(namespace string, type_ string, name strin
 		}
 		return ""
 
-	case "plugin":
+	case "delegate":
 		if entries, err := os.ReadDir(dir); err == nil {
 			for _, entry := range entries {
 				path := filepath.Join(dir, entry.Name())

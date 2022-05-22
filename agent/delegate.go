@@ -1,90 +1,139 @@
 package agent
 
 import (
+	"fmt"
+	"os"
+
+	"github.com/danjacques/gofslock/fslock"
 	delegatepkg "github.com/tliron/khutulun/delegate"
+	"github.com/tliron/kutil/ard"
 	"github.com/tliron/kutil/logging"
 	cloutpkg "github.com/tliron/puccini/clout"
 )
 
-func (self *Agent) GetDelegate() (*delegatepkg.DelegatePluginClient, delegatepkg.Delegate, error) {
-	name := "podman"
-	command := self.getPackageMainFile("common", "plugin", name)
-	client := delegatepkg.NewDelegatePluginClient(name, command)
-	if delegate, err := client.Delegate(); err == nil {
-		return client, delegate, nil
-	} else {
-		client.Close()
-		return nil, nil, err
-	}
-}
-
-func (self *Agent) ProcessAllServices(phase string) {
-	if identifiers, err := self.ListPackages("", "clout"); err == nil {
-		for _, identifier := range identifiers {
-			self.ProcessService(identifier.Namespace, identifier.Name, phase)
+func (self *Agent) GetDelegateCommand(namespace string, delegateName string) (string, fslock.Handle, error) {
+	if lock, err := self.lockPackage(namespace, "delegate", delegateName, false); err == nil {
+		return self.getPackageMainFile(namespace, "delegate", delegateName), lock, nil
+	} else if os.IsNotExist(err) {
+		namespace = "common"
+		if lock, err := self.lockPackage(namespace, "delegate", delegateName, false); err == nil {
+			return self.getPackageMainFile(namespace, "delegate", delegateName), lock, nil
+		} else if os.IsNotExist(err) {
+			return "", nil, fmt.Errorf("delegate not found: %s/%s", namespace, delegateName)
+		} else {
+			return "", nil, err
 		}
 	} else {
-		delegateLog.Errorf("%s", err.Error())
+		return "", nil, err
 	}
 }
 
-func (self *Agent) ProcessService(namespace string, serviceName string, phase string) {
-	if namespace == "" {
-		namespace = "_"
-	}
+//
+// Delegate
+//
 
-	delegateLog.Infof("processing service %s: %s/%s", phase, namespace, serviceName)
+type Delegate interface {
+	Delegate() delegatepkg.Delegate
+	Release() error
+}
 
-	var delegate delegatepkg.Delegate
-	var client *delegatepkg.DelegatePluginClient
-	var err error
-	if client, delegate, err = self.GetDelegate(); err == nil {
-		defer client.Close()
-	} else {
-		delegateLog.Errorf("%s", err.Error())
-		return
-	}
+//
+// PluginDelegate
+//
 
-	var clout_ *cloutpkg.Clout
-	var next []delegatepkg.Next
+type PluginDelegate struct {
+	delegate delegatepkg.Delegate
+	client   *delegatepkg.DelegatePluginClient
+}
 
-	if lock, clout, err := self.OpenClout(namespace, serviceName); err == nil {
+func (self *Agent) NewPluginDelegate(namespace string, delegateName string) (*PluginDelegate, error) {
+	if command, lock, err := self.GetDelegateCommand(namespace, delegateName); err == nil {
 		defer logging.CallAndLogError(lock.Unlock, "unlock", delegateLog)
+		var self PluginDelegate
+		self.client = delegatepkg.NewDelegatePluginClient(delegateName, command)
+		if self.delegate, err = self.client.Delegate(); err == nil {
+			return &self, nil
+		} else {
+			self.client.Close()
+			return nil, err
+		}
+	} else {
+		return nil, err
+	}
+}
 
-		if coerced, err := clout.Copy(); err == nil {
-			if err := self.CoerceClout(coerced); err == nil {
-				if clout_, next, err = delegate.ProcessService(namespace, serviceName, phase, clout, coerced); err == nil {
-					if clout_ != nil {
-						if err := self.SaveClout(namespace, serviceName, clout_); err != nil {
-							delegateLog.Errorf("%s", err.Error())
+// Delegate interface
+func (self *PluginDelegate) Delegate() delegatepkg.Delegate {
+	return self.delegate
+}
+
+// Delegate interface
+func (self *PluginDelegate) Release() error {
+	self.client.Close()
+	return nil
+}
+
+func (self *Agent) GetDelegate(namespace string, delegateName string) (Delegate, error) {
+	return self.NewPluginDelegate(namespace, delegateName)
+}
+
+//
+// Delegates
+//
+
+type Delegates struct {
+	agent     *Agent
+	delegates map[string]Delegate
+}
+
+func (self *Agent) NewDelegates() *Delegates {
+	return &Delegates{
+		agent:     self,
+		delegates: make(map[string]Delegate),
+	}
+}
+
+func (self *Delegates) All() []delegatepkg.Delegate {
+	delegates := make([]delegatepkg.Delegate, len(self.delegates))
+	index := 0
+	for _, delegate := range self.delegates {
+		delegates[index] = delegate.Delegate()
+		index++
+	}
+	return delegates
+}
+
+func (self *Delegates) Get(namespace string, delegateName string) (delegatepkg.Delegate, error) {
+	if delegate, ok := self.delegates[delegateName]; ok {
+		return delegate.Delegate(), nil
+	} else if delegate, err := self.agent.GetDelegate(namespace, delegateName); err == nil {
+		self.delegates[delegateName] = delegate
+		return delegate.Delegate(), nil
+	} else {
+		return nil, err
+	}
+}
+
+func (self *Delegates) Fill(namespace string, coercedClout *cloutpkg.Clout) {
+	for _, vertex := range coercedClout.Vertexes {
+		if capabilities, ok := ard.NewNode(vertex.Properties).Get("capabilities").StringMap(); ok {
+			for _, capability := range capabilities {
+				if types, ok := ard.NewNode(capability).Get("types").StringMap(); ok {
+					if _, ok := types["cloud.puccini.khutulun::Runnable"]; ok {
+						if delegateName, ok := ard.NewNode(capability).Get("attributes").Get("delegate").String(); ok {
+							if _, err := self.Get(namespace, delegateName); err != nil {
+								delegateLog.Errorf("%s", err.Error())
+							}
 						}
 					}
-				} else {
-					delegateLog.Errorf("%s", err.Error())
 				}
-			} else {
-				delegateLog.Errorf("%s", err.Error())
 			}
-		} else {
-			delegateLog.Errorf("%s", err.Error())
 		}
-	} else {
-		delegateLog.Errorf("%s", err.Error())
 	}
+}
 
-	//log.Infof("NEXT: %v", next)
-	for _, next_ := range next {
-		if next_.Host == self.host {
-			self.ProcessService(next_.Namespace, next_.ServiceName, next_.Phase)
-		} else {
-			command := make(map[string]any)
-			command["command"] = PROCESS_SERVICE
-			command["namespace"] = next_.Namespace
-			command["serviceName"] = next_.ServiceName
-			command["phase"] = next_.Phase
-			if err := self.gossip.SendJSON(next_.Host, command); err != nil {
-				delegateLog.Errorf("%s", err.Error())
-			}
-		}
+func (self *Delegates) Release() {
+	for _, delegate := range self.delegates {
+		logging.CallAndLogError(delegate.Release, "release", delegateLog)
 	}
 }

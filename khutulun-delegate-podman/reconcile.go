@@ -24,7 +24,8 @@ func (self *Delegate) Reconcile(namespace string, serviceName string, clout *clo
 
 	for _, container := range containers {
 		if container.Host == self.host {
-			if err := self.CreateContainer(container); err != nil {
+			//format.WriteGo(container, logging.GetWriter(), " ")
+			if err := self.CreateContainerUserService(container); err != nil {
 				log.Errorf("instantiate: %s", err.Error())
 			}
 		}
@@ -33,7 +34,7 @@ func (self *Delegate) Reconcile(namespace string, serviceName string, clout *clo
 	return nil, nil, nil
 }
 
-func (self *Delegate) CreateContainer(container *sdk.Container) error {
+func (self *Delegate) CreateContainerUserService(container *sdk.Container) error {
 	serviceName := fmt.Sprintf("%s-%s.service", servicePrefix, container.Name)
 
 	user_, err := user.Current()
@@ -56,14 +57,16 @@ func (self *Delegate) CreateContainer(container *sdk.Container) error {
 	args := []string{"create", "--name=" + container.Name, "--replace"} // --tty?
 	args = append(args, container.CreateArguments...)
 	for _, port := range container.Ports {
-		protocol := "tcp"
-		switch port.Protocol {
-		case "UDP":
-			protocol = "udp"
-		case "SCTP":
-			protocol = "sctp"
+		if port.External != 0 {
+			protocol := "tcp"
+			switch port.Protocol {
+			case "UDP":
+				protocol = "udp"
+			case "SCTP":
+				protocol = "sctp"
+			}
+			args = append(args, fmt.Sprintf("--publish=%d:%d/%s", port.External, port.Internal, protocol))
 		}
-		args = append(args, fmt.Sprintf("--publish=%d:%d/%s", port.External, port.Internal, protocol))
 	}
 	args = append(args, container.Reference)
 

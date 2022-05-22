@@ -4,7 +4,7 @@ After=network-online.target
 Wants=network-online.target
 
 [Service]
-ExecStart=/mnt/khutulun/common/plugin/agent/agent server --journal -v
+ExecStart=/mnt/khutulun/common/delegate/agent/khutulun-agent server --journal -v
 
 [Install]
 WantedBy=default.target

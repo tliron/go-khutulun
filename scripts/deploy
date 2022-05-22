@@ -10,8 +10,8 @@ ssh "$HOST" systemctl --user stop khutulun-agent.service || true
 
 # Note: copying the file over NFS could involve a delay leading to a "text file busy" error
 # when trying to run it, so we will copy it over rsync/ssh
-ssh "$HOST" mkdir --parents /mnt/khutulun/common/plugin/agent/
-rsync "$GOPATH/bin/khutulun-agent" "$HOST:/mnt/khutulun/common/plugin/agent/agent"
+ssh "$HOST" mkdir --parents /mnt/khutulun/common/delegate/agent/
+rsync "$GOPATH/bin/khutulun-agent" "$HOST:/mnt/khutulun/common/delegate/agent/khutulun-agent"
 
 ssh "$HOST" mkdir --parents .config/systemd/user/
 rsync "$ROOT/assets/systemd/khutulun-agent.service" "$HOST:.config/systemd/user/"

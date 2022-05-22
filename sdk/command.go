@@ -10,6 +10,7 @@ import (
 	"github.com/tliron/khutulun/api"
 	"github.com/tliron/kutil/exec"
 	"github.com/tliron/kutil/logging"
+	"github.com/tliron/kutil/util"
 	"google.golang.org/grpc/codes"
 	statuspkg "google.golang.org/grpc/status"
 )
@@ -48,6 +49,8 @@ func NewCommand(start *api.Interaction_Start, log logging.Logger) *exec.Command 
 func StartCommand(command *exec.Command, server GRPCInteractor, log logging.Logger) error {
 	context, cancel := contextpkg.WithCancel(contextpkg.Background())
 	defer cancel()
+
+	log.Infof("starting command: %s %s", command.Name, util.JoinQuote(command.Args, " "))
 
 	process, err := command.Start(context)
 	if err != nil {

@@ -68,14 +68,19 @@ func (self *Agent) ListResources(namespace string, serviceName string, type_ str
 }
 
 func (self *Agent) getResources(namespace string, serviceName string, coercedClout *cloutpkg.Clout, type_ string) ([]delegatepkg.Resource, error) {
-	var delegate delegatepkg.Delegate
-	var client *delegatepkg.DelegatePluginClient
-	var err error
-	if client, delegate, err = self.GetDelegate(); err == nil {
-		defer client.Close()
-	} else {
-		return nil, err
+	delegates := self.NewDelegates()
+	delegates.Fill(namespace, coercedClout)
+	defer delegates.Release()
+
+	var resources []delegatepkg.Resource
+
+	for _, delegate := range delegates.All() {
+		if resources_, err := delegate.ListResources(namespace, serviceName, coercedClout); err == nil {
+			resources = append(resources, resources_...)
+		} else {
+			return nil, err
+		}
 	}
 
-	return delegate.ListResources(namespace, serviceName, coercedClout)
+	return resources, nil
 }

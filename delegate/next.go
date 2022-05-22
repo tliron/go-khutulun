@@ -32,6 +32,22 @@ func AppendNext(next []Next, host string, phase string, namespace string, servic
 	return append(next, next_)
 }
 
+func MergeNexts(to []Next, from []Next) []Next {
+	for _, next := range from {
+		var exists bool
+		for _, next_ := range to {
+			if next_.Equals(next) {
+				exists = true
+				break
+			}
+		}
+		if !exists {
+			to = append(to, next)
+		}
+	}
+	return to
+}
+
 func NextToAPI(next Next) *api.NextService {
 	return &api.NextService{
 		Host:  next.Host,

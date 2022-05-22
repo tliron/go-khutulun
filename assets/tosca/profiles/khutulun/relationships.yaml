@@ -8,8 +8,9 @@ imports:
 relationship_types:
 
   Connection:
-    metadata:
-      khutulun.plugin: connection
+    attributes:
+      delegate:
+        type: string
     interfaces:
       events:
         type: Events
@@ -30,6 +31,9 @@ relationship_types:
   IPPort:
     derived_from: Connection
     attributes:
+      delegate:
+        type: string
+        default: ipport
       ip:
         type: IPAddress
         default: '::'

@@ -99,6 +99,7 @@ message ListPackages {
 
 message GetPackageFiles {
     PackageIdentifier identifier = 1;
+    bool coerce = 2;
     repeated string paths = 3;
 }
 

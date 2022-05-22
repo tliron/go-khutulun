@@ -7,8 +7,6 @@ import (
 	cloutpkg "github.com/tliron/puccini/clout"
 )
 
-const servicePrefix = "khutulun"
-
 //
 // Delegate
 //

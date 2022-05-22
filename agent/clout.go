@@ -1,8 +1,9 @@
 package agent
 
 import (
-	"errors"
+	"io"
 	"os"
+	"strings"
 
 	"github.com/danjacques/gofslock/fslock"
 	"github.com/tliron/kutil/format"
@@ -31,8 +32,7 @@ func (self *Agent) SaveClout(serviceNamespace string, serviceName string, clout 
 	cloutPath := self.getPackageMainFile(serviceNamespace, "clout", serviceName)
 	log.Infof("writing to %q", cloutPath)
 	if file, err := os.OpenFile(cloutPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0666); err == nil {
-		defer file.Close()
-
+		defer logging.CallAndLogError(file.Close, "file close", log)
 		return format.WriteYAML(clout, file, "  ", false)
 	} else {
 		return err
@@ -42,9 +42,30 @@ func (self *Agent) SaveClout(serviceNamespace string, serviceName string, clout 
 func (self *Agent) CoerceClout(clout *cloutpkg.Clout) error {
 	problems := problemspkg.NewProblems(nil)
 	js.Coerce(clout, problems, self.urlContext, true, "yaml", true, false, false)
-	if problems.Empty() {
-		return nil
+	return problems.ToError(true)
+}
+
+func (self *Agent) OpenFile(path string, coerceClout bool) (io.ReadCloser, error) {
+	if coerceClout {
+		if file, err := os.Open(path); err == nil {
+			defer logging.CallAndLogError(file.Close, "file close", log)
+			if clout, err := cloutpkg.Read(file, "yaml"); err == nil {
+				if err := self.CoerceClout(clout); err == nil {
+					if clout_, err := format.EncodeYAML(clout, "  ", false); err == nil {
+						return io.NopCloser(strings.NewReader(clout_)), nil
+					} else {
+						return nil, err
+					}
+				} else {
+					return nil, err
+				}
+			} else {
+				return nil, err
+			}
+		} else {
+			return nil, err
+		}
 	} else {
-		return errors.New(problems.String())
+		return os.Open(path)
 	}
 }

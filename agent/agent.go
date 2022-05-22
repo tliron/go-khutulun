@@ -10,11 +10,6 @@ import (
 
 type OnMessageFunc func(bytes []byte, broadcast bool)
 
-const (
-	ADD_HOST        = "khutulun.addHost"
-	PROCESS_SERVICE = "khutulun.processService"
-)
-
 //
 // Agent
 //
@@ -45,31 +40,8 @@ func (self *Agent) Release() error {
 // OnMessageFunc signature
 func (self *Agent) onMessage(bytes []byte, broadcast bool) {
 	if message, _, err := ard.DecodeJSON(util.BytesToString(bytes), false); err == nil {
-		go self.handleMessage(message, broadcast)
+		go self.handleCommand(message, broadcast)
 	} else {
 		log.Errorf("%s", err.Error())
-	}
-}
-
-func (self *Agent) handleMessage(message any, broadcast bool) {
-	command, _ := ard.NewNode(message).Get("command").String()
-
-	switch command {
-	case ADD_HOST:
-		address, _ := ard.NewNode(message).Get("address").String()
-		log.Infof("received addHost(%q)", address)
-		if err := self.gossip.AddHosts([]string{address}); err != nil {
-			log.Errorf("%s", err.Error())
-		}
-
-	case PROCESS_SERVICE:
-		namespace, _ := ard.NewNode(message).Get("namespace").String()
-		serviceName, _ := ard.NewNode(message).Get("serviceName").String()
-		phase, _ := ard.NewNode(message).Get("phase").String()
-		log.Infof("received processService(%q,%q,%q)", namespace, serviceName, phase)
-		self.ProcessService(namespace, serviceName, phase)
-
-	default:
-		log.Errorf("received unsupported message: %s", message)
 	}
 }

@@ -5,6 +5,7 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"strings"
 
 	clientpkg "github.com/tliron/khutulun/client"
 	formatpkg "github.com/tliron/kutil/format"
@@ -171,9 +172,16 @@ func fetchPackage(namespace string, type_ string, args []string) {
 	name := args[0]
 	if len(args) > 1 {
 		path := args[1]
-
-		err = client.GetPackageFile(namespace, type_, name, path, terminal.Stdout)
-		util.FailOnError(err)
+		if (type_ == "clout") && terminal.Colorize {
+			var buffer strings.Builder
+			err = client.GetPackageFile(namespace, type_, name, path, coerce, &buffer)
+			util.FailOnError(err)
+			err = formatpkg.PrettifyYAML(buffer.String(), terminal.Stdout)
+			util.FailOnError(err)
+		} else {
+			err = client.GetPackageFile(namespace, type_, name, path, coerce, terminal.Stdout)
+			util.FailOnError(err)
+		}
 	} else {
 		files, err := client.ListPackageFiles(namespace, type_, name)
 		util.FailOnError(err)

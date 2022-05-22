@@ -68,9 +68,9 @@ topology_template:
   policies:
 
     - podman:
-        type: kh:Run
+        type: kh:Delegation
         properties:
-          runner: podman
+          delegate: podman
         targets:
         - frontend
         - web-server
@@ -83,3 +83,10 @@ topology_template:
         targets:
         - frontend
         - web-server
+
+  outputs:
+
+    port:
+      value:
+        concat:
+        - { get_attribute: [ web-server, connectable, ports, 0, internal ] }

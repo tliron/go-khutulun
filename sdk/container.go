@@ -51,8 +51,8 @@ func GetContainerPorts(capability any) []Port {
 	capabilityAttributes, _ := ard.NewNode(capability).Get("attributes").StringMap()
 	if ports_, ok := ard.NewNode(capabilityAttributes).Get("ports").List(); ok {
 		for _, port := range ports_ {
-			external, _ := ard.NewNode(port).Get("external").Integer()
-			internal, _ := ard.NewNode(port).Get("internal").Integer()
+			external, _ := ard.NewNode(port).Get("external").NumberAsInteger()
+			internal, _ := ard.NewNode(port).Get("internal").NumberAsInteger()
 			protocol, _ := ard.NewNode(port).Get("protocol").String()
 			ports = append(ports, Port{
 				External: external,
@@ -81,7 +81,7 @@ func GetContainer(vertex *cloutpkg.Vertex, capabilityName string, capability any
 	self.Reference, _ = ard.NewNode(capabilityProperties).Get("image").Get("reference").String()
 	if self.Reference == "" {
 		host, _ := ard.NewNode(capabilityProperties).Get("image").Get("host").String()
-		port, _ := ard.NewNode(capabilityProperties).Get("image").Get("port").Integer()
+		port, _ := ard.NewNode(capabilityProperties).Get("image").Get("port").NumberAsInteger()
 		repository, _ := ard.NewNode(capabilityProperties).Get("image").Get("repository").String()
 		image, _ := ard.NewNode(capabilityProperties).Get("image").Get("image").String()
 		tag, _ := ard.NewNode(capabilityProperties).Get("image").Get("tag").String()

@@ -94,7 +94,7 @@ func (self *Client) ListPackageFiles(namespace string, type_ string, name string
 	}
 }
 
-func (self *Client) GetPackageFile(namespace string, type_ string, name string, path string, writer io.Writer) error {
+func (self *Client) GetPackageFile(namespace string, type_ string, name string, path string, coerce bool, writer io.Writer) error {
 	context, cancel := self.newContextWithTimeout()
 	defer cancel()
 
@@ -104,7 +104,7 @@ func (self *Client) GetPackageFile(namespace string, type_ string, name string, 
 		Name:      name,
 	}
 
-	if client, err := self.client.GetPackageFiles(context, &api.GetPackageFiles{Identifier: &identifier, Paths: []string{path}}); err == nil {
+	if client, err := self.client.GetPackageFiles(context, &api.GetPackageFiles{Identifier: &identifier, Paths: []string{path}, Coerce: coerce}); err == nil {
 		for {
 			if content, err := client.Recv(); err == nil {
 				if _, err := writer.Write(content.Bytes); err != nil {

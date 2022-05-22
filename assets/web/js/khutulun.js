@@ -136,7 +136,7 @@ $(document).ready(function () {
   syncTable('services', 'api/package/list?type=clout', ['namespace', 'name', 'description']);
   syncTable('templates', 'api/package/list?type=template', ['namespace', 'name', 'description']);
   syncTable('profiles', 'api/package/list?type=profile', ['namespace', 'name', 'description']);
-  syncTable('plugins', 'api/package/list?type=plugin', ['namespace', 'name', 'description']);
+  syncTable('delegates', 'api/package/list?type=delegate', ['namespace', 'name', 'description']);
   syncTable('runnables', 'api/resource/list?type=runnable', ['namespace', 'name', 'description', 'host']);
   syncTable('connections', 'api/resource/list?type=connection', ['namespace', 'name', 'description', 'host']);
   syncTable('hosts', 'api/host/list', ['name', 'grpcAddress']);

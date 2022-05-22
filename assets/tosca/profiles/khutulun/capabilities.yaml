@@ -7,14 +7,9 @@ imports:
 capability_types:
 
   Runnable:
-    metadata:
-      khutulun.plugin: runnable
     description: >-
       Base type for continuously-running Service and short-running Task.
     properties:
-      runner:
-        type: string
-        required: false
       temporality:
         type: string
         constraints:
@@ -38,12 +33,12 @@ capability_types:
         type: boolean
         default: true
     attributes:
+      delegate:
+        type: string
       host:
         type: string
 
   Connectable:
-    metadata:
-      khutulun.plugin: connectable
     description: >-
       By default has no opinion on the semantics of incoming connections. For example, all connections could
       share the same port and be sesssionless. Or, it could be the same port but require an authenticated
@@ -55,25 +50,22 @@ capability_types:
         type: boolean
         default: false
 
-  Storage:
-    metadata:
-      khutulun.plugin: storage
+  Storage: {}
 
   # Runnables
 
   Process:
     derived_from: Runnable
     properties:
-      runner:
-        default: shell
       command:
         type: Command
+    attributes:
+      delegate:
+        default: bare
 
   Container:
     derived_from: Runnable
     properties:
-      runner:
-        default: podman
       name:
         description: >-
           If not provided will use the node's name.
@@ -88,11 +80,14 @@ capability_types:
         type: list
         entry_schema: string
         required: false
+    attributes:
+      delegate:
+        default: podman
 
   Pod:
     derived_from: Runnable
     properties:
-      runner:
+      delegate:
         default: podman
       images:
         description: >-

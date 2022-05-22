@@ -10,7 +10,6 @@ import (
 
 	"github.com/tliron/khutulun/api"
 	clientpkg "github.com/tliron/khutulun/client"
-	delegatepkg "github.com/tliron/khutulun/delegate"
 	"github.com/tliron/khutulun/sdk"
 	"github.com/tliron/kutil/logging"
 	"github.com/tliron/kutil/util"
@@ -208,7 +207,7 @@ func (self *GRPC) GetPackageFiles(getPackageFiles *api.GetPackageFiles, server a
 		dir := self.agent.getPackageDir(getPackageFiles.Identifier.Namespace, getPackageFiles.Identifier.Type.Name, getPackageFiles.Identifier.Name)
 
 		for _, path := range getPackageFiles.Paths {
-			if file, err := os.Open(filepath.Join(dir, path)); err == nil {
+			if file, err := self.agent.OpenFile(filepath.Join(dir, path), getPackageFiles.Coerce); err == nil {
 				for {
 					count, err := file.Read(buffer)
 					if count > 0 {
@@ -232,9 +231,7 @@ func (self *GRPC) GetPackageFiles(getPackageFiles *api.GetPackageFiles, server a
 					}
 				}
 
-				if err := file.Close(); err != nil {
-					grpcLog.Errorf("file close: %s", err.Error())
-				}
+				logging.CallAndLogError(file.Close, "file close", grpcLog)
 			} else {
 				return sdk.Aborted(err)
 			}
@@ -383,6 +380,23 @@ func (self *GRPC) ListResources(listResources *api.ListResources, server api.Age
 func (self *GRPC) Interact(server api.Agent_InteractServer) error {
 	grpcLog.Info("interact()")
 
+	relay := func(host string, start *api.Interaction_Start) error {
+		if host_ := self.agent.gossip.GetHost(host); host_ != nil {
+			client, err := clientpkg.NewClient(host_.GRPCAddress)
+			if err != nil {
+				return err
+			}
+			defer client.Close()
+
+			grpcLog.Infof("relay interaction to %s", host_)
+			err = client.InteractRelay(server, start)
+			grpcLog.Info("interaction ended")
+			return err
+		} else {
+			return statuspkg.Errorf(codes.Aborted, "host not found: %s", host)
+		}
+	}
+
 	return sdk.Interact(server, map[string]sdk.InteractFunc{
 		"host": func(start *api.Interaction_Start) error {
 			if len(start.Identifier) != 2 {
@@ -393,46 +407,57 @@ func (self *GRPC) Interact(server api.Agent_InteractServer) error {
 
 			command := sdk.NewCommand(start, grpcLog)
 
-			var relay string
 			if self.agent.gossip != nil {
 				if self.agent.host != host {
-					if host_ := self.agent.gossip.GetHost(host); host_ != nil {
-						relay = host_.GRPCAddress
-					} else {
-						return statuspkg.Errorf(codes.Aborted, "host not found: %s", host)
-					}
+					return relay(host, start)
 				}
 			}
 
-			if relay == "" {
-				return sdk.StartCommand(command, server, grpcLog)
-			} else {
-				client, err := clientpkg.NewClient(relay)
-				if err != nil {
-					return err
-				}
-				defer client.Close()
-
-				grpcLog.Infof("relay interaction to %s", relay)
-				err = client.InteractRelay(server, start)
-				grpcLog.Info("interaction ended")
-				return err
-			}
+			return sdk.StartCommand(command, server, grpcLog)
 		},
 
 		"runnable": func(start *api.Interaction_Start) error {
 			// TODO: find host for runnable and relay if necessary
 
-			var delegate delegatepkg.Delegate
-			var client *delegatepkg.DelegatePluginClient
-			var err error
-			if client, delegate, err = self.agent.GetDelegate(); err == nil {
-				defer client.Close()
+			namespace := start.Identifier[1]
+			serviceName := start.Identifier[2]
+			resourceName := start.Identifier[3]
+
+			if lock, clout, err := self.agent.OpenClout(namespace, serviceName); err == nil {
+				logging.CallAndLogError(lock.Unlock, "unlock", delegateLog)
+				if err := self.agent.CoerceClout(clout); err == nil {
+					delegates := self.agent.NewDelegates()
+					delegates.Fill(namespace, clout)
+					defer delegates.Release()
+
+					for _, delegate := range delegates.All() {
+						if resources, err := delegate.ListResources(namespace, serviceName, clout); err == nil {
+							var found bool
+							for _, resource := range resources {
+								if resource.Name == resourceName {
+									if resource.Host != self.agent.host {
+										return relay(resource.Host, start)
+									}
+									found = true
+									break
+								}
+							}
+
+							if found {
+								return delegate.Interact(server, start)
+							}
+						} else {
+							return sdk.Aborted(err)
+						}
+					}
+				} else {
+					return sdk.Aborted(err)
+				}
 			} else {
 				return sdk.Aborted(err)
 			}
 
-			return delegate.Interact(server, start)
+			return sdk.Abortedf("runnable not found: %s/%s->%s", namespace, serviceName, resourceName)
 		},
 	})
 }

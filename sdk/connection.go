@@ -45,7 +45,7 @@ func GetConnection(vertex *cloutpkg.Vertex, edgesOutIndex int, edge *cloutpkg.Ed
 	self.Name = fmt.Sprintf("%s:%d", name, edgesOutIndex)
 	relationshipAttributes, _ := ard.NewNode(edge.Properties).Get("attributes").StringMap()
 	self.IP, _ = ard.NewNode(relationshipAttributes).Get("ip").String()
-	port, _ := ard.NewNode(relationshipAttributes).Get("port").Integer()
+	port, _ := ard.NewNode(relationshipAttributes).Get("port").NumberAsInteger()
 	self.Port = int(port)
 
 	if sources := GetVertexContainers(vertex); len(sources) > 0 {
