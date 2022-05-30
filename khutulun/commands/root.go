@@ -13,7 +13,6 @@ var verbose int
 var format string
 var colorize string
 var strict bool
-var timestamps bool
 var pretty bool
 var configurationPath string
 
@@ -28,7 +27,6 @@ func init() {
 	rootCommand.PersistentFlags().StringVarP(&format, "format", "f", "", "force output format (\"yaml\", \"json\", \"cjson\", \"xml\", \"cbor\", or \"go\")")
 	rootCommand.PersistentFlags().StringVarP(&colorize, "colorize", "z", "true", "colorize output (boolean or \"force\")")
 	rootCommand.PersistentFlags().BoolVarP(&strict, "strict", "y", false, "strict output (for \"YAML\" format only)")
-	rootCommand.PersistentFlags().BoolVarP(&timestamps, "timestamps", "w", false, "use !!timestamp type (for \"YAML\" format)")
 	rootCommand.PersistentFlags().BoolVarP(&pretty, "pretty", "p", true, "prettify output")
 	rootCommand.PersistentFlags().StringVarP(&configurationPath, "config", "k", defaultConfigurationPath, "configuration file path")
 }

@@ -1,7 +1,10 @@
 package commands
 
 import (
+	"archive/tar"
 	"archive/zip"
+	"compress/gzip"
+	"io"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -93,10 +96,9 @@ func registerPackage(namespace string, type_ string, args []string) {
 	} else {
 		if isFile {
 			var archive string
-			switch filepath.Ext(path) {
-			case ".zip", ".csar":
+			if strings.HasSuffix(path, ".zip") || strings.HasSuffix(path, ".csar") {
 				archive = "zip"
-			case ".tar.gz", ".tgz":
+			} else if strings.HasSuffix(path, ".tar.gz") || strings.HasSuffix(path, ".tgz") {
 				archive = "tgz"
 			}
 
@@ -130,7 +132,65 @@ func registerPackage(namespace string, type_ string, args []string) {
 							})
 						}
 					}
+
+				case "tgz":
+					reader, err := os.Open(path)
+					util.FailOnError(err)
+					gzipReader, err := gzip.NewReader(reader)
+					util.FailOnError(err)
+					tarReader := tar.NewReader(gzipReader)
+
+					var packageFiles_ []clientpkg.PackageFile
+
+					for {
+						header, err := tarReader.Next()
+						if err == io.EOF {
+							break
+						}
+						util.FailOnError(err)
+						if header.Typeflag == tar.TypeReg {
+							packageFiles_ = append(packageFiles_, clientpkg.PackageFile{
+								Path:       header.Name,
+								Executable: util.IsFileExecutable(fs.FileMode(header.Mode)),
+							})
+						}
+					}
+
+					err = gzipReader.Close()
+					util.FailOnError(err)
+					err = reader.Close()
+					util.FailOnError(err)
+
+					reader, err = os.Open(path)
+					util.FailOnError(err)
+					util.OnExitError(reader.Close)
+					gzipReader, err = gzip.NewReader(reader)
+					util.FailOnError(err)
+					util.OnExitError(gzipReader.Close)
+					tarReader = tar.NewReader(gzipReader)
+
+					done := func() {
+						for {
+							header, err := tarReader.Next()
+							if err == io.EOF {
+								break
+							}
+							util.FailOnError(err)
+							if header.Typeflag == tar.TypeReg {
+								break
+							}
+						}
+					}
+
+					for _, packageFile := range packageFiles_ {
+						packageFiles = append(packageFiles, clientpkg.SetPackageFile{
+							Reader:      tarReader,
+							Done:        done,
+							PackageFile: packageFile,
+						})
+					}
 				}
+
 			} else {
 				// Single file
 				reader, err := os.Open(path)

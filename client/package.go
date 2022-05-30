@@ -23,6 +23,7 @@ type PackageFile struct {
 type SetPackageFile struct {
 	PackageFile
 	Reader io.Reader
+	Done   func()
 }
 
 func (self *Client) ListPackages(namespace string, type_ string) ([]PackageIdentifier, error) {
@@ -164,6 +165,9 @@ func (self *Client) SetPackageFiles(namespace string, type_ string, name string,
 				}
 				if err != nil {
 					if err == io.EOF {
+						if packageFile.Done != nil {
+							packageFile.Done()
+						}
 						break
 					} else {
 						return sdk.UnpackGRPCError(err)

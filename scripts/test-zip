@@ -1,0 +1,13 @@
+#!/bin/bash
+set -e
+
+HERE=$(dirname "$(readlink --canonicalize "$BASH_SOURCE")")
+. "$HERE/_env"
+
+cd "$ROOT/assets/tosca/profiles/khutulun"
+
+rm -f "$ROOT/work/khutulun.zip"
+zip -r "$ROOT/work/khutulun.zip" .
+
+rm -f "$ROOT/work/khutulun.tar.gz"
+tar -czf "$ROOT/work/khutulun.tar.gz" .
