@@ -11,23 +11,26 @@ import (
 //
 
 type Ticker struct {
-	ticker *time.Ticker
+	frequency time.Duration
+	f         func()
+
 	stop   chan struct{}
-	f      func()
 	lock   util.RWLocker
+	ticker *time.Ticker
 }
 
 func NewTicker(frequency time.Duration, f func()) *Ticker {
 	return &Ticker{
-		stop: make(chan struct{}),
-		f:    f,
-		lock: util.NewDefaultRWLocker(),
+		frequency: frequency,
+		f:         f,
+		stop:      make(chan struct{}),
+		lock:      util.NewDefaultRWLocker(),
 	}
 }
 
 func (self *Ticker) Start() {
-	self.ticker = time.NewTicker(TICKER_FREQUENCY)
 	self.f()
+	self.ticker = time.NewTicker(self.frequency)
 	for {
 		select {
 		case <-self.stop:
@@ -44,6 +47,8 @@ func (self *Ticker) Start() {
 }
 
 func (self *Ticker) Stop() {
-	self.ticker.Stop()
+	if self.ticker != nil {
+		self.ticker.Stop()
+	}
 	self.stop <- struct{}{}
 }

@@ -21,3 +21,4 @@ function build () {
 build khutulun
 build khutulun-agent
 build khutulun-delegate-podman
+build khutulun-delegate-ipport

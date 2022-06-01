@@ -33,6 +33,7 @@ func (self *Agent) GetDelegateCommand(namespace string, delegateName string) (st
 //
 
 type Delegate interface {
+	Name() string
 	Delegate() delegatepkg.Delegate
 	Release() error
 }
@@ -42,6 +43,7 @@ type Delegate interface {
 //
 
 type PluginDelegate struct {
+	name     string
 	delegate delegatepkg.Delegate
 	client   *delegatepkg.DelegatePluginClient
 }
@@ -49,7 +51,7 @@ type PluginDelegate struct {
 func (self *Agent) NewPluginDelegate(namespace string, delegateName string) (*PluginDelegate, error) {
 	if command, lock, err := self.GetDelegateCommand(namespace, delegateName); err == nil {
 		defer logging.CallAndLogError(lock.Unlock, "unlock", delegateLog)
-		var self PluginDelegate
+		self := PluginDelegate{name: delegateName}
 		self.client = delegatepkg.NewDelegatePluginClient(delegateName, command)
 		if self.delegate, err = self.client.Delegate(); err == nil {
 			return &self, nil
@@ -60,6 +62,11 @@ func (self *Agent) NewPluginDelegate(namespace string, delegateName string) (*Pl
 	} else {
 		return nil, err
 	}
+}
+
+// Delegate interface
+func (self *PluginDelegate) Name() string {
+	return self.name
 }
 
 // Delegate interface
@@ -116,6 +123,18 @@ func (self *Delegates) Get(namespace string, delegateName string) (delegatepkg.D
 
 func (self *Delegates) Fill(namespace string, coercedClout *cloutpkg.Clout) {
 	for _, vertex := range coercedClout.Vertexes {
+		for _, edge := range vertex.EdgesOut {
+			if types, ok := ard.NewNode(edge.Properties).Get("types").StringMap(); ok {
+				if _, ok := types["cloud.puccini.khutulun::Connection"]; ok {
+					if delegateName, ok := ard.NewNode(edge.Properties).Get("attributes").Get("delegate").String(); ok {
+						if _, err := self.Get(namespace, delegateName); err != nil {
+							delegateLog.Errorf("%s", err.Error())
+						}
+					}
+				}
+			}
+		}
+
 		if capabilities, ok := ard.NewNode(vertex.Properties).Get("capabilities").StringMap(); ok {
 			for _, capability := range capabilities {
 				if types, ok := ard.NewNode(capability).Get("types").StringMap(); ok {

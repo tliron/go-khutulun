@@ -6,7 +6,7 @@ HERE=$(dirname "$(readlink --canonicalize "$BASH_SOURCE")")
 
 cd "$ROOT/assets/tosca/profiles/khutulun"
 
-rm -f "$ROOT/work/khutulun.zip"
-zip -r "$ROOT/work/khutulun.zip" .
+rm -f "$ROOT/work/khutulun.tar.gz"
+tar -czf "$ROOT/work/khutulun.tar.gz" .
 khutulun profile delist khutulun --namespace=common || true
-khutulun profile register khutulun "$ROOT/work/khutulun.zip" --namespace=common
+khutulun profile register khutulun "$ROOT/work/khutulun.tar.gz" --namespace=common

@@ -51,6 +51,9 @@ func (self *Agent) ProcessService(namespace string, serviceName string, phase st
 				var saveClout *cloutpkg.Clout
 
 				for _, delegate := range delegates.All() {
+					//for _, delegate_ := range delegates.delegates {
+					//delegate := delegate_.Delegate()
+					//log.Noticef("!!!!!!!!!!!!! delegate: %s", delegate_.Name())
 					if clout_, next_, err := delegate.ProcessService(namespace, serviceName, phase, clout, coercedClout); err == nil {
 						next = delegatepkg.MergeNexts(next, next_)
 

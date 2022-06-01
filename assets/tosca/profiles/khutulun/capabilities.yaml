@@ -87,14 +87,15 @@ capability_types:
   Pod:
     derived_from: Runnable
     properties:
-      delegate:
-        default: podman
       images:
         description: >-
           OCI pseudo-URIs. If not provided ContainerImage artifacts would have to be attached instead.
         type: list
         entry_schema: ContainerImageReference
         required: false
+    attributes:
+      delegate:
+        default: podman
 
   VirtualMachine:
     derived_from: Runnable

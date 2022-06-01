@@ -2,6 +2,8 @@ package agent
 
 import (
 	"os"
+	"sort"
+	"strings"
 
 	delegatepkg "github.com/tliron/khutulun/delegate"
 	"github.com/tliron/kutil/logging"
@@ -16,8 +18,37 @@ type ResourceIdentifier struct {
 	Host      string `json:"host" yaml:"host"`
 }
 
-func (self *Agent) ListResources(namespace string, serviceName string, type_ string) ([]ResourceIdentifier, error) {
-	var resources []ResourceIdentifier
+type ResourceIdentifiers []ResourceIdentifier
+
+// sort.Interface interface
+func (self ResourceIdentifiers) Len() int {
+	return len(self)
+}
+
+// sort.Interface interface
+func (self ResourceIdentifiers) Swap(i, j int) {
+	self[i], self[j] = self[j], self[i]
+}
+
+// sort.Interface interface
+func (self ResourceIdentifiers) Less(i, j int) bool {
+	if c := strings.Compare(self[i].Namespace, self[j].Namespace); c == 0 {
+		if c := strings.Compare(self[i].Service, self[j].Service); c == 0 {
+			if c := strings.Compare(self[i].Type, self[j].Type); c == 0 {
+				return strings.Compare(self[i].Name, self[j].Name) == -1
+			} else {
+				return c == 1
+			}
+		} else {
+			return c == 1
+		}
+	} else {
+		return c == -1
+	}
+}
+
+func (self *Agent) ListResources(namespace string, serviceName string, type_ string) (ResourceIdentifiers, error) {
+	var resources ResourceIdentifiers
 
 	var packages []PackageIdentifier
 	if serviceName == "" {
@@ -63,6 +94,8 @@ func (self *Agent) ListResources(namespace string, serviceName string, type_ str
 			}
 		}
 	}
+
+	sort.Sort(resources)
 
 	return resources, nil
 }

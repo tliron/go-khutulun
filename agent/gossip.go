@@ -2,6 +2,8 @@ package agent
 
 import (
 	"fmt"
+	"sort"
+	"strings"
 	"time"
 
 	"github.com/hashicorp/memberlist"
@@ -88,14 +90,32 @@ type HostInformation struct {
 	GRPCAddress string `json:"grpcAddress"`
 }
 
-func (self *Gossip) ListHosts() []*HostInformation {
-	var hosts []*HostInformation
+type HostInformations []*HostInformation
+
+// sort.Interface interface
+func (self HostInformations) Len() int {
+	return len(self)
+}
+
+// sort.Interface interface
+func (self HostInformations) Swap(i, j int) {
+	self[i], self[j] = self[j], self[i]
+}
+
+// sort.Interface interface
+func (self HostInformations) Less(i, j int) bool {
+	return strings.Compare(self[i].Name, self[j].Name) == -1
+}
+
+func (self *Gossip) ListHosts() HostInformations {
+	var hosts HostInformations
 	for _, node := range self.members.Members() {
 		hosts = append(hosts, &HostInformation{
 			Name:        node.Name,
 			GRPCAddress: util.BytesToString(node.Meta),
 		})
 	}
+	sort.Sort(hosts)
 	return hosts
 }
 

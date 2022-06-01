@@ -3,6 +3,7 @@ package agent
 import (
 	"io/ioutil"
 	"os"
+	"sort"
 
 	"github.com/tliron/kutil/util"
 )
@@ -16,6 +17,7 @@ func (self *Agent) ListNamespaces() ([]string, error) {
 				names = append(names, name)
 			}
 		}
+		sort.Strings(names)
 		return names, nil
 	} else {
 		if os.IsNotExist(err) {

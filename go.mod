@@ -3,15 +3,14 @@ module github.com/tliron/khutulun
 go 1.18
 
 require (
-	github.com/charmbracelet/bubbletea v0.20.0
-	github.com/charmbracelet/lipgloss v0.5.0
 	github.com/danjacques/gofslock v0.0.0-20220131014315-6e321f4509c8
-	github.com/evertras/bubble-table v0.12.0
 	github.com/fsnotify/fsnotify v1.5.4
 	github.com/fxamacker/cbor/v2 v2.4.0
+	github.com/gdamore/tcell/v2 v2.4.1-0.20210905002822-f057f0a857a1
 	github.com/hashicorp/go-plugin v1.4.4
 	github.com/hashicorp/memberlist v0.3.1
 	github.com/rakyll/statik v0.1.7
+	github.com/rivo/tview v0.0.0-20220307222120-9994674d60a8
 	github.com/spf13/cobra v1.4.0
 	github.com/tliron/kutil v0.1.59
 	github.com/tliron/puccini v0.20.1
@@ -26,10 +25,7 @@ require (
 	github.com/ProtonMail/go-crypto v0.0.0-20210428141323-04723f9f07d7 // indirect
 	github.com/acomagu/bufpipe v1.0.3 // indirect
 	github.com/armon/go-metrics v0.3.10 // indirect
-	github.com/atotto/clipboard v0.1.4 // indirect
 	github.com/beevik/etree v1.1.0 // indirect
-	github.com/charmbracelet/bubbles v0.10.3 // indirect
-	github.com/containerd/console v1.0.3 // indirect
 	github.com/containerd/stargz-snapshotter/estargz v0.10.1 // indirect
 	github.com/coreos/go-systemd v0.0.0-20191104093116-d3cd4ed1dbcf // indirect
 	github.com/creack/pty v1.1.18 // indirect
@@ -41,6 +37,7 @@ require (
 	github.com/dop251/goja v0.0.0-20220501172647-e1eca0b61fa9 // indirect
 	github.com/emirpasic/gods v1.12.0 // indirect
 	github.com/fatih/color v1.13.0 // indirect
+	github.com/gdamore/encoding v1.0.0 // indirect
 	github.com/go-git/gcfg v1.5.0 // indirect
 	github.com/go-git/go-billy/v5 v5.3.1 // indirect
 	github.com/go-git/go-git/v5 v5.4.2 // indirect
@@ -68,14 +65,11 @@ require (
 	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect
 	github.com/mattn/go-colorable v0.1.12 // indirect
 	github.com/mattn/go-isatty v0.0.14 // indirect
-	github.com/mattn/go-runewidth v0.0.13 // indirect
+	github.com/mattn/go-runewidth v0.0.14-0.20210830053702-dc8fe66265af // indirect
 	github.com/miekg/dns v1.1.41 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/mitchellh/go-testing-interface v1.0.0 // indirect
 	github.com/mitchellh/hashstructure/v2 v2.0.2 // indirect
-	github.com/muesli/ansi v0.0.0-20211018074035-2e021307bc4b // indirect
-	github.com/muesli/reflow v0.3.0 // indirect
-	github.com/muesli/termenv v0.11.1-0.20220212125758-44cd13922739 // indirect
 	github.com/oklog/run v1.0.0 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.0.2 // indirect

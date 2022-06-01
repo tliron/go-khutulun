@@ -5,6 +5,8 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"sort"
+	"strings"
 	"time"
 
 	"github.com/danjacques/gofslock/fslock"
@@ -20,14 +22,39 @@ type PackageIdentifier struct {
 	Name      string `json:"name" yaml:"name"`
 }
 
+type PackageIdentifiers []PackageIdentifier
+
+// sort.Interface interface
+func (self PackageIdentifiers) Len() int {
+	return len(self)
+}
+
+// sort.Interface interface
+func (self PackageIdentifiers) Swap(i, j int) {
+	self[i], self[j] = self[j], self[i]
+}
+
+// sort.Interface interface
+func (self PackageIdentifiers) Less(i, j int) bool {
+	if c := strings.Compare(self[i].Namespace, self[j].Namespace); c == 0 {
+		if c := strings.Compare(self[i].Type, self[j].Type); c == 0 {
+			return strings.Compare(self[i].Name, self[j].Name) == -1
+		} else {
+			return c == 1
+		}
+	} else {
+		return c == -1
+	}
+}
+
 type PackageFile struct {
 	Path       string
 	Executable bool
 }
 
-func (self *Agent) ListPackages(namespace string, type_ string) ([]PackageIdentifier, error) {
+func (self *Agent) ListPackages(namespace string, type_ string) (PackageIdentifiers, error) {
 	if namespaces, err := self.namespaceToNamespaces(namespace); err == nil {
-		var identifiers []PackageIdentifier
+		var identifiers PackageIdentifiers
 		for _, namespace_ := range namespaces {
 			if files, err := os.ReadDir(self.getPackageTypeDir(namespace_, type_)); err == nil {
 				for _, file := range files {
@@ -46,6 +73,7 @@ func (self *Agent) ListPackages(namespace string, type_ string) ([]PackageIdenti
 				}
 			}
 		}
+		sort.Sort(identifiers)
 		return identifiers, nil
 	} else {
 		return nil, err
