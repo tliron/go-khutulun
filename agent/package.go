@@ -179,7 +179,7 @@ func (self *Agent) getPackageMainFile(namespace string, type_ string, name strin
 		}
 		return ""
 
-	case "profile", "clout":
+	case "profile", "service":
 		return filepath.Join(dir, type_+".yaml")
 
 	default:

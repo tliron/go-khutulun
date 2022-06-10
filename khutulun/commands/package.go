@@ -11,8 +11,8 @@ import (
 	"strings"
 
 	clientpkg "github.com/tliron/khutulun/client"
-	formatpkg "github.com/tliron/kutil/format"
 	"github.com/tliron/kutil/terminal"
+	formatpkg "github.com/tliron/kutil/transcribe"
 	urlpkg "github.com/tliron/kutil/url"
 	"github.com/tliron/kutil/util"
 )
@@ -232,7 +232,7 @@ func fetchPackage(namespace string, type_ string, args []string) {
 	name := args[0]
 	if len(args) > 1 {
 		path := args[1]
-		if (type_ == "clout") && terminal.Colorize {
+		if (type_ == "service") && terminal.Colorize {
 			var buffer strings.Builder
 			err = client.GetPackageFile(namespace, type_, name, path, coerce, &buffer)
 			util.FailOnError(err)

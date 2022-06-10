@@ -3,8 +3,8 @@ package commands
 import (
 	"github.com/spf13/cobra"
 	"github.com/tliron/khutulun/configuration"
-	formatpkg "github.com/tliron/kutil/format"
 	"github.com/tliron/kutil/terminal"
+	"github.com/tliron/kutil/transcribe"
 	"github.com/tliron/kutil/util"
 )
 
@@ -18,7 +18,7 @@ var clusterListCommand = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		client, err := configuration.LoadOrNewClient(configurationPath)
 		util.FailOnError(err)
-		err = formatpkg.Print(client.Clusters, format, terminal.Stdout, false, pretty)
+		err = transcribe.Print(client.Clusters, format, terminal.Stdout, false, pretty)
 		util.FailOnError(err)
 	},
 }

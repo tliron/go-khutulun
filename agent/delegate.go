@@ -4,38 +4,24 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/danjacques/gofslock/fslock"
 	delegatepkg "github.com/tliron/khutulun/delegate"
 	"github.com/tliron/kutil/ard"
 	"github.com/tliron/kutil/logging"
 	cloutpkg "github.com/tliron/puccini/clout"
 )
 
-func (self *Agent) GetDelegateCommand(namespace string, delegateName string) (string, fslock.Handle, error) {
-	if lock, err := self.lockPackage(namespace, "delegate", delegateName, false); err == nil {
-		return self.getPackageMainFile(namespace, "delegate", delegateName), lock, nil
-	} else if os.IsNotExist(err) {
-		namespace = "common"
-		if lock, err := self.lockPackage(namespace, "delegate", delegateName, false); err == nil {
-			return self.getPackageMainFile(namespace, "delegate", delegateName), lock, nil
-		} else if os.IsNotExist(err) {
-			return "", nil, fmt.Errorf("delegate not found: %s/%s", namespace, delegateName)
-		} else {
-			return "", nil, err
-		}
-	} else {
-		return "", nil, err
-	}
-}
-
 //
 // Delegate
 //
 
 type Delegate interface {
-	Name() string
+	Name() (string, string)
 	Delegate() delegatepkg.Delegate
 	Release() error
+}
+
+func (self *Agent) NewDelegate(namespace string, delegateName string) (Delegate, error) {
+	return self.NewPluginDelegate(namespace, delegateName)
 }
 
 //
@@ -43,30 +29,38 @@ type Delegate interface {
 //
 
 type PluginDelegate struct {
-	name     string
-	delegate delegatepkg.Delegate
-	client   *delegatepkg.DelegatePluginClient
+	namespace string
+	name      string
+	delegate  delegatepkg.Delegate
+	client    *delegatepkg.DelegatePluginClient
 }
 
 func (self *Agent) NewPluginDelegate(namespace string, delegateName string) (*PluginDelegate, error) {
-	if command, lock, err := self.GetDelegateCommand(namespace, delegateName); err == nil {
+	if lock, err := self.lockPackage(namespace, "delegate", delegateName, false); err == nil {
 		defer logging.CallAndLogError(lock.Unlock, "unlock", delegateLog)
-		self := PluginDelegate{name: delegateName}
-		self.client = delegatepkg.NewDelegatePluginClient(delegateName, command)
+
+		command := self.getPackageMainFile(namespace, "delegate", delegateName)
+		self := PluginDelegate{
+			name:   delegateName,
+			client: delegatepkg.NewDelegatePluginClient(delegateName, command),
+		}
+
 		if self.delegate, err = self.client.Delegate(); err == nil {
 			return &self, nil
 		} else {
-			self.client.Close()
+			self.Release()
 			return nil, err
 		}
+	} else if os.IsNotExist(err) {
+		return nil, fmt.Errorf("delegate not found: %s/%s", namespace, delegateName)
 	} else {
 		return nil, err
 	}
 }
 
 // Delegate interface
-func (self *PluginDelegate) Name() string {
-	return self.name
+func (self *PluginDelegate) Name() (string, string) {
+	return self.namespace, self.name
 }
 
 // Delegate interface
@@ -80,23 +74,55 @@ func (self *PluginDelegate) Release() error {
 	return nil
 }
 
-func (self *Agent) GetDelegate(namespace string, delegateName string) (Delegate, error) {
-	return self.NewPluginDelegate(namespace, delegateName)
-}
-
 //
 // Delegates
 //
 
 type Delegates struct {
 	agent     *Agent
-	delegates map[string]Delegate
+	delegates map[Namespaced]Delegate
+}
+
+type Namespaced struct {
+	Namespace string
+	Name      string
+}
+
+func NewNamespaced(namespace string, name string) Namespaced {
+	return Namespaced{
+		Namespace: namespace,
+		Name:      name,
+	}
 }
 
 func (self *Agent) NewDelegates() *Delegates {
 	return &Delegates{
 		agent:     self,
-		delegates: make(map[string]Delegate),
+		delegates: make(map[Namespaced]Delegate),
+	}
+}
+
+func (self *Delegates) NewDelegate(namespace string, delegateName string) (Delegate, error) {
+	if delegate, err := self.agent.NewDelegate(namespace, delegateName); err == nil {
+		self.delegates[NewNamespaced(namespace, delegateName)] = delegate
+		if namespace_, _ := delegate.Name(); namespace_ != namespace {
+			self.delegates[NewNamespaced(namespace_, delegateName)] = delegate
+		}
+		return delegate, nil
+	} else {
+		return nil, err
+	}
+}
+
+func (self *Delegates) Get(namespace string, delegateName string) (delegatepkg.Delegate, error) {
+	if delegate, ok := self.delegates[NewNamespaced(namespace, delegateName)]; ok {
+		return delegate.Delegate(), nil
+	} else if delegate, err := self.NewDelegate(namespace, delegateName); err == nil {
+		return delegate.Delegate(), nil
+	} else if namespace != "common" {
+		return self.Get("common", delegateName)
+	} else {
+		return nil, err
 	}
 }
 
@@ -108,17 +134,6 @@ func (self *Delegates) All() []delegatepkg.Delegate {
 		index++
 	}
 	return delegates
-}
-
-func (self *Delegates) Get(namespace string, delegateName string) (delegatepkg.Delegate, error) {
-	if delegate, ok := self.delegates[delegateName]; ok {
-		return delegate.Delegate(), nil
-	} else if delegate, err := self.agent.GetDelegate(namespace, delegateName); err == nil {
-		self.delegates[delegateName] = delegate
-		return delegate.Delegate(), nil
-	} else {
-		return nil, err
-	}
 }
 
 func (self *Delegates) Fill(namespace string, coercedClout *cloutpkg.Clout) {

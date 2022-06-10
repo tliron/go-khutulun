@@ -57,7 +57,7 @@ func (self *DelegateGRPCServer) ProcessService(context contextpkg.Context, proce
 		if coercedClout, err := CloutFromAPI(processService.CoercedClout); err == nil {
 			if clout_, next, err := self.implementation.ProcessService(processService.Service.Namespace, processService.Service.Name, processService.Phase, clout, coercedClout); err == nil {
 				var result api.ProcessServiceResult
-				if result.Clout, err = CloutToAPI(clout_); err != nil {
+				if result.Clout, err = CloutToAPI(clout_, false); err != nil {
 					return new(api.ProcessServiceResult), sdk.Aborted(err)
 				}
 				result.Next = NextsToAPI(next)
@@ -97,7 +97,7 @@ func NewDelegateGRPCClient(context contextpkg.Context, client api.DelegateClient
 
 // Delegate interface
 func (self *DelegateGRPCClient) ListResources(namespace string, serviceName string, coercedClout *cloutpkg.Clout) ([]Resource, error) {
-	if coercedClout_, err := CloutToAPI(coercedClout); err == nil {
+	if coercedClout_, err := CloutToAPI(coercedClout, false); err == nil {
 		listResources := api.DelegateListResources{
 			Service: &api.ServiceIdentifier{
 				Namespace: namespace,
@@ -131,8 +131,8 @@ func (self *DelegateGRPCClient) ListResources(namespace string, serviceName stri
 
 // Delegate interface
 func (self *DelegateGRPCClient) ProcessService(namespace string, serviceName string, phase string, clout *cloutpkg.Clout, coercedClout *cloutpkg.Clout) (*cloutpkg.Clout, []Next, error) {
-	if clout_, err := CloutToAPI(clout); err == nil {
-		if coercedClout_, err := CloutToAPI(coercedClout); err == nil {
+	if clout_, err := CloutToAPI(clout, false); err == nil {
+		if coercedClout_, err := CloutToAPI(coercedClout, false); err == nil {
 			processService := api.ProcessService{
 				Service: &api.ServiceIdentifier{
 					Namespace: namespace,

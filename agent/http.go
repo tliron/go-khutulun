@@ -8,7 +8,7 @@ import (
 
 	fspkg "github.com/rakyll/statik/fs"
 	_ "github.com/tliron/khutulun/web"
-	"github.com/tliron/kutil/format"
+	"github.com/tliron/kutil/transcribe"
 	"github.com/tliron/kutil/util"
 )
 
@@ -80,7 +80,7 @@ func (self *HTTP) Stop() error {
 
 func (self *HTTP) listNamespaces(writer http.ResponseWriter, request *http.Request) {
 	if namespaces, err := self.agent.ListNamespaces(); err == nil {
-		format.WriteJSON(namespaces, writer, "")
+		transcribe.WriteJSON(namespaces, writer, "")
 	} else {
 		writer.WriteHeader(500)
 	}
@@ -91,7 +91,7 @@ func (self *HTTP) listPackages(writer http.ResponseWriter, request *http.Request
 	type_ := request.URL.Query().Get("type")
 	if type_ != "" {
 		if identifiers, err := self.agent.ListPackages(namespace, type_); err == nil {
-			format.WriteJSON(identifiers, writer, "")
+			transcribe.WriteJSON(identifiers, writer, "")
 		} else {
 			writer.WriteHeader(500)
 		}
@@ -106,7 +106,7 @@ func (self *HTTP) listResources(writer http.ResponseWriter, request *http.Reques
 	type_ := request.URL.Query().Get("type")
 	if type_ != "" {
 		if resources, err := self.agent.ListResources(namespace, service, type_); err == nil {
-			format.WriteJSON(resources, writer, "")
+			transcribe.WriteJSON(resources, writer, "")
 		} else {
 			writer.WriteHeader(500)
 		}
@@ -117,7 +117,7 @@ func (self *HTTP) listResources(writer http.ResponseWriter, request *http.Reques
 
 func (self *HTTP) listHosts(writer http.ResponseWriter, request *http.Request) {
 	if self.agent.gossip != nil {
-		format.WriteJSON(self.agent.gossip.ListHosts(), writer, "")
+		transcribe.WriteJSON(self.agent.gossip.ListHosts(), writer, "")
 	} else {
 		writer.WriteHeader(500)
 	}

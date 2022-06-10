@@ -1,6 +1,8 @@
 package agent
 
-import "github.com/tliron/kutil/ard"
+import (
+	"github.com/tliron/kutil/ard"
+)
 
 const (
 	ADD_HOST        = "khutulun.addHost"
@@ -39,7 +41,9 @@ func (self *Agent) handleCommand(message any, broadcast bool) {
 		serviceName, _ := ard.NewNode(message).Get("serviceName").String()
 		phase, _ := ard.NewNode(message).Get("phase").String()
 		log.Infof("received processService(%q, %q, %q)", namespace, serviceName, phase)
-		self.ProcessService(namespace, serviceName, phase)
+		delegates := self.NewDelegates()
+		defer delegates.Release()
+		self.ProcessService(namespace, serviceName, phase, delegates)
 
 	default:
 		log.Errorf("received unsupported message: %s", message)

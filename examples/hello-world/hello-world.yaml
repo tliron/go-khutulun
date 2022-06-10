@@ -26,8 +26,6 @@ topology_template:
 
     web-server:
       type: kh:Container
-      properties:
-        count: 3
       capabilities:
         runnable:
           properties:
@@ -53,8 +51,6 @@ topology_template:
             image:
               reference: docker.io/postgres:14.2
             create-arguments: [ --env=POSTGRES_PASSWORD=postgres ]
-          attributes:
-            host: lab1
       requirements:
       - storage: directory
 
@@ -77,12 +73,26 @@ topology_template:
         - database
 
     - colocate:
-        type: kh:Placement
-        properties:
-          hints: [ Colocate ]
+        type: kh:Colocation
         targets:
+        - endpoint
         - frontend
         - web-server
+
+    - redundancy:
+        type: kh:Redundancy
+        properties:
+          minimum-count: 3
+        targets:
+        - frontend
+
+    - place:
+        type: kh:Distribution
+        properties:
+          hosts: { name: lab1 }
+        targets:
+        - database
+
 
   outputs:
 

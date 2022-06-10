@@ -6,15 +6,27 @@ import (
 
 	"github.com/fxamacker/cbor/v2"
 	"github.com/tliron/khutulun/api"
+	"github.com/tliron/kutil/util"
 	cloutpkg "github.com/tliron/puccini/clout"
+	yamlpkg "gopkg.in/yaml.v3"
 )
 
-func CloutToAPI(clout *cloutpkg.Clout) (*api.Clout, error) {
+var yaml_ bool = true
+
+func CloutToAPI(clout *cloutpkg.Clout, yaml bool) (*api.Clout, error) {
 	if clout != nil {
-		if clout_, err := cbor.Marshal(clout); err == nil {
-			return &api.Clout{Cbor: clout_}, err
+		if yaml {
+			if clout_, err := yamlpkg.Marshal(clout); err == nil {
+				return &api.Clout{Yaml: util.BytesToString(clout_)}, err
+			} else {
+				return nil, err
+			}
 		} else {
-			return nil, err
+			if clout_, err := cbor.Marshal(clout); err == nil {
+				return &api.Clout{Cbor: clout_}, err
+			} else {
+				return nil, err
+			}
 		}
 	} else {
 		return nil, nil

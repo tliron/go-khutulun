@@ -8,13 +8,22 @@ imports:
 
 node_types:
 
-  Redundant:
-    properties:
+  Instantiated:
+    description: >-
+      Base type for nodes that can have zero or more instances.
+
+      See `Redundancy` policy.
+    attributes:
       count:
         type: Count
-        default: 1
+        default: 0
+      instances:
+        type: list
+        entry_schema: Instance
+        #default: [ { name: "hello", host: "here" } ]
 
   Endpoint:
+    derived_from: Instantiated
     properties:
       ingress:
         type: boolean
@@ -24,10 +33,15 @@ node_types:
         capability: Connectable
         relationship: Connection
 
+  DelegateEndpoint:
+    description: >-
+      asd
+    derived_from: Endpoint
+
   # Runnable
 
   Process:
-    derived_from: Redundant
+    derived_from: Instantiated
     interfaces:
       events:
         type: Events
@@ -44,7 +58,7 @@ node_types:
         relationship: Storage
 
   Container:
-    derived_from: Redundant
+    derived_from: Instantiated
     interfaces:
       events:
         type: Events
@@ -71,7 +85,7 @@ node_types:
     # TODO: attach an artifact that sets up loadbalancing
 
   VirtualMachine:
-    derived_from: Redundant
+    derived_from: Instantiated
     interfaces:
       events:
         type: Events

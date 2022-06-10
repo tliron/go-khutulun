@@ -3,8 +3,8 @@ package commands
 import (
 	"github.com/spf13/cobra"
 	clientpkg "github.com/tliron/khutulun/client"
-	formatpkg "github.com/tliron/kutil/format"
 	"github.com/tliron/kutil/terminal"
+	formatpkg "github.com/tliron/kutil/transcribe"
 	"github.com/tliron/kutil/util"
 )
 

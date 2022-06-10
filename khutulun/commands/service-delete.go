@@ -19,7 +19,7 @@ var serviceDeleteCommand = &cobra.Command{
 		util.FailOnError(err)
 		util.OnExitError(client.Close)
 
-		err = client.RemovePackage(namespace, "clout", args[0])
+		err = client.RemovePackage(namespace, "service", args[0])
 		util.FailOnError(err)
 	},
 }

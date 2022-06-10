@@ -7,6 +7,11 @@ data_types:
     constraints:
     - greater_or_equal: 0
 
+  Ratio:
+    derived_from: float
+    constraints:
+    - in_range: [ 0.0, 1.0 ]
+
   Hex:
     derived_from: string
     constraints:
@@ -173,3 +178,32 @@ data_types:
         constraints:
         - valid_values: [ TCP, UDP, SCTP ]
         default: TCP
+
+  Instance:
+    properties:
+      name:
+        type: string
+        required: false
+      host:
+        type: string
+        required: false
+
+  HostSelector:
+    description: >-
+      Only one of the properties can be specified.
+
+      To select all hosts use `{ ratio: 1.0 }`.
+    properties:
+      name:
+        type: string
+        required: false
+      names:
+        type: list
+        entry_schema: string
+        required: false
+      ratio:
+        type: Ratio
+        required: false
+      count:
+        type: Count
+        required: false

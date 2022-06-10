@@ -133,7 +133,7 @@ $(document).ready(function () {
     });
   });
 
-  syncTable('services', 'api/package/list?type=clout', ['namespace', 'name', 'description']);
+  syncTable('services', 'api/package/list?type=service', ['namespace', 'name', 'description']);
   syncTable('templates', 'api/package/list?type=template', ['namespace', 'name', 'description']);
   syncTable('profiles', 'api/package/list?type=profile', ['namespace', 'name', 'description']);
   syncTable('delegates', 'api/package/list?type=delegate', ['namespace', 'name', 'description']);

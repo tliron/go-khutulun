@@ -35,8 +35,6 @@ capability_types:
     attributes:
       delegate:
         type: string
-      host:
-        type: string
 
   Connectable:
     description: >-

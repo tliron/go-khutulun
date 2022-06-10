@@ -8,7 +8,7 @@ import (
 func (self *Application) updateServices(table *tview.Table, namespace *tview.DropDown) {
 	update := func() {
 		namespace_ := getNamespace(namespace)
-		if services_, err := self.client.ListPackages(namespace_, "clout"); err == nil {
+		if services_, err := self.client.ListPackages(namespace_, "service"); err == nil {
 			table.Clear()
 
 			headers := []string{"Name"}

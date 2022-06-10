@@ -2,8 +2,8 @@ package commands
 
 import (
 	clientpkg "github.com/tliron/khutulun/client"
-	formatpkg "github.com/tliron/kutil/format"
 	"github.com/tliron/kutil/terminal"
+	formatpkg "github.com/tliron/kutil/transcribe"
 	"github.com/tliron/kutil/util"
 )
 

@@ -47,16 +47,16 @@ func (self *Agent) ParseTOSCA(templateNamespace string, templateName string) (*n
 
 func (self *Agent) CompileTOSCA(templateNamespace string, templateName string, serviceNamespace string, serviceName string) (*cloutpkg.Clout, *problemspkg.Problems, error) {
 	if serviceTemplate, problems, err := self.ParseTOSCA(templateNamespace, templateName); err == nil {
-		if clout, err := serviceTemplate.Compile(false); err == nil {
-			js.Resolve(clout, problems, self.urlContext, true, "yaml", true, false, false)
+		if clout, err := serviceTemplate.Compile(); err == nil {
+			js.Resolve(clout, problems, self.urlContext, true, "yaml", true, false)
 			if !problems.Empty() {
 				return nil, nil, problems.WithError(nil, false)
 			}
 
-			if lock, err := self.lockPackage(serviceNamespace, "clout", serviceName, true); err == nil {
+			if lock, err := self.lockPackage(serviceNamespace, "service", serviceName, true); err == nil {
 				defer logging.CallAndLogError(lock.Unlock, "unlock", log)
 
-				if err := self.SaveClout(serviceNamespace, serviceName, clout); err == nil {
+				if err := self.SaveServiceClout(serviceNamespace, serviceName, clout); err == nil {
 					return clout, problems, nil
 				} else {
 					return nil, nil, err

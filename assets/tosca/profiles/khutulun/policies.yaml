@@ -1,6 +1,12 @@
 tosca_definitions_version: tosca_2_0
 
+imports:
+
+- groups.yaml
+
 policy_types:
+
+  # Delegation
 
   Delegation:
     properties:
@@ -8,15 +14,98 @@ policy_types:
         type: string
         required: false
 
-  Placement:
+  # Redundancy
+
+  Redundancy:
+    description: >-
+      Targets must have a `minimum-count` number of instances and will not have more than
+      a `maximum-count` number of instances.
     properties:
-      host:
-        type: string
+      minimum-count:
+        description: >-
+          A value of zero is possible, in which case the targets will have no instances.
+        type: Count
+        default: 1
+      maximum-count:
+        description: >-
+          Must be equal to or greater than `minimum-count`. If not specified, there is no
+          maximum.
+        type: Count
         required: false
-      hints:
-        type: list
-        entry_schema:
-          type: string
-          constraints:
-          - valid_values: [ Colocate, Distribute ]
+    targets:
+    - Instantiated
+    - InstantiatedGroup
+
+  # Affinity
+
+  Affinity:
+    description: >-
+      Base type for affinity policies.
+    targets:
+    - Instantiated
+    - InstantiatedGroup
+
+  Colocation:
+    description: >-
+      Deploy all target instances to the same host.
+    derived_from: Affinity
+
+  Separation:
+    description: >-
+      Deploy all target instances to different hosts.
+    derived_from: Affinity
+    properties:
+      strict:
+        description: >-
+          If true, absolutely requires instances to be separated. If false, it is only
+          a preference.
+        type: boolean
+        default: true
+
+  # Placement
+
+  Placement:
+    description: >-
+      Base type for policies that place instances on hosts.
+    properties:
+      hosts:
+        type: HostSelector
         required: false
+    targets:
+    - Instantiated
+    - InstantiatedGroup
+
+  Scattering:
+    description: >-
+      Deploy each target instance to a different host.
+
+      If there are not enough hosts selected to satisfy a `Redundancy` policy's `minimum-count`,
+      then behavior depends on our `allow-colocation` property. If false (the default), then
+      deployment would fail until additional hosts are selectable. If true, then some instances
+      would share hosts and an effort would be made to reduce the number of instances per
+      host.
+    derived_from: Placement
+    properties:
+      allow-colocation:
+        type: boolean
+        default: false
+
+  Distribution:
+    description: >-
+      Deploy all target instances to all hosts.
+
+      If there are not enough hosts selected to satisfy a `Redundancy` policy's `minimum-count`,
+      then behavior depends on our `allow-colocation` property. If false (the default), then
+      deployment would fail until additional hosts are selectable. If true, then some instances
+      would share hosts and an effort would be made to reduce the number of instances per
+      host.
+
+      If a `Redundancy` policy's `maximum-count` is smaller than the number of selected hosts,
+      then behavior depends on our `allow-partial` property. If false (the default), then
+      deployment would fail until fewer hosts are selected. If true, them some hosts would
+      not have instances.
+    derived_from: Scattering
+    properties:
+      allow-partial:
+        type: boolean
+        default: false

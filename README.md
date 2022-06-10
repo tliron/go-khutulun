@@ -10,15 +10,15 @@ Khutulun
 A distributed orchestrator for services that speaks
 [TOSCA](https://www.oasis-open.org/committees/tosca/).
 
-Khutulun addresses similar uses as [Kubernetes](https://kubernetes.io/) does and can provide a
-more straightforward solution.
+Khutulun is a straightforward, flexible alternative to [Kubernetes](https://kubernetes.io/),
+[Nomad](https://www.nomadproject.io/), etc.
 
 Its primary design goal is that the outcome of orchestration would be no different from what a
 sysadmin would do themselves. If you want to simply install and run a bare process on a machine,
 Khutulun will do that for you. If you want straightforward networking based on reserved TCP ports,
 Khutulun won't do anything more than keep track of those ports for you. More complex deployments
-using containers, virtual machines, and virtual networks are also supported. Khutulun's aim is to
-manage complexity without getting in the way of simplicity.
+using containers, virtual machines, and virtual networks are also supported, but Khutulun's aim is
+to manage complexity without getting in the way of simplicity.
 
 The guiding paradigm is policy-driven service composition based on graph representations of the
 service's topology. Khutulun provides custom discovery that allows components to find each other,

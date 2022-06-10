@@ -8,7 +8,9 @@ import (
 
 func (self *Agent) DeployService(templateNamespace string, templateName string, serviceNamespace string, serviceName string) error {
 	if _, problems, err := self.CompileTOSCA(templateNamespace, templateName, serviceNamespace, serviceName); err == nil {
-		self.ProcessService(serviceNamespace, serviceName, "schedule")
+		delegates := self.NewDelegates()
+		defer delegates.Release()
+		self.ProcessService(serviceNamespace, serviceName, "schedule", delegates)
 		return nil
 	} else {
 		if problems != nil {
@@ -20,16 +22,19 @@ func (self *Agent) DeployService(templateNamespace string, templateName string, 
 }
 
 func (self *Agent) ProcessAllServices(phase string) {
-	if identifiers, err := self.ListPackages("", "clout"); err == nil {
+	if identifiers, err := self.ListPackages("", "service"); err == nil {
+		delegates := self.NewDelegates()
+		defer delegates.Release()
+
 		for _, identifier := range identifiers {
-			self.ProcessService(identifier.Namespace, identifier.Name, phase)
+			self.ProcessService(identifier.Namespace, identifier.Name, phase, delegates)
 		}
 	} else {
 		delegateLog.Errorf("%s", err.Error())
 	}
 }
 
-func (self *Agent) ProcessService(namespace string, serviceName string, phase string) {
+func (self *Agent) ProcessService(namespace string, serviceName string, phase string, delegates *Delegates) {
 	if namespace == "" {
 		namespace = "_"
 	}
@@ -38,47 +43,48 @@ func (self *Agent) ProcessService(namespace string, serviceName string, phase st
 
 	var next []delegatepkg.Next
 
-	if lock, clout, err := self.OpenClout(namespace, serviceName); err == nil {
+	if lock, clout, err := self.OpenServiceClout(namespace, serviceName); err == nil {
 		defer logging.CallAndLogError(lock.Unlock, "unlock", delegateLog)
 
-		if coercedClout, err := clout.Copy(); err == nil {
-			if err := self.CoerceClout(coercedClout); err == nil {
+		if coercedClout, err := self.CoerceClout(clout, true); err == nil {
 
-				delegates := self.NewDelegates()
-				delegates.Fill(namespace, coercedClout)
-				defer delegates.Release()
+			var saveClout *cloutpkg.Clout
 
-				var saveClout *cloutpkg.Clout
+			if self.Instantiate(clout, coercedClout) {
+				// Re-coerce
+				if coercedClout, err = self.CoerceClout(clout, true); err != nil {
+					delegateLog.Errorf("%s", err.Error())
+					return
+				}
+				saveClout = clout
+			}
 
-				for _, delegate := range delegates.All() {
-					//for _, delegate_ := range delegates.delegates {
-					//delegate := delegate_.Delegate()
-					//log.Noticef("!!!!!!!!!!!!! delegate: %s", delegate_.Name())
-					if clout_, next_, err := delegate.ProcessService(namespace, serviceName, phase, clout, coercedClout); err == nil {
-						next = delegatepkg.MergeNexts(next, next_)
+			delegates.Fill(namespace, coercedClout)
 
-						if clout_ != nil {
-							clout = clout_
-							saveClout = clout_
+			for _, delegate := range delegates.All() {
+				//for _, delegate_ := range delegates.delegates {
+				//delegate := delegate_.Delegate()
+				//log.Noticef("!!!!!!!!!!!!! delegate: %s", delegate_.Name())
+				if changedClout, next_, err := delegate.ProcessService(namespace, serviceName, phase, clout, coercedClout); err == nil {
+					next = delegatepkg.MergeNexts(next, next_)
 
-							if coercedClout, err = clout.Copy(); err == nil {
-								if err := self.CoerceClout(coercedClout); err != nil {
-									delegateLog.Errorf("%s", err.Error())
-								}
-							}
+					if changedClout != nil {
+						clout = changedClout
+						saveClout = changedClout
+
+						if coercedClout, err = self.CoerceClout(clout, true); err != nil {
+							delegateLog.Errorf("%s", err.Error())
 						}
-					} else {
-						delegateLog.Errorf("%s", err.Error())
 					}
+				} else {
+					delegateLog.Errorf("%s", err.Error())
 				}
+			}
 
-				if saveClout != nil {
-					if err := self.SaveClout(namespace, serviceName, saveClout); err != nil {
-						delegateLog.Errorf("%s", err.Error())
-					}
+			if saveClout != nil {
+				if err := self.SaveServiceClout(namespace, serviceName, saveClout); err != nil {
+					delegateLog.Errorf("%s", err.Error())
 				}
-			} else {
-				delegateLog.Errorf("%s", err.Error())
 			}
 		} else {
 			delegateLog.Errorf("%s", err.Error())
@@ -87,10 +93,14 @@ func (self *Agent) ProcessService(namespace string, serviceName string, phase st
 		delegateLog.Errorf("%s", err.Error())
 	}
 
+	self.ProcessNext(next, delegates)
+}
+
+func (self *Agent) ProcessNext(next []delegatepkg.Next, delegates *Delegates) {
 	//log.Infof("NEXT: %v", next)
 	for _, next_ := range next {
 		if next_.Host == self.host {
-			self.ProcessService(next_.Namespace, next_.ServiceName, next_.Phase)
+			self.ProcessService(next_.Namespace, next_.ServiceName, next_.Phase, delegates)
 		} else {
 			if err := self.gossip.SendJSON(next_.Host, NewProcessServiceCommand(next_.Namespace, next_.ServiceName, next_.Phase)); err != nil {
 				delegateLog.Errorf("%s", err.Error())

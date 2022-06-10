@@ -53,23 +53,23 @@ func (self *Agent) ListResources(namespace string, serviceName string, type_ str
 	var packages []PackageIdentifier
 	if serviceName == "" {
 		var err error
-		if packages, err = self.ListPackages(namespace, "clout"); err != nil {
+		if packages, err = self.ListPackages(namespace, "service"); err != nil {
 			return nil, err
 		}
 	} else {
 		packages = []PackageIdentifier{
 			{
 				Namespace: namespace,
-				Type:      "clout",
+				Type:      "service",
 				Name:      serviceName,
 			},
 		}
 	}
 
 	for _, package_ := range packages {
-		if lock, clout, err := self.OpenClout(package_.Namespace, package_.Name); err == nil {
+		if lock, clout, err := self.OpenServiceClout(package_.Namespace, package_.Name); err == nil {
 			logging.CallAndLogError(lock.Unlock, "unlock", log)
-			if err := self.CoerceClout(clout); err == nil {
+			if clout, err = self.CoerceClout(clout, false); err == nil {
 				if resources_, err := self.getResources(package_.Namespace, package_.Name, clout, type_); err == nil {
 					for _, resource := range resources_ {
 						if resource.Type == type_ {

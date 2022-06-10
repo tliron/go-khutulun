@@ -2,8 +2,6 @@ package agent
 
 import (
 	"time"
-
-	"github.com/tliron/kutil/util"
 )
 
 //
@@ -15,7 +13,6 @@ type Ticker struct {
 	f         func()
 
 	stop   chan struct{}
-	lock   util.RWLocker
 	ticker *time.Ticker
 }
 
@@ -24,7 +21,6 @@ func NewTicker(frequency time.Duration, f func()) *Ticker {
 		frequency: frequency,
 		f:         f,
 		stop:      make(chan struct{}),
-		lock:      util.NewDefaultRWLocker(),
 	}
 }
 
@@ -39,9 +35,7 @@ func (self *Ticker) Start() {
 
 		case <-self.ticker.C:
 			log.Info("tick")
-			self.lock.Lock()
 			self.f()
-			self.lock.Unlock()
 		}
 	}
 }

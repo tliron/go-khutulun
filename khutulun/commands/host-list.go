@@ -3,8 +3,8 @@ package commands
 import (
 	"github.com/spf13/cobra"
 	clientpkg "github.com/tliron/khutulun/client"
-	formatpkg "github.com/tliron/kutil/format"
 	"github.com/tliron/kutil/terminal"
+	"github.com/tliron/kutil/transcribe"
 	"github.com/tliron/kutil/util"
 )
 
@@ -23,7 +23,7 @@ var hostListCommand = &cobra.Command{
 		hosts, err := client.ListHosts()
 		util.FailOnError(err)
 		if len(hosts) > 0 {
-			err = formatpkg.Print(hosts, format, terminal.Stdout, strict, pretty)
+			err = transcribe.Print(hosts, format, terminal.Stdout, strict, pretty)
 			util.FailOnError(err)
 		}
 	},

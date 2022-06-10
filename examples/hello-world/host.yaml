@@ -1,0 +1,32 @@
+tosca_definitions_version: tosca_2_0
+
+imports:
+
+- namespace: kh
+  url: khutulun/profile.yaml
+
+topology_template:
+
+  node_templates:
+
+    endpoint:
+      type: kh:DelegateEndpoint
+      requirements:
+      - connection: ip-port
+
+    ip-port:
+      type: kh:Process
+      capabilities:
+        runnable:
+          properties:
+            command:
+              name: /mnt/khutulun/common/delegate/ipport/khutulun-delegate-ipport
+
+  policies:
+
+    - distribute-all-hosts:
+        type: kh:Distribution
+        properties:
+          hosts: { ratio: 1.0 }
+        targets:
+        - ip-port

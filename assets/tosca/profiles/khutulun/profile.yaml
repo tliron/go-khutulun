@@ -11,6 +11,4 @@ imports:
 
 - artifacts.yaml
 - groups.yaml
-- nodes.yaml
 - policies.yaml
-

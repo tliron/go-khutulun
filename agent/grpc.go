@@ -423,9 +423,9 @@ func (self *GRPC) Interact(server api.Agent_InteractServer) error {
 			serviceName := start.Identifier[2]
 			resourceName := start.Identifier[3]
 
-			if lock, clout, err := self.agent.OpenClout(namespace, serviceName); err == nil {
+			if lock, clout, err := self.agent.OpenServiceClout(namespace, serviceName); err == nil {
 				logging.CallAndLogError(lock.Unlock, "unlock", delegateLog)
-				if err := self.agent.CoerceClout(clout); err == nil {
+				if clout, err = self.agent.CoerceClout(clout, false); err == nil {
 					delegates := self.agent.NewDelegates()
 					delegates.Fill(namespace, clout)
 					defer delegates.Release()

@@ -64,36 +64,43 @@ func GetContainerPorts(capability any) []Port {
 	return ports
 }
 
-func GetContainer(vertex *cloutpkg.Vertex, capabilityName string, capability any) *Container {
-	self := Container{
-		vertexID:       vertex.ID,
-		capabilityName: capabilityName,
-	}
+func GetContainers(vertex *cloutpkg.Vertex, capabilityName string, capability any) []*Container {
+	var containers []*Container
 
-	capabilityProperties, _ := ard.NewNode(capability).Get("properties").StringMap()
-	capabilityAttributes, _ := ard.NewNode(capability).Get("attributes").StringMap()
-
-	self.Host, _ = ard.NewNode(capabilityAttributes).Get("host").String()
-	var ok bool
-	if self.Name, ok = ard.NewNode(capabilityProperties).Get("name").String(); !ok {
-		self.Name, _ = ard.NewNode(vertex.Properties).Get("name").String()
-	}
-	self.Reference, _ = ard.NewNode(capabilityProperties).Get("image").Get("reference").String()
-	if self.Reference == "" {
-		host, _ := ard.NewNode(capabilityProperties).Get("image").Get("host").String()
-		port, _ := ard.NewNode(capabilityProperties).Get("image").Get("port").NumberAsInteger()
-		repository, _ := ard.NewNode(capabilityProperties).Get("image").Get("repository").String()
-		image, _ := ard.NewNode(capabilityProperties).Get("image").Get("image").String()
-		tag, _ := ard.NewNode(capabilityProperties).Get("image").Get("tag").String()
-		digestAlgorithm, _ := ard.NewNode(capabilityProperties).Get("image").Get("digest-algorithm").String()
-		digestHex, _ := ard.NewNode(capabilityProperties).Get("image").Get("digest-hex").String()
-		if image != "" {
-			self.Reference = formatImageReference(host, int(port), repository, image, tag, digestAlgorithm, digestHex)
+	instances, _ := ard.NewNode(vertex.Properties).Get("attributes").Get("instances").List()
+	for index, instance := range instances {
+		container := Container{
+			vertexID:       vertex.ID,
+			capabilityName: capabilityName,
 		}
-	}
-	self.CreateArguments, _ = ard.NewNode(capabilityProperties).Get("create-arguments").StringList()
 
-	return &self
+		capabilityProperties, _ := ard.NewNode(capability).Get("properties").StringMap()
+
+		container.Host, _ = ard.NewNode(instance).Get("host").String()
+		var ok bool
+		if container.Name, ok = ard.NewNode(capabilityProperties).Get("name").String(); !ok {
+			container.Name, _ = ard.NewNode(vertex.Properties).Get("name").String()
+		}
+		container.Name = fmt.Sprintf("%s-%d", container.Name, index)
+		container.Reference, _ = ard.NewNode(capabilityProperties).Get("image").Get("reference").String()
+		if container.Reference == "" {
+			host, _ := ard.NewNode(capabilityProperties).Get("image").Get("host").String()
+			port, _ := ard.NewNode(capabilityProperties).Get("image").Get("port").NumberAsInteger()
+			repository, _ := ard.NewNode(capabilityProperties).Get("image").Get("repository").String()
+			image, _ := ard.NewNode(capabilityProperties).Get("image").Get("image").String()
+			tag, _ := ard.NewNode(capabilityProperties).Get("image").Get("tag").String()
+			digestAlgorithm, _ := ard.NewNode(capabilityProperties).Get("image").Get("digest-algorithm").String()
+			digestHex, _ := ard.NewNode(capabilityProperties).Get("image").Get("digest-hex").String()
+			if image != "" {
+				container.Reference = formatImageReference(host, int(port), repository, image, tag, digestAlgorithm, digestHex)
+			}
+		}
+		container.CreateArguments, _ = ard.NewNode(capabilityProperties).Get("create-arguments").StringList()
+
+		containers = append(containers, &container)
+	}
+
+	return containers
 }
 
 func GetVertexContainers(vertex *cloutpkg.Vertex) []*Container {
@@ -102,7 +109,7 @@ func GetVertexContainers(vertex *cloutpkg.Vertex) []*Container {
 		for capabilityName, capability := range capabilities {
 			if types, ok := ard.NewNode(capability).Get("types").StringMap(); ok {
 				if _, ok := types["cloud.puccini.khutulun::Container"]; ok {
-					containers = append(containers, GetContainer(vertex, capabilityName, capability))
+					containers = append(containers, GetContainers(vertex, capabilityName, capability)...)
 				}
 			}
 		}

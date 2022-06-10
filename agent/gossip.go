@@ -7,9 +7,9 @@ import (
 	"time"
 
 	"github.com/hashicorp/memberlist"
-	"github.com/tliron/kutil/format"
 	"github.com/tliron/kutil/logging"
 	"github.com/tliron/kutil/logging/sink"
+	"github.com/tliron/kutil/transcribe"
 	"github.com/tliron/kutil/util"
 )
 
@@ -137,7 +137,7 @@ func (self *Gossip) AddHosts(gossipAddresses []string) error {
 }
 
 func (self *Gossip) SendJSON(host string, message any) error {
-	if code, err := format.EncodeJSON(message, ""); err == nil {
+	if code, err := transcribe.EncodeJSON(message, ""); err == nil {
 		return self.Send(host, util.StringToBytes(code))
 	} else {
 		return err

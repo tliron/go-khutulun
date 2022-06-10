@@ -17,6 +17,6 @@ var serviceFetchCommand = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		args = append(args, "clout.yaml")
-		fetchPackage(namespace, "clout", args)
+		fetchPackage(namespace, "service", args)
 	},
 }

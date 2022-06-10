@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net"
 
-	"github.com/tliron/kutil/format"
+	"github.com/tliron/kutil/transcribe"
 	"github.com/tliron/kutil/util"
 )
 
@@ -54,7 +54,7 @@ func (self *Broadcaster) Stop() error {
 }
 
 func (self *Broadcaster) SendJSON(message any) error {
-	if code, err := format.EncodeJSON(message, ""); err == nil {
+	if code, err := transcribe.EncodeJSON(message, ""); err == nil {
 		return self.Send(util.StringToBytes(code))
 	} else {
 		return err
