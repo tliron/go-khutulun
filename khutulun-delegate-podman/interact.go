@@ -12,7 +12,7 @@ import (
 // delegate.Delegate interface
 func (self *Delegate) Interact(server sdk.GRPCInteractor, start *api.Interaction_Start) error {
 	if len(start.Identifier) != 4 {
-		return statuspkg.Errorf(codes.InvalidArgument, "malformed identifier for runnable: %s", start.Identifier)
+		return statuspkg.Errorf(codes.InvalidArgument, "malformed identifier for activity: %s", start.Identifier)
 	}
 
 	//namespace := interaction.Start.Identifier[1]

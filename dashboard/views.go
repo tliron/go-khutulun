@@ -34,10 +34,10 @@ func (self *Application) updateServices(table *tview.Table, namespace *tview.Dro
 }
 
 // UpdateTableFunc signature
-func (self *Application) updateRunnables(table *tview.Table, namespace *tview.DropDown) {
+func (self *Application) updateActivities(table *tview.Table, namespace *tview.DropDown) {
 	update := func() {
 		namespace_ := getNamespace(namespace)
-		if resources, err := self.client.ListResources(namespace_, "", "runnable"); err == nil {
+		if resources, err := self.client.ListResources(namespace_, "", "activity"); err == nil {
 			table.Clear()
 
 			headers := []string{"Name", "Service", "Host"}
@@ -58,6 +58,35 @@ func (self *Application) updateRunnables(table *tview.Table, namespace *tview.Dr
 				table.SetCell(row, column, tview.NewTableCell(resource.Service))
 				column++
 				table.SetCell(row, column, tview.NewTableCell(resource.Host))
+				row++
+				column = 0
+			}
+		}
+	}
+	self.updateNamespaces(table, namespace, update)
+}
+
+// UpdateTableFunc signature
+func (self *Application) updateConnections(table *tview.Table, namespace *tview.DropDown) {
+	update := func() {
+		namespace_ := getNamespace(namespace)
+		if resources, err := self.client.ListResources(namespace_, "", "connection"); err == nil {
+			table.Clear()
+
+			headers := []string{"Name"}
+			if namespace_ == "" {
+				headers = append([]string{"Namespace"}, headers...)
+			}
+			SetTableHeader(table, headers...)
+
+			column := 0
+			row := 1
+			for _, resource := range resources {
+				if namespace_ == "" {
+					table.SetCell(row, column, tview.NewTableCell(namespaceLabel(resource.Namespace)))
+					column++
+				}
+				table.SetCell(row, column, tview.NewTableCell(resource.Name))
 				row++
 				column = 0
 			}

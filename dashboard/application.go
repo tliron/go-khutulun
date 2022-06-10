@@ -56,8 +56,8 @@ func NewApplication(client *clientpkg.Client, frequency time.Duration) *Applicat
 
 	self.AddTableView("home", "Home", 'm', false, nil)
 	self.AddTableView("services", "Services", 's', true, self.updateServices)
-	self.AddTableView("runnables", "Runnables", 'r', true, self.updateRunnables)
-	self.AddTableView("connections", "Connections", 'c', true, nil)
+	self.AddTableView("activities", "Activities", 'a', true, self.updateActivities)
+	self.AddTableView("connections", "Connections", 'c', true, self.updateConnections)
 	self.AddTableView("storage", "Storage", 's', true, nil)
 	self.AddTableView("delegates", "Delegates", 'd', true, self.updateDelegates)
 	self.AddTableView("templates", "Templates", 't', true, self.updateTemplates)

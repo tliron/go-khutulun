@@ -12,7 +12,7 @@ import (
 
 	clientpkg "github.com/tliron/khutulun/client"
 	"github.com/tliron/kutil/terminal"
-	formatpkg "github.com/tliron/kutil/transcribe"
+	"github.com/tliron/kutil/transcribe"
 	urlpkg "github.com/tliron/kutil/url"
 	"github.com/tliron/kutil/util"
 )
@@ -25,7 +25,7 @@ func listPackages(namespace string, type_ string) {
 	identifiers, err := client.ListPackages(namespace, type_)
 	util.FailOnError(err)
 	if len(identifiers) > 0 {
-		err = formatpkg.Print(identifiers, format, terminal.Stdout, strict, pretty)
+		err = transcribe.Print(identifiers, format, terminal.Stdout, strict, pretty)
 		util.FailOnError(err)
 	}
 }
@@ -236,7 +236,7 @@ func fetchPackage(namespace string, type_ string, args []string) {
 			var buffer strings.Builder
 			err = client.GetPackageFile(namespace, type_, name, path, coerce, &buffer)
 			util.FailOnError(err)
-			err = formatpkg.PrettifyYAML(buffer.String(), terminal.Stdout)
+			err = transcribe.PrettifyYAML(buffer.String(), terminal.Stdout)
 			util.FailOnError(err)
 		} else {
 			err = client.GetPackageFile(namespace, type_, name, path, coerce, terminal.Stdout)

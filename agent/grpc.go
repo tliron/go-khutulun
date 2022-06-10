@@ -340,9 +340,9 @@ func (self *GRPC) RemovePackage(context contextpkg.Context, packageIdentifer *ap
 
 // api.AgentServer interface
 func (self *GRPC) DeployService(context contextpkg.Context, deployService *api.DeployService) (*emptypb.Empty, error) {
-	grpcLog.Infof("deployService(%q, %q, %q, %q)", deployService.Template.Namespace, deployService.Template.Name, deployService.Service.Name, deployService.Template.Name)
+	grpcLog.Infof("deployService(%q, %q, %q, %q, %t)", deployService.Template.Namespace, deployService.Template.Name, deployService.Service.Name, deployService.Template.Name, deployService.Async)
 
-	if err := self.agent.DeployService(deployService.Template.Namespace, deployService.Template.Name, deployService.Service.Namespace, deployService.Service.Name); err == nil {
+	if err := self.agent.DeployService(deployService.Template.Namespace, deployService.Template.Name, deployService.Service.Namespace, deployService.Service.Name, deployService.Async); err == nil {
 		return new(emptypb.Empty), nil
 	} else {
 		return new(emptypb.Empty), sdk.Aborted(err)
@@ -416,8 +416,8 @@ func (self *GRPC) Interact(server api.Agent_InteractServer) error {
 			return sdk.StartCommand(command, server, grpcLog)
 		},
 
-		"runnable": func(start *api.Interaction_Start) error {
-			// TODO: find host for runnable and relay if necessary
+		"activity": func(start *api.Interaction_Start) error {
+			// TODO: find host for activity and relay if necessary
 
 			namespace := start.Identifier[1]
 			serviceName := start.Identifier[2]
@@ -427,8 +427,8 @@ func (self *GRPC) Interact(server api.Agent_InteractServer) error {
 				logging.CallAndLogError(lock.Unlock, "unlock", delegateLog)
 				if clout, err = self.agent.CoerceClout(clout, false); err == nil {
 					delegates := self.agent.NewDelegates()
-					delegates.Fill(namespace, clout)
 					defer delegates.Release()
+					delegates.Fill(namespace, clout)
 
 					for _, delegate := range delegates.All() {
 						if resources, err := delegate.ListResources(namespace, serviceName, clout); err == nil {
@@ -457,7 +457,7 @@ func (self *GRPC) Interact(server api.Agent_InteractServer) error {
 				return sdk.Aborted(err)
 			}
 
-			return sdk.Abortedf("runnable not found: %s/%s->%s", namespace, serviceName, resourceName)
+			return sdk.Abortedf("activity not found: %s/%s->%s", namespace, serviceName, resourceName)
 		},
 	})
 }

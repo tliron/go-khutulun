@@ -33,7 +33,7 @@ relationship_types:
     attributes:
       delegate:
         type: string
-        default: ipport
+        default: ipport-endpoint
       ip:
         type: IPAddress
         default: '::'

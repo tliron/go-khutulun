@@ -8,6 +8,7 @@ import (
 	"github.com/tliron/kutil/ard"
 	"github.com/tliron/kutil/logging"
 	cloutpkg "github.com/tliron/puccini/clout"
+	cloututil "github.com/tliron/puccini/clout/util"
 )
 
 //
@@ -40,15 +41,15 @@ func (self *Agent) NewPluginDelegate(namespace string, delegateName string) (*Pl
 		defer logging.CallAndLogError(lock.Unlock, "unlock", delegateLog)
 
 		command := self.getPackageMainFile(namespace, "delegate", delegateName)
-		self := PluginDelegate{
+		pluginDelegate := PluginDelegate{
 			name:   delegateName,
 			client: delegatepkg.NewDelegatePluginClient(delegateName, command),
 		}
 
-		if self.delegate, err = self.client.Delegate(); err == nil {
-			return &self, nil
+		if pluginDelegate.delegate, err = pluginDelegate.client.Delegate(); err == nil {
+			return &pluginDelegate, nil
 		} else {
-			self.Release()
+			logging.CallAndLogError(pluginDelegate.Release, "release", delegateLog)
 			return nil, err
 		}
 	} else if os.IsNotExist(err) {
@@ -105,9 +106,6 @@ func (self *Agent) NewDelegates() *Delegates {
 func (self *Delegates) NewDelegate(namespace string, delegateName string) (Delegate, error) {
 	if delegate, err := self.agent.NewDelegate(namespace, delegateName); err == nil {
 		self.delegates[NewNamespaced(namespace, delegateName)] = delegate
-		if namespace_, _ := delegate.Name(); namespace_ != namespace {
-			self.delegates[NewNamespaced(namespace_, delegateName)] = delegate
-		}
 		return delegate, nil
 	} else {
 		return nil, err
@@ -139,12 +137,10 @@ func (self *Delegates) All() []delegatepkg.Delegate {
 func (self *Delegates) Fill(namespace string, coercedClout *cloutpkg.Clout) {
 	for _, vertex := range coercedClout.Vertexes {
 		for _, edge := range vertex.EdgesOut {
-			if types, ok := ard.NewNode(edge.Properties).Get("types").StringMap(); ok {
-				if _, ok := types["cloud.puccini.khutulun::Connection"]; ok {
-					if delegateName, ok := ard.NewNode(edge.Properties).Get("attributes").Get("delegate").String(); ok {
-						if _, err := self.Get(namespace, delegateName); err != nil {
-							delegateLog.Errorf("%s", err.Error())
-						}
+			if cloututil.IsType(edge.Properties, "cloud.puccini.khutulun::Connection") {
+				if delegateName, ok := ard.NewNode(edge.Properties).Get("attributes").Get("delegate").String(); ok {
+					if _, err := self.Get(namespace, delegateName); err != nil {
+						delegateLog.Errorf("%s", err.Error())
 					}
 				}
 			}
@@ -152,12 +148,10 @@ func (self *Delegates) Fill(namespace string, coercedClout *cloutpkg.Clout) {
 
 		if capabilities, ok := ard.NewNode(vertex.Properties).Get("capabilities").StringMap(); ok {
 			for _, capability := range capabilities {
-				if types, ok := ard.NewNode(capability).Get("types").StringMap(); ok {
-					if _, ok := types["cloud.puccini.khutulun::Runnable"]; ok {
-						if delegateName, ok := ard.NewNode(capability).Get("attributes").Get("delegate").String(); ok {
-							if _, err := self.Get(namespace, delegateName); err != nil {
-								delegateLog.Errorf("%s", err.Error())
-							}
+				if cloututil.IsType(capability, "cloud.puccini.khutulun::Runnable") {
+					if delegateName, ok := ard.NewNode(capability).Get("attributes").Get("delegate").String(); ok {
+						if _, err := self.Get(namespace, delegateName); err != nil {
+							delegateLog.Errorf("%s", err.Error())
 						}
 					}
 				}

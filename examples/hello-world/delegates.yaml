@@ -9,15 +9,15 @@ topology_template:
 
   node_templates:
 
-    endpoint:
+    ipport-endpoint:
       type: kh:DelegateEndpoint
       requirements:
-      - connection: ip-port
+      - connection: ipport
 
-    ip-port:
+    ipport:
       type: kh:Process
       capabilities:
-        runnable:
+        activity:
           properties:
             command:
               name: /mnt/khutulun/common/delegate/ipport/khutulun-delegate-ipport

@@ -7,6 +7,7 @@ import (
 
 	"github.com/tliron/kutil/ard"
 	cloutpkg "github.com/tliron/puccini/clout"
+	cloututil "github.com/tliron/puccini/clout/util"
 )
 
 //
@@ -25,12 +26,12 @@ type Container struct {
 }
 
 type Port struct {
-	External int64
-	Internal int64
-	Protocol string
+	External int64  `ard:"external"`
+	Internal int64  `ard:"internal"`
+	Protocol string `ard:"protocol"`
 }
 
-func (self *Container) Find(clout *cloutpkg.Clout) (*cloutpkg.Vertex, any, error) {
+func (self *Container) Find(clout *cloutpkg.Clout) (*cloutpkg.Vertex, ard.Value, error) {
 	if vertex, ok := clout.Vertexes[self.vertexID]; ok {
 		if capabilities, ok := ard.NewNode(vertex.Properties).Get("capabilities").StringMap(); ok {
 			if capability, ok := capabilities[self.capabilityName]; ok {
@@ -46,56 +47,55 @@ func (self *Container) Find(clout *cloutpkg.Clout) (*cloutpkg.Vertex, any, error
 	}
 }
 
-func GetContainerPorts(capability any) []Port {
+func GetContainerPorts(capability ard.Value) []Port {
 	var ports []Port
-	capabilityAttributes, _ := ard.NewNode(capability).Get("attributes").StringMap()
-	if ports_, ok := ard.NewNode(capabilityAttributes).Get("ports").List(); ok {
-		for _, port := range ports_ {
-			external, _ := ard.NewNode(port).Get("external").NumberAsInteger()
-			internal, _ := ard.NewNode(port).Get("internal").NumberAsInteger()
-			protocol, _ := ard.NewNode(port).Get("protocol").String()
-			ports = append(ports, Port{
-				External: external,
-				Internal: internal,
-				Protocol: protocol,
-			})
-		}
+	if ports_, ok := ard.NewNode(capability).Get("attributes", "ports").List(); ok {
+		ard.NewReflector().ToComposite(ports_, &ports)
 	}
 	return ports
 }
 
-func GetContainers(vertex *cloutpkg.Vertex, capabilityName string, capability any) []*Container {
+func GetContainers(vertex *cloutpkg.Vertex, capabilityName string, capability ard.Value) []*Container {
 	var containers []*Container
 
-	instances, _ := ard.NewNode(vertex.Properties).Get("attributes").Get("instances").List()
-	for index, instance := range instances {
+	reflector := ard.NewReflector()
+	reflector.IgnoreMissingStructFields = true
+	reflector.NilMeansZero = true
+
+	var instances []struct {
+		Name string `ard:"name"`
+	}
+	if err := reflector.ToComposite(ard.NewNode(vertex.Properties).Get("attributes", "instances").Value, &instances); err != nil {
+		panic(err)
+	}
+
+	var capability_ struct {
+		Properties struct {
+			Name            string                  `ard:"name"`
+			Image           ContainerImageReference `ard:"image"`
+			CreateArguments []string                `ard:"create-arguments"`
+		} `ard:"properties"`
+		Attributes struct {
+			Host string `ard:"host"`
+		} `ard:"attributes"`
+	}
+	if err := reflector.ToComposite(capability, &capability_); err != nil {
+		panic(err)
+	}
+
+	for _, instance := range instances {
 		container := Container{
-			vertexID:       vertex.ID,
-			capabilityName: capabilityName,
+			Host:            capability_.Attributes.Host,
+			Name:            instance.Name,
+			Reference:       capability_.Properties.Image.String(),
+			CreateArguments: capability_.Properties.CreateArguments,
+			vertexID:        vertex.ID,
+			capabilityName:  capabilityName,
 		}
 
-		capabilityProperties, _ := ard.NewNode(capability).Get("properties").StringMap()
-
-		container.Host, _ = ard.NewNode(instance).Get("host").String()
-		var ok bool
-		if container.Name, ok = ard.NewNode(capabilityProperties).Get("name").String(); !ok {
-			container.Name, _ = ard.NewNode(vertex.Properties).Get("name").String()
+		if capability_.Properties.Name != "" {
+			container.Name = fmt.Sprintf("%s-%s", container.Name, capability_.Properties.Name)
 		}
-		container.Name = fmt.Sprintf("%s-%d", container.Name, index)
-		container.Reference, _ = ard.NewNode(capabilityProperties).Get("image").Get("reference").String()
-		if container.Reference == "" {
-			host, _ := ard.NewNode(capabilityProperties).Get("image").Get("host").String()
-			port, _ := ard.NewNode(capabilityProperties).Get("image").Get("port").NumberAsInteger()
-			repository, _ := ard.NewNode(capabilityProperties).Get("image").Get("repository").String()
-			image, _ := ard.NewNode(capabilityProperties).Get("image").Get("image").String()
-			tag, _ := ard.NewNode(capabilityProperties).Get("image").Get("tag").String()
-			digestAlgorithm, _ := ard.NewNode(capabilityProperties).Get("image").Get("digest-algorithm").String()
-			digestHex, _ := ard.NewNode(capabilityProperties).Get("image").Get("digest-hex").String()
-			if image != "" {
-				container.Reference = formatImageReference(host, int(port), repository, image, tag, digestAlgorithm, digestHex)
-			}
-		}
-		container.CreateArguments, _ = ard.NewNode(capabilityProperties).Get("create-arguments").StringList()
 
 		containers = append(containers, &container)
 	}
@@ -107,20 +107,16 @@ func GetVertexContainers(vertex *cloutpkg.Vertex) []*Container {
 	var containers []*Container
 	if capabilities, ok := ard.NewNode(vertex.Properties).Get("capabilities").StringMap(); ok {
 		for capabilityName, capability := range capabilities {
-			if types, ok := ard.NewNode(capability).Get("types").StringMap(); ok {
-				if _, ok := types["cloud.puccini.khutulun::Container"]; ok {
-					containers = append(containers, GetContainers(vertex, capabilityName, capability)...)
-				}
+			if cloututil.IsType(capability, "cloud.puccini.khutulun::Container") {
+				containers = append(containers, GetContainers(vertex, capabilityName, capability)...)
 			}
 		}
 
 		for _, capability := range capabilities {
-			if types, ok := ard.NewNode(capability).Get("types").StringMap(); ok {
-				if _, ok := types["cloud.puccini.khutulun::ContainerConnectable"]; ok {
-					ports := GetContainerPorts(capability)
-					for _, container := range containers {
-						container.Ports = ports
-					}
+			if cloututil.IsType(capability, "cloud.puccini.khutulun::ContainerConnectable") {
+				ports := GetContainerPorts(capability)
+				for _, container := range containers {
+					container.Ports = ports
 				}
 			}
 		}
@@ -131,37 +127,60 @@ func GetVertexContainers(vertex *cloutpkg.Vertex) []*Container {
 func GetCloutContainers(clout *cloutpkg.Clout) []*Container {
 	var containers []*Container
 	for _, vertex := range clout.Vertexes {
-		containers = append(containers, GetVertexContainers(vertex)...)
+		if cloututil.IsTOSCA(vertex.Metadata, "NodeTemplate") {
+			containers = append(containers, GetVertexContainers(vertex)...)
+		}
 	}
 	return containers
 }
 
-func formatImageReference(host string, port int, repository string, image string, tag string, digestAlgorithm string, digestHex string) string {
-	// [host[:port]/][repository/]image[:tag][@digest-algorithm:digest-hex]
+//
+// ContainerImageReference
+//
+
+type ContainerImageReference struct {
+	Reference string `ard:"reference"`
+
+	Host            string `ard:"host"`
+	Port            int    `ard:"port"`
+	Repository      string `ard:"repository"`
+	Image           string `ard:"image"`
+	Tag             string `ard:"tag"`
+	DigestAlgorithm string `ard:"digestAlgorithm"`
+	DigestHex       string `ard:"digestHex"`
+}
+
+// [host[:port]/][repository/]image[:tag][@digest-algorithm:digest-hex]
+// fmt.Stringer interface
+func (self ContainerImageReference) String() string {
+	if self.Reference != "" {
+		return self.Reference
+	}
+
 	var s strings.Builder
-	if host != "" {
-		s.WriteString(host)
-		if port != 0 {
+	if self.Host != "" {
+		s.WriteString(self.Host)
+		if self.Port != 0 {
 			s.WriteRune(':')
-			s.WriteString(strconv.Itoa(port))
+			s.WriteString(strconv.Itoa(self.Port))
 		}
 		s.WriteRune('/')
 	}
-	if repository != "" {
-		s.WriteString(repository)
+	if self.Repository != "" {
+		s.WriteString(self.Repository)
 		s.WriteRune('/')
 	}
-	s.WriteString(image)
-	if tag != "" {
+	s.WriteString(self.Image)
+	if self.Tag != "" {
 		s.WriteRune(':')
-		s.WriteString(tag)
+		s.WriteString(self.Tag)
 	}
-	if digestAlgorithm != "" {
+	if self.DigestAlgorithm != "" {
 		s.WriteRune('@')
-		s.WriteString(digestAlgorithm)
-		if digestHex != "" {
+		s.WriteString(self.DigestAlgorithm)
+		if self.DigestHex != "" {
 			s.WriteRune(':')
-			s.WriteString(digestHex)
+			s.WriteString(self.DigestHex)
 		}
 	}
 	return s.String()

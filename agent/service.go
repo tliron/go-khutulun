@@ -6,11 +6,21 @@ import (
 	cloutpkg "github.com/tliron/puccini/clout"
 )
 
-func (self *Agent) DeployService(templateNamespace string, templateName string, serviceNamespace string, serviceName string) error {
+func (self *Agent) DeployService(templateNamespace string, templateName string, serviceNamespace string, serviceName string, async bool) error {
 	if _, problems, err := self.CompileTOSCA(templateNamespace, templateName, serviceNamespace, serviceName); err == nil {
-		delegates := self.NewDelegates()
-		defer delegates.Release()
-		self.ProcessService(serviceNamespace, serviceName, "schedule", delegates)
+		schedule := func() {
+			delegates := self.NewDelegates()
+			defer delegates.Release()
+
+			self.ProcessService(serviceNamespace, serviceName, "schedule", delegates)
+		}
+
+		if async {
+			go schedule()
+		} else {
+			schedule()
+		}
+
 		return nil
 	} else {
 		if problems != nil {
@@ -50,13 +60,15 @@ func (self *Agent) ProcessService(namespace string, serviceName string, phase st
 
 			var saveClout *cloutpkg.Clout
 
-			if self.Instantiate(clout, coercedClout) {
-				// Re-coerce
-				if coercedClout, err = self.CoerceClout(clout, true); err != nil {
-					delegateLog.Errorf("%s", err.Error())
-					return
+			if phase == "schedule" { // TODO: move to its own phase?
+				if self.Instantiate(clout, coercedClout) {
+					// Re-coerce
+					if coercedClout, err = self.CoerceClout(clout, true); err != nil {
+						delegateLog.Errorf("%s", err.Error())
+						return
+					}
+					saveClout = clout
 				}
-				saveClout = clout
 			}
 
 			delegates.Fill(namespace, coercedClout)

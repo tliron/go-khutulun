@@ -26,7 +26,7 @@ capability_types:
         required: false
       user:
         description: >-
-          Operating system user owning the runnable. If not provided will be the user owning the host service.
+          Operating system user owning the activity. If not provided will be the user owning the host service.
         type: string
         required: false
       systemd:
@@ -50,7 +50,7 @@ capability_types:
 
   Storage: {}
 
-  # Runnables
+  # Activities
 
   Process:
     derived_from: Runnable
@@ -66,7 +66,7 @@ capability_types:
     properties:
       name:
         description: >-
-          If not provided will use the node's name.
+          If specified will be appended to the instance name.
         type: string
         required: false
       image:
@@ -81,6 +81,8 @@ capability_types:
     attributes:
       delegate:
         default: podman
+      host:
+        type: string
 
   Pod:
     derived_from: Runnable

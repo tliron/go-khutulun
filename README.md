@@ -99,7 +99,7 @@ decisions:
   enables "side-loading" networking, but we still need a primary IP address on the Kubernetes
   control plane.) Distributed storage solutions must also be made to participate in this networking
   scheme.
-* Kubernetes is focused on one kind of runnable: pods of Docker-style containers. This means that we
+* Kubernetes is focused on one kind of activity: pods of Docker-style containers. This means that we
   also require a Docker-style container image repository (either external or internal to the cluster).
   That's a not-insignficant cost. And what if we don't need or want to use containers? Sometimes we want
   just bare processes, or virtual machines, or even other container technologies (e.g. systemd-nspawn).

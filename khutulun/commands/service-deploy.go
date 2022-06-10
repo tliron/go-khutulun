@@ -12,6 +12,7 @@ import (
 var template string
 var inputs map[string]string
 var inputsUrl string
+var async bool
 
 var inputValues = make(map[string]any)
 
@@ -20,6 +21,7 @@ func init() {
 	serviceDeployCommand.Flags().StringVarP(&template, "template", "t", "", "registered template name (defaults to same name as service)")
 	serviceDeployCommand.Flags().StringToStringVarP(&inputs, "input", "i", nil, "specify an input (format is name=YAML)")
 	serviceDeployCommand.Flags().StringVarP(&inputsUrl, "inputs", "m", "", "load inputs from a PATH or URL to YAML content")
+	serviceDeployCommand.Flags().BoolVarP(&async, "async", "a", false, "if true will not wait for deployment to finish")
 }
 
 var serviceDeployCommand = &cobra.Command{
@@ -38,7 +40,11 @@ var serviceDeployCommand = &cobra.Command{
 		util.FailOnError(err)
 		util.OnExitError(client.Close)
 
-		err = client.DeployService(namespace, serviceName, namespace, template, inputValues)
+		if !async {
+			client.Timeout *= 10
+		}
+
+		err = client.DeployService(namespace, serviceName, namespace, template, inputValues, async)
 		util.FailOnError(err)
 	},
 }

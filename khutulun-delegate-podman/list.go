@@ -9,22 +9,21 @@ import (
 func (self *Delegate) ListResources(namespace string, serviceName string, coercedClout *cloutpkg.Clout) ([]delegate.Resource, error) {
 	containers := sdk.GetCloutContainers(coercedClout)
 	connections := sdk.GetCloutConnections(coercedClout)
-	containersLength := len(containers)
-	resources := make([]delegate.Resource, containersLength+len(connections))
+	var resources []delegate.Resource
 
-	for index, container := range containers {
-		resources[index] = delegate.Resource{
-			Type: "runnable",
+	for _, container := range containers {
+		resources = append(resources, delegate.Resource{
+			Type: "activity",
 			Name: container.Name,
 			Host: container.Host,
-		}
+		})
 	}
 
-	for index, connection := range connections {
-		resources[containersLength+index] = delegate.Resource{
+	for _, connection := range connections {
+		resources = append(resources, delegate.Resource{
 			Type: "connection",
 			Name: connection.Name,
-		}
+		})
 	}
 
 	return resources, nil

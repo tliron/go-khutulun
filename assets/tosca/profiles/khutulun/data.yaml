@@ -184,9 +184,6 @@ data_types:
       name:
         type: string
         required: false
-      host:
-        type: string
-        required: false
 
   HostSelector:
     description: >-

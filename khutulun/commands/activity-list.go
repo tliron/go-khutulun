@@ -5,14 +5,14 @@ import (
 )
 
 func init() {
-	runnableCommand.AddCommand(runnableListCommand)
+	activityCommand.AddCommand(activityListCommand)
 }
 
-var runnableListCommand = &cobra.Command{
+var activityListCommand = &cobra.Command{
 	Use:   "list [[SERVICE NAME]]",
-	Short: "List runnables",
+	Short: "List activities",
 	Args:  cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		listResources("runnable", args)
+		listResources("activity", args)
 	},
 }

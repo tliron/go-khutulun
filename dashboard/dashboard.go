@@ -7,7 +7,7 @@ import (
 )
 
 func Dashboard(client *clientpkg.Client) error {
-	application := NewApplication(client, 1*time.Second)
+	application := NewApplication(client, 5*time.Second)
 	err := application.application.Run()
 	if application.ticker != nil {
 		application.ticker.Stop()

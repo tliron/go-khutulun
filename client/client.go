@@ -12,13 +12,15 @@ import (
 	"google.golang.org/grpc"
 )
 
-const TIMEOUT = 10 * time.Second
+const DEFAULT_TIMEOUT = 10 * time.Second
 
 //
 // Client
 //
 
 type Client struct {
+	Timeout time.Duration
+
 	conn    *grpc.ClientConn
 	client  api.AgentClient
 	context contextpkg.Context
@@ -44,6 +46,7 @@ func NewClientFromConfiguration(configurationPath string, clusterName string) (*
 func NewClient(target string) (*Client, error) {
 	if conn, err := grpc.Dial(target, grpc.WithInsecure()); err == nil {
 		return &Client{
+			Timeout: DEFAULT_TIMEOUT,
 			conn:    conn,
 			client:  api.NewAgentClient(conn),
 			context: contextpkg.Background(),
@@ -58,7 +61,7 @@ func (self *Client) Close() error {
 }
 
 func (self *Client) newContextWithTimeout() (contextpkg.Context, contextpkg.CancelFunc) {
-	return contextpkg.WithTimeout(self.context, TIMEOUT)
+	return contextpkg.WithTimeout(self.context, self.Timeout)
 }
 
 func (self *Client) newContextWithCancel() (contextpkg.Context, contextpkg.CancelFunc) {

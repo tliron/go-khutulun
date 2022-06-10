@@ -5,7 +5,7 @@ import (
 	"github.com/tliron/khutulun/sdk"
 )
 
-func (self *Client) DeployService(serviceNamespace string, serviceName string, templateNamespace string, templateName string, inputs map[string]any) error {
+func (self *Client) DeployService(serviceNamespace string, serviceName string, templateNamespace string, templateName string, inputs map[string]any, async bool) error {
 	deployService := api.DeployService{
 		Template: &api.PackageIdentifier{
 			Namespace: templateNamespace,
@@ -16,6 +16,7 @@ func (self *Client) DeployService(serviceNamespace string, serviceName string, t
 			Namespace: serviceNamespace,
 			Name:      serviceName,
 		},
+		Async: async,
 	}
 
 	context, cancel := self.newContextWithTimeout()

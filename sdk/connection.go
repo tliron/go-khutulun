@@ -5,6 +5,7 @@ import (
 
 	"github.com/tliron/kutil/ard"
 	cloutpkg "github.com/tliron/puccini/clout"
+	cloututil "github.com/tliron/puccini/clout/util"
 )
 
 //
@@ -14,7 +15,7 @@ import (
 type Connection struct {
 	Name string
 	IP   string
-	Port int
+	Port int64
 
 	Source *Container
 	Target *Container
@@ -36,36 +37,47 @@ func (self *Connection) Find(clout *cloutpkg.Clout) (*cloutpkg.Edge, error) {
 }
 
 func GetConnection(vertex *cloutpkg.Vertex, edgesOutIndex int, edge *cloutpkg.Edge) Connection {
-	self := Connection{
+	reflector := ard.NewReflector()
+	reflector.IgnoreMissingStructFields = true
+	reflector.NilMeansZero = true
+
+	var relationship struct {
+		Name       string `ard:"name"`
+		Attributes struct {
+			IP   string `ard:"ip"`
+			Port int64  `ard:"port"`
+		} `ard:"attributes"`
+	}
+	if err := reflector.ToComposite(edge.Properties, &relationship); err != nil {
+		panic(err)
+	}
+
+	connection := Connection{
+		Name:          fmt.Sprintf("%s:%d", relationship.Name, edgesOutIndex),
+		IP:            relationship.Attributes.IP,
+		Port:          relationship.Attributes.Port,
 		vertexID:      vertex.ID,
 		edgesOutIndex: edgesOutIndex,
 	}
 
-	name, _ := ard.NewNode(edge.Properties).Get("name").String()
-	self.Name = fmt.Sprintf("%s:%d", name, edgesOutIndex)
-	relationshipAttributes, _ := ard.NewNode(edge.Properties).Get("attributes").StringMap()
-	self.IP, _ = ard.NewNode(relationshipAttributes).Get("ip").String()
-	port, _ := ard.NewNode(relationshipAttributes).Get("port").NumberAsInteger()
-	self.Port = int(port)
-
 	if sources := GetVertexContainers(vertex); len(sources) > 0 {
-		self.Source = sources[0]
+		connection.Source = sources[0]
 	}
 
 	if edge.Target != nil {
 		if targets := GetVertexContainers(edge.Target); len(targets) > 0 {
-			self.Target = targets[0]
+			connection.Target = targets[0]
 		}
 	}
 
-	return self
+	return connection
 }
 
 func GetVertexConnections(vertex *cloutpkg.Vertex) []Connection {
 	var connections []Connection
 	for index, edge := range vertex.EdgesOut {
-		if types, ok := ard.NewNode(edge.Properties).Get("types").StringMap(); ok {
-			if _, ok := types["cloud.puccini.khutulun::IPPort"]; ok {
+		if cloututil.IsTOSCA(edge.Metadata, "Relationship") {
+			if cloututil.IsType(edge.Properties, "cloud.puccini.khutulun::IPPort") {
 				connections = append(connections, GetConnection(vertex, index, edge))
 			}
 		}
@@ -76,7 +88,9 @@ func GetVertexConnections(vertex *cloutpkg.Vertex) []Connection {
 func GetCloutConnections(clout *cloutpkg.Clout) []Connection {
 	var connections []Connection
 	for _, vertex := range clout.Vertexes {
-		connections = append(connections, GetVertexConnections(vertex)...)
+		if cloututil.IsTOSCA(vertex.Metadata, "NodeTemplate") {
+			connections = append(connections, GetVertexConnections(vertex)...)
+		}
 	}
 	return connections
 }

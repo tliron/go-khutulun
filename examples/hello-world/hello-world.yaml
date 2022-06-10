@@ -27,7 +27,7 @@ topology_template:
     web-server:
       type: kh:Container
       capabilities:
-        runnable:
+        activity:
           properties:
             image:
               reference: docker.io/nginx:1.21.6
@@ -46,11 +46,13 @@ topology_template:
     database:
       type: kh:Container
       capabilities:
-        runnable:
+        activity:
           properties:
             image:
               reference: docker.io/postgres:14.2
             create-arguments: [ --env=POSTGRES_PASSWORD=postgres ]
+          attributes:
+            host: lab1 # TEMP: use policy
       requirements:
       - storage: directory
 

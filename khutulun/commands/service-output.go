@@ -7,7 +7,7 @@ import (
 	clientpkg "github.com/tliron/khutulun/client"
 	"github.com/tliron/kutil/ard"
 	"github.com/tliron/kutil/terminal"
-	formatpkg "github.com/tliron/kutil/transcribe"
+	"github.com/tliron/kutil/transcribe"
 	"github.com/tliron/kutil/util"
 	cloutpkg "github.com/tliron/puccini/clout"
 )
@@ -45,10 +45,10 @@ func serviceOutput(serviceName string, outputName *string) {
 	if outputs, ok := ard.NewNode(clout.Properties).Get("tosca").Get("outputs").StringMap(); ok {
 		if outputName != nil {
 			if output, ok := outputs[*outputName]; ok {
-				formatpkg.Print(output, format, terminal.Stdout, strict, pretty)
+				transcribe.Print(output, format, terminal.Stdout, strict, pretty)
 			}
 		} else {
-			formatpkg.Print(outputs, format, terminal.Stdout, strict, pretty)
+			transcribe.Print(outputs, format, terminal.Stdout, strict, pretty)
 		}
 	}
 }

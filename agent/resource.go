@@ -102,8 +102,8 @@ func (self *Agent) ListResources(namespace string, serviceName string, type_ str
 
 func (self *Agent) getResources(namespace string, serviceName string, coercedClout *cloutpkg.Clout, type_ string) ([]delegatepkg.Resource, error) {
 	delegates := self.NewDelegates()
-	delegates.Fill(namespace, coercedClout)
 	defer delegates.Release()
+	delegates.Fill(namespace, coercedClout)
 
 	var resources []delegatepkg.Resource
 

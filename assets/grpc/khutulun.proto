@@ -130,6 +130,7 @@ message ListServices {
 message DeployService {
     PackageIdentifier template = 1;
     ServiceIdentifier service = 2;
+    bool async = 3;
 }
 
 message ResourceIdentifier {

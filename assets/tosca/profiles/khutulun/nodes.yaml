@@ -20,7 +20,7 @@ node_types:
       instances:
         type: list
         entry_schema: Instance
-        #default: [ { name: "hello", host: "here" } ]
+        #default: [ { name: "hello" } ]
 
   Endpoint:
     derived_from: Instantiated
@@ -35,8 +35,14 @@ node_types:
 
   DelegateEndpoint:
     description: >-
-      asd
+      An endpoint that registers a delegate.
     derived_from: Endpoint
+    properties:
+      name:
+        description: >-
+          If not specified will use the node template's name.
+        type: string
+        required: false
 
   # Runnable
 
@@ -46,7 +52,7 @@ node_types:
       events:
         type: Events
     capabilities:
-      runnable:
+      activity:
         type: Process
       connectable: Connectable
     requirements:
@@ -63,7 +69,7 @@ node_types:
       events:
         type: Events
     capabilities:
-      runnable: Container
+      activity: Container
       connectable: ContainerConnectable
     requirements:
     - connection:
@@ -76,7 +82,7 @@ node_types:
   LoadBalancer:
     derived_from: Container
     capabilities:
-      runnable:
+      activity:
         type: Container
         properties:
           image:
@@ -90,7 +96,7 @@ node_types:
       events:
         type: Events
     capabilities:
-      runnable: VirtualMachine
+      activity: VirtualMachine
       connectable: Connectable
     requirements:
     - connection:

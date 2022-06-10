@@ -137,7 +137,7 @@ $(document).ready(function () {
   syncTable('templates', 'api/package/list?type=template', ['namespace', 'name', 'description']);
   syncTable('profiles', 'api/package/list?type=profile', ['namespace', 'name', 'description']);
   syncTable('delegates', 'api/package/list?type=delegate', ['namespace', 'name', 'description']);
-  syncTable('runnables', 'api/resource/list?type=runnable', ['namespace', 'name', 'description', 'host']);
+  syncTable('activities', 'api/resource/list?type=activity', ['namespace', 'name', 'description', 'host']);
   syncTable('connections', 'api/resource/list?type=connection', ['namespace', 'name', 'description', 'host']);
   syncTable('hosts', 'api/host/list', ['name', 'grpcAddress']);
 

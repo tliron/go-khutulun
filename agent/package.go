@@ -155,6 +155,9 @@ func (self *Agent) getPackageDir(namespace string, type_ string, name string) st
 func (self *Agent) getPackageMainFile(namespace string, type_ string, name string) string {
 	dir := self.getPackageDir(namespace, type_, name)
 	switch type_ {
+	case "service":
+		return filepath.Join(dir, "clout.yaml")
+
 	case "template":
 		if entries, err := os.ReadDir(dir); err == nil {
 			for _, entry := range entries {
@@ -165,6 +168,9 @@ func (self *Agent) getPackageMainFile(namespace string, type_ string, name strin
 			}
 		}
 		return ""
+
+	case "profile":
+		return filepath.Join(dir, "profile.yaml")
 
 	case "delegate":
 		if entries, err := os.ReadDir(dir); err == nil {
@@ -178,9 +184,6 @@ func (self *Agent) getPackageMainFile(namespace string, type_ string, name strin
 			}
 		}
 		return ""
-
-	case "profile", "service":
-		return filepath.Join(dir, type_+".yaml")
 
 	default:
 		return filepath.Join(dir, name)

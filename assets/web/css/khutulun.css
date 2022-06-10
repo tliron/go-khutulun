@@ -11,6 +11,11 @@
     margin-right: 40px;
 }
 
+#header .title a {
+    text-decoration: none;
+    color: white;
+}
+
 .hstack div {
     margin-left: 6px;
     margin-right: 6px;

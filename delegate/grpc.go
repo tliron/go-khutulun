@@ -76,7 +76,7 @@ func (self *DelegateGRPCServer) ProcessService(context contextpkg.Context, proce
 // api.DelegateServer interface
 func (self *DelegateGRPCServer) Interact(server api.Delegate_InteractServer) error {
 	return sdk.Interact(server, map[string]sdk.InteractFunc{
-		"runnable": func(start *api.Interaction_Start) error {
+		"activity": func(start *api.Interaction_Start) error {
 			return self.implementation.Interact(server, start)
 		},
 	})
