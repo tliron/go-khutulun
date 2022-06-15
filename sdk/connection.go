@@ -75,22 +75,16 @@ func GetConnection(vertex *cloutpkg.Vertex, edgesOutIndex int, edge *cloutpkg.Ed
 
 func GetVertexConnections(vertex *cloutpkg.Vertex) []Connection {
 	var connections []Connection
-	for index, edge := range vertex.EdgesOut {
-		if cloututil.IsTOSCA(edge.Metadata, "Relationship") {
-			if cloututil.IsType(edge.Properties, "cloud.puccini.khutulun::IPPort") {
-				connections = append(connections, GetConnection(vertex, index, edge))
-			}
-		}
+	for index, edge := range cloututil.GetToscaRelationships(vertex, "cloud.puccini.khutulun::IPPort") {
+		connections = append(connections, GetConnection(vertex, index, edge))
 	}
 	return connections
 }
 
 func GetCloutConnections(clout *cloutpkg.Clout) []Connection {
 	var connections []Connection
-	for _, vertex := range clout.Vertexes {
-		if cloututil.IsTOSCA(vertex.Metadata, "NodeTemplate") {
-			connections = append(connections, GetVertexConnections(vertex)...)
-		}
+	for _, vertex := range cloututil.GetToscaNodeTemplates(clout, "") {
+		connections = append(connections, GetVertexConnections(vertex)...)
 	}
 	return connections
 }

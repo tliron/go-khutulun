@@ -107,13 +107,13 @@ func GetVertexContainers(vertex *cloutpkg.Vertex) []*Container {
 	var containers []*Container
 	if capabilities, ok := ard.NewNode(vertex.Properties).Get("capabilities").StringMap(); ok {
 		for capabilityName, capability := range capabilities {
-			if cloututil.IsType(capability, "cloud.puccini.khutulun::Container") {
+			if cloututil.IsToscaType(capability, "cloud.puccini.khutulun::Container") {
 				containers = append(containers, GetContainers(vertex, capabilityName, capability)...)
 			}
 		}
 
 		for _, capability := range capabilities {
-			if cloututil.IsType(capability, "cloud.puccini.khutulun::ContainerConnectable") {
+			if cloututil.IsToscaType(capability, "cloud.puccini.khutulun::ContainerConnectable") {
 				ports := GetContainerPorts(capability)
 				for _, container := range containers {
 					container.Ports = ports
@@ -126,10 +126,8 @@ func GetVertexContainers(vertex *cloutpkg.Vertex) []*Container {
 
 func GetCloutContainers(clout *cloutpkg.Clout) []*Container {
 	var containers []*Container
-	for _, vertex := range clout.Vertexes {
-		if cloututil.IsTOSCA(vertex.Metadata, "NodeTemplate") {
-			containers = append(containers, GetVertexContainers(vertex)...)
-		}
+	for _, vertex := range cloututil.GetToscaNodeTemplates(clout, "cloud.puccini.khutulun::Instantiated") {
+		containers = append(containers, GetVertexContainers(vertex)...)
 	}
 	return containers
 }

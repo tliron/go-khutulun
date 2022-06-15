@@ -1,0 +1,14 @@
+#!/bin/bash
+set -e
+
+HERE=$(dirname "$(readlink --canonicalize "$BASH_SOURCE")")
+. "$HERE/_env"
+
+. "$HERE/_start-http-server"
+
+cd "$ROOT/assets/tosca/profiles/khutulun"
+
+rm -f "$ROOT/work/khutulun.zip"
+zip -r "$ROOT/work/khutulun.zip" .
+khutulun profile delist khutulun --namespace=common || true
+khutulun profile register khutulun "http://localhost:8000/khutulun.zip" --namespace=common

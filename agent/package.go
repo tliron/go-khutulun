@@ -130,8 +130,19 @@ func (self *Agent) DeletePackage(namespace string, type_ string, name string) er
 
 		path := self.getPackageDir(namespace, type_, name)
 		log.Infof("deleting package %q", path)
-		// TODO: is it OK to delete the lock file while we're holding it?
-		return os.RemoveAll(path)
+		if entries, err := os.ReadDir(path); err == nil {
+			for _, entry := range entries {
+				name := entry.Name()
+				if name == LOCK_FILE {
+					continue
+				}
+				name = filepath.Join(path, name)
+				if err := os.RemoveAll(name); err != nil {
+					return err
+				}
+			}
+		}
+		return nil
 	} else {
 		return err
 	}

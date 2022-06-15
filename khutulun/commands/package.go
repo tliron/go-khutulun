@@ -1,13 +1,7 @@
 package commands
 
 import (
-	"archive/tar"
-	"archive/zip"
-	"compress/gzip"
-	"io"
-	"io/fs"
 	"os"
-	"path/filepath"
 	"strings"
 
 	clientpkg "github.com/tliron/khutulun/client"
@@ -33,193 +27,53 @@ func listPackages(namespace string, type_ string) {
 func registerPackage(namespace string, type_ string, args []string) {
 	name := args[0]
 
-	client, err := clientpkg.NewClientFromConfiguration(configurationPath, clusterName)
-	util.FailOnError(err)
-	util.OnExitError(client.Close)
+	switch unpack {
+	case "tgz", "zip":
+	case "auto":
+		if len(args) == 2 {
+			path := args[1]
+			if strings.HasSuffix(path, ".tar") {
+				unpack = "tar"
+			} else if strings.HasSuffix(path, ".tar.gz") || strings.HasSuffix(path, ".tgz") {
+				unpack = "tgz"
+			} else if strings.HasSuffix(path, ".zip") || strings.HasSuffix(path, ".csar") {
+				unpack = "zip"
+			} else {
+				unpack = ""
+			}
+		}
+	case "false":
+		unpack = ""
+	default:
+		util.Failf("\"--unpack\" must be \"tar\", \"tgz\", \"zip\", \"auto\" or \"false\": %s", unpack)
+	}
 
 	context := urlpkg.NewContext()
 	util.OnExitError(context.Release)
 
-	var packageFiles []clientpkg.SetPackageFile
-
 	var url urlpkg.URL
-	var path string
-	var isFile bool
-	var isDir bool
-	var stat os.FileInfo
+	var err error
 
 	if len(args) == 2 {
-		path = args[1]
-		url, err = urlpkg.NewValidURL(path, nil, context)
-		util.FailOnError(err)
+		url, err = urlpkg.NewValidURL(args[1], nil, context)
 	} else {
+		path := type_
 		switch type_ {
 		case "profile", "template":
-			path = type_ + ".yaml"
-			url, err = urlpkg.ReadToInternalURLFromStdin("yaml")
-			util.FailOnError(err)
-
-		default:
-			path = type_
-			url, err = urlpkg.ReadToInternalURLFromStdin("")
-			util.FailOnError(err)
+			path += ".yaml"
 		}
+		url, err = urlpkg.ReadToInternalURL(path, os.Stdin)
 	}
+	util.FailOnError(err)
 
-	if _, isFile = url.(*urlpkg.FileURL); isFile {
-		stat, err = os.Stat(path)
+	fileProviders, err := urlpkg.NewFileProviders(url, unpack)
+	util.FailOnError(err)
+	if fileProviders != nil {
+		client, err := clientpkg.NewClientFromConfiguration(configurationPath, clusterName)
 		util.FailOnError(err)
-		isDir = stat.IsDir()
-	}
+		util.OnExitError(client.Close)
 
-	if isDir {
-		// All files in directory
-		length := len(path)
-		err = filepath.WalkDir(path, func(path string, entry fs.DirEntry, err error) error {
-			if !entry.IsDir() {
-				stat, err = os.Stat(path)
-				util.FailOnError(err)
-				reader, err := os.Open(path)
-				util.FailOnError(err)
-				util.OnExitError(reader.Close)
-				packageFiles = append(packageFiles, clientpkg.SetPackageFile{
-					Reader: reader,
-					PackageFile: clientpkg.PackageFile{
-						Path:       path[length:],
-						Executable: util.IsFileExecutable(stat.Mode()),
-					},
-				})
-			}
-			return nil
-		})
-		util.FailOnError(err)
-	} else {
-		if isFile {
-			var archive string
-			if strings.HasSuffix(path, ".zip") || strings.HasSuffix(path, ".csar") {
-				archive = "zip"
-			} else if strings.HasSuffix(path, ".tar.gz") || strings.HasSuffix(path, ".tgz") {
-				archive = "tgz"
-			}
-
-			var unpack_ bool
-			switch unpack {
-			case "auto":
-				unpack_ = (archive != "")
-			case "false":
-			default:
-				util.Failf("\"--unpack\" must be \"auto\" or \"false\": %s", unpack)
-			}
-
-			if unpack_ {
-				// All files in archive
-				switch archive {
-				case "zip":
-					zipReader, err := zip.OpenReader(path)
-					util.FailOnError(err)
-					util.OnExitError(zipReader.Close)
-					for _, file := range zipReader.File {
-						if !file.FileInfo().IsDir() {
-							reader, err := file.Open()
-							util.FailOnError(err)
-							util.OnExitError(reader.Close)
-							packageFiles = append(packageFiles, clientpkg.SetPackageFile{
-								Reader: reader,
-								PackageFile: clientpkg.PackageFile{
-									Path:       file.Name,
-									Executable: util.IsFileExecutable(file.Mode()),
-								},
-							})
-						}
-					}
-
-				case "tgz":
-					reader, err := os.Open(path)
-					util.FailOnError(err)
-					gzipReader, err := gzip.NewReader(reader)
-					util.FailOnError(err)
-					tarReader := tar.NewReader(gzipReader)
-
-					var packageFiles_ []clientpkg.PackageFile
-
-					for {
-						header, err := tarReader.Next()
-						if err == io.EOF {
-							break
-						}
-						util.FailOnError(err)
-						if header.Typeflag == tar.TypeReg {
-							packageFiles_ = append(packageFiles_, clientpkg.PackageFile{
-								Path:       header.Name,
-								Executable: util.IsFileExecutable(fs.FileMode(header.Mode)),
-							})
-						}
-					}
-
-					err = gzipReader.Close()
-					util.FailOnError(err)
-					err = reader.Close()
-					util.FailOnError(err)
-
-					reader, err = os.Open(path)
-					util.FailOnError(err)
-					util.OnExitError(reader.Close)
-					gzipReader, err = gzip.NewReader(reader)
-					util.FailOnError(err)
-					util.OnExitError(gzipReader.Close)
-					tarReader = tar.NewReader(gzipReader)
-
-					done := func() {
-						for {
-							header, err := tarReader.Next()
-							if err == io.EOF {
-								break
-							}
-							util.FailOnError(err)
-							if header.Typeflag == tar.TypeReg {
-								break
-							}
-						}
-					}
-
-					for _, packageFile := range packageFiles_ {
-						packageFiles = append(packageFiles, clientpkg.SetPackageFile{
-							Reader:      tarReader,
-							Done:        done,
-							PackageFile: packageFile,
-						})
-					}
-				}
-
-			} else {
-				// Single file
-				reader, err := os.Open(path)
-				util.FailOnError(err)
-				util.OnExitError(reader.Close)
-				packageFiles = append(packageFiles, clientpkg.SetPackageFile{
-					Reader: reader,
-					PackageFile: clientpkg.PackageFile{
-						Path:       filepath.Base(path),
-						Executable: util.IsFileExecutable(stat.Mode()),
-					},
-				})
-			}
-		} else {
-			// Single URL
-			reader, err := url.Open()
-			util.FailOnError(err)
-			util.OnExitError(reader.Close)
-			packageFiles = append(packageFiles, clientpkg.SetPackageFile{
-				Reader: reader,
-				PackageFile: clientpkg.PackageFile{
-					Path: filepath.Base(path),
-				},
-			})
-		}
-	}
-
-	if len(packageFiles) > 0 {
-		err = client.SetPackageFiles(namespace, type_, name, packageFiles)
+		err = client.SetPackageFiles(namespace, type_, name, fileProviders)
 		util.FailOnError(err)
 	}
 }

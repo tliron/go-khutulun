@@ -6,7 +6,7 @@ import (
 
 func init() {
 	templateCommand.AddCommand(templateRegisterCommand)
-	templateRegisterCommand.Flags().StringVarP(&unpack, "unpack", "u", "auto", "unpack archive (\"auto\" or \"false\")")
+	templateRegisterCommand.Flags().StringVarP(&unpack, "unpack", "u", "auto", "unpack archive (\"tar\", \"tgz\", \"zip\", \"auto\" or \"false\")")
 }
 
 var templateRegisterCommand = &cobra.Command{

@@ -5,6 +5,8 @@ import (
 
 	"github.com/tliron/khutulun/api"
 	"github.com/tliron/khutulun/sdk"
+	"github.com/tliron/kutil/logging"
+	"github.com/tliron/kutil/url"
 )
 
 const BUFFER_SIZE = 65536
@@ -13,17 +15,6 @@ type PackageIdentifier struct {
 	Namespace string `json:"namespace" yaml:"namespace"`
 	Type      string `json:"type" yaml:"type"`
 	Name      string `json:"name" yaml:"name"`
-}
-
-type PackageFile struct {
-	Path       string
-	Executable bool
-}
-
-type SetPackageFile struct {
-	PackageFile
-	Reader io.Reader
-	Done   func()
 }
 
 func (self *Client) ListPackages(namespace string, type_ string) ([]PackageIdentifier, error) {
@@ -59,6 +50,11 @@ func (self *Client) ListPackages(namespace string, type_ string) ([]PackageIdent
 	} else {
 		return nil, sdk.UnpackGRPCError(err)
 	}
+}
+
+type PackageFile struct {
+	Path       string
+	Executable bool
 }
 
 func (self *Client) ListPackageFiles(namespace string, type_ string, name string) ([]PackageFile, error) {
@@ -126,7 +122,9 @@ func (self *Client) GetPackageFile(namespace string, type_ string, name string, 
 	}
 }
 
-func (self *Client) SetPackageFiles(namespace string, type_ string, name string, packageFiles []SetPackageFile) error {
+func (self *Client) SetPackageFiles(namespace string, type_ string, name string, fileProviders url.FileProviders) error {
+	defer logging.CallAndLogError(fileProviders.Close, "close package file sources", log)
+
 	context, cancel := self.newContextWithTimeout()
 	defer cancel()
 
@@ -143,11 +141,24 @@ func (self *Client) SetPackageFiles(namespace string, type_ string, name string,
 
 		buffer := make([]byte, BUFFER_SIZE)
 
-		for _, packageFile := range packageFiles {
+		for {
+			fileProvider, err := fileProviders.Next()
+			if err != nil {
+				return err
+			}
+			if fileProvider == nil {
+				break
+			}
+
+			path, executable, reader, err := fileProvider.Open()
+			if err != nil {
+				return err
+			}
+
 			content := api.PackageContent{
 				File: &api.PackageFile{
-					Path:       packageFile.Path,
-					Executable: packageFile.Executable,
+					Path:       path,
+					Executable: executable,
 				},
 			}
 
@@ -156,7 +167,7 @@ func (self *Client) SetPackageFiles(namespace string, type_ string, name string,
 			}
 
 			for {
-				count, err := packageFile.Reader.Read(buffer)
+				count, err := reader.Read(buffer)
 				if count > 0 {
 					content = api.PackageContent{Bytes: buffer[:count]}
 					if err := client.Send(&content); err != nil {
@@ -165,12 +176,12 @@ func (self *Client) SetPackageFiles(namespace string, type_ string, name string,
 				}
 				if err != nil {
 					if err == io.EOF {
-						if packageFile.Done != nil {
-							packageFile.Done()
+						if err := fileProvider.Close(); err != nil {
+							return err
 						}
 						break
 					} else {
-						return sdk.UnpackGRPCError(err)
+						return err
 					}
 				}
 			}

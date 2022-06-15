@@ -6,9 +6,9 @@ imports:
 
 capability_types:
 
-  Runnable:
+  Activity:
     description: >-
-      Base type for continuously-running Service and short-running Task.
+      Base type for continuously-running services and short-running tasks.
     properties:
       temporality:
         type: string
@@ -53,7 +53,7 @@ capability_types:
   # Activities
 
   Process:
-    derived_from: Runnable
+    derived_from: Activity
     properties:
       command:
         type: Command
@@ -62,7 +62,7 @@ capability_types:
         default: bare
 
   Container:
-    derived_from: Runnable
+    derived_from: Activity
     properties:
       name:
         description: >-
@@ -85,7 +85,7 @@ capability_types:
         type: string
 
   Pod:
-    derived_from: Runnable
+    derived_from: Activity
     properties:
       images:
         description: >-
@@ -98,7 +98,7 @@ capability_types:
         default: podman
 
   VirtualMachine:
-    derived_from: Runnable
+    derived_from: Activity
 
   # Connectable
 

@@ -6,7 +6,7 @@ import (
 
 func init() {
 	delegateCommand.AddCommand(delegateRegisterCommand)
-	delegateRegisterCommand.Flags().StringVarP(&unpack, "unpack", "u", "auto", "unpack archive (\"auto\" or \"false\")")
+	delegateRegisterCommand.Flags().StringVarP(&unpack, "unpack", "u", "auto", "unpack archive (\"tar\", \"tgz\", \"zip\", \"auto\" or \"false\")")
 }
 
 var delegateRegisterCommand = &cobra.Command{

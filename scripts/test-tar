@@ -1,0 +1,12 @@
+#!/bin/bash
+set -e
+
+HERE=$(dirname "$(readlink --canonicalize "$BASH_SOURCE")")
+. "$HERE/_env"
+
+cd "$ROOT/assets/tosca/profiles/khutulun"
+
+rm -f "$ROOT/work/khutulun.tar"
+tar -cf "$ROOT/work/khutulun.tar" .
+khutulun profile delist khutulun --namespace=common || true
+khutulun profile register khutulun "$ROOT/work/khutulun.tar" --namespace=common

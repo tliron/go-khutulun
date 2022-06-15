@@ -10,7 +10,7 @@ imports:
 - namespace: kh
   url: khutulun/profile.yaml
 
-topology_template:
+service_template:
 
   node_templates:
 
@@ -30,7 +30,7 @@ topology_template:
         activity:
           properties:
             image:
-              reference: docker.io/nginx:1.21.6
+              reference: docker.io/nginx:1.22.0
         connectable:
           attributes:
             ports:

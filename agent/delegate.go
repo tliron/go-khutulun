@@ -137,7 +137,7 @@ func (self *Delegates) All() []delegatepkg.Delegate {
 func (self *Delegates) Fill(namespace string, coercedClout *cloutpkg.Clout) {
 	for _, vertex := range coercedClout.Vertexes {
 		for _, edge := range vertex.EdgesOut {
-			if cloututil.IsType(edge.Properties, "cloud.puccini.khutulun::Connection") {
+			if cloututil.IsToscaType(edge.Properties, "cloud.puccini.khutulun::Connection") {
 				if delegateName, ok := ard.NewNode(edge.Properties).Get("attributes").Get("delegate").String(); ok {
 					if _, err := self.Get(namespace, delegateName); err != nil {
 						delegateLog.Errorf("%s", err.Error())
@@ -148,7 +148,7 @@ func (self *Delegates) Fill(namespace string, coercedClout *cloutpkg.Clout) {
 
 		if capabilities, ok := ard.NewNode(vertex.Properties).Get("capabilities").StringMap(); ok {
 			for _, capability := range capabilities {
-				if cloututil.IsType(capability, "cloud.puccini.khutulun::Runnable") {
+				if cloututil.IsToscaType(capability, "cloud.puccini.khutulun::Activity") {
 					if delegateName, ok := ard.NewNode(capability).Get("attributes").Get("delegate").String(); ok {
 						if _, err := self.Get(namespace, delegateName); err != nil {
 							delegateLog.Errorf("%s", err.Error())
