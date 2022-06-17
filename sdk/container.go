@@ -15,36 +15,19 @@ import (
 //
 
 type Container struct {
+	Capability
+
 	Host            string
 	Name            string
 	Reference       string
 	CreateArguments []string
 	Ports           []Port
-
-	vertexID       string
-	capabilityName string
 }
 
 type Port struct {
 	External int64  `ard:"external"`
 	Internal int64  `ard:"internal"`
 	Protocol string `ard:"protocol"`
-}
-
-func (self *Container) Find(clout *cloutpkg.Clout) (*cloutpkg.Vertex, ard.Value, error) {
-	if vertex, ok := clout.Vertexes[self.vertexID]; ok {
-		if capabilities, ok := ard.NewNode(vertex.Properties).Get("capabilities").StringMap(); ok {
-			if capability, ok := capabilities[self.capabilityName]; ok {
-				return vertex, capability, nil
-			} else {
-				return nil, nil, fmt.Errorf("vertex %s has no capability: %s", self.vertexID, self.capabilityName)
-			}
-		} else {
-			return nil, nil, fmt.Errorf("vertex has no capabilities: %s", self.vertexID)
-		}
-	} else {
-		return nil, nil, fmt.Errorf("vertex not found: %s", self.vertexID)
-	}
 }
 
 func GetContainerPorts(capability ard.Value) []Port {
@@ -89,8 +72,10 @@ func GetContainers(vertex *cloutpkg.Vertex, capabilityName string, capability ar
 			Name:            instance.Name,
 			Reference:       capability_.Properties.Image.String(),
 			CreateArguments: capability_.Properties.CreateArguments,
-			vertexID:        vertex.ID,
-			capabilityName:  capabilityName,
+			Capability: Capability{
+				vertexID:       vertex.ID,
+				capabilityName: capabilityName,
+			},
 		}
 
 		if capability_.Properties.Name != "" {

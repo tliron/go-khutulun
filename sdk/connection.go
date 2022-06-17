@@ -13,27 +13,13 @@ import (
 //
 
 type Connection struct {
-	Name string
-	IP   string
-	Port int64
+	Relationship
 
+	Name   string
+	IP     string
+	Port   int64
 	Source *Container
 	Target *Container
-
-	vertexID      string
-	edgesOutIndex int
-}
-
-func (self *Connection) Find(clout *cloutpkg.Clout) (*cloutpkg.Edge, error) {
-	if vertex, ok := clout.Vertexes[self.vertexID]; ok {
-		if self.edgesOutIndex < len(vertex.EdgesOut) {
-			return vertex.EdgesOut[self.edgesOutIndex], nil
-		} else {
-			return nil, fmt.Errorf("vertex has too few edges: %s", self.vertexID)
-		}
-	} else {
-		return nil, fmt.Errorf("vertex not found: %s", self.vertexID)
-	}
 }
 
 func GetConnection(vertex *cloutpkg.Vertex, edgesOutIndex int, edge *cloutpkg.Edge) Connection {
@@ -53,11 +39,13 @@ func GetConnection(vertex *cloutpkg.Vertex, edgesOutIndex int, edge *cloutpkg.Ed
 	}
 
 	connection := Connection{
-		Name:          fmt.Sprintf("%s:%d", relationship.Name, edgesOutIndex),
-		IP:            relationship.Attributes.IP,
-		Port:          relationship.Attributes.Port,
-		vertexID:      vertex.ID,
-		edgesOutIndex: edgesOutIndex,
+		Name: fmt.Sprintf("%s:%d", relationship.Name, edgesOutIndex),
+		IP:   relationship.Attributes.IP,
+		Port: relationship.Attributes.Port,
+		Relationship: Relationship{
+			vertexID:      vertex.ID,
+			edgesOutIndex: edgesOutIndex,
+		},
 	}
 
 	if sources := GetVertexContainers(vertex); len(sources) > 0 {

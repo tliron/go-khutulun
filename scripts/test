@@ -5,10 +5,11 @@ HERE=$(dirname "$(readlink --canonicalize "$BASH_SOURCE")")
 . "$HERE/_env"
 
 khutulun delegate register podman "$GOPATH/bin/khutulun-delegate-podman" --namespace=common -vv
-khutulun delegate register ipport "$GOPATH/bin/khutulun-delegate-ipport" --namespace=common
+khutulun delegate register process "$GOPATH/bin/khutulun-delegate-process" --namespace=common -vv
+khutulun delegate register ipport "$GOPATH/bin/khutulun-delegate-ipport" --namespace=common -vv
 #sleep 5
-khutulun profile register khutulun "$ROOT/assets/tosca/profiles/khutulun/" --namespace=common
-khutulun template register delegates "$ROOT/examples/hello-world/delegates.yaml"
-khutulun template register hello "$ROOT/examples/hello-world/hello-world.yaml"
-khutulun service deploy delegates
-khutulun service deploy hello
+khutulun profile register khutulun "$ROOT/assets/tosca/profiles/khutulun/" --namespace=common -vv
+khutulun template register delegates "$ROOT/examples/hello-world/delegates.yaml" -vv
+khutulun template register hello "$ROOT/examples/hello-world/hello-world.yaml" -vv
+khutulun service deploy delegates -vv
+khutulun service deploy hello -vv

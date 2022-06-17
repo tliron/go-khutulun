@@ -59,7 +59,9 @@ capability_types:
         type: Command
     attributes:
       delegate:
-        default: bare
+        default: process
+      host:
+        type: string
 
   Container:
     derived_from: Activity
@@ -96,9 +98,16 @@ capability_types:
     attributes:
       delegate:
         default: podman
+      host:
+        type: string
 
   VirtualMachine:
     derived_from: Activity
+    attributes:
+      delegate:
+        default: podman
+      host:
+        type: string
 
   # Connectable
 

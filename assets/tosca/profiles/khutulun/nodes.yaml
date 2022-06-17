@@ -32,7 +32,7 @@ node_types:
     - connection:
         capability: Connectable
         relationship: Connection
-        occurrences: [ 0, UNBOUNDED ]
+        count_range: [ 0, UNBOUNDED ]
 
   DelegateEndpoint:
     description: >-
@@ -60,11 +60,11 @@ node_types:
     - connection:
         capability: Connectable
         relationship: Connection
-        occurrences: [ 0, UNBOUNDED ]
+        count_range: [ 0, UNBOUNDED ]
     - storage:
         capability: Storage
         relationship: Storage
-        occurrences: [ 0, UNBOUNDED ]
+        count_range: [ 0, UNBOUNDED ]
 
   Container:
     derived_from: Instantiated
@@ -78,11 +78,11 @@ node_types:
     - connection:
         capability: Connectable
         relationship: Connection
-        occurrences: [ 0, UNBOUNDED ]
+        count_range: [ 0, UNBOUNDED ]
     - storage:
         capability: Storage
         relationship: Storage
-        occurrences: [ 0, UNBOUNDED ]
+        count_range: [ 0, UNBOUNDED ]
 
   LoadBalancer:
     derived_from: Container
@@ -107,11 +107,11 @@ node_types:
     - connection:
         capability: Connectable
         relationship: Connection
-        occurrences: [ 0, UNBOUNDED ]
+        count_range: [ 0, UNBOUNDED ]
     - storage:
         capability: Storage
         relationship: Storage
-        occurrences: [ 0, UNBOUNDED ]
+        count_range: [ 0, UNBOUNDED ]
 
   # Storage
 
