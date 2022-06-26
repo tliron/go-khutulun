@@ -33,7 +33,7 @@ type Port struct {
 func GetContainerPorts(capability ard.Value) []Port {
 	var ports []Port
 	if ports_, ok := ard.NewNode(capability).Get("attributes", "ports").List(); ok {
-		ard.NewReflector().ToComposite(ports_, &ports)
+		ardReflector.ToComposite(ports_, &ports)
 	}
 	return ports
 }
@@ -41,14 +41,10 @@ func GetContainerPorts(capability ard.Value) []Port {
 func GetContainers(vertex *cloutpkg.Vertex, capabilityName string, capability ard.Value) []*Container {
 	var containers []*Container
 
-	reflector := ard.NewReflector()
-	reflector.IgnoreMissingStructFields = true
-	reflector.NilMeansZero = true
-
 	var instances []struct {
 		Name string `ard:"name"`
 	}
-	if err := reflector.ToComposite(ard.NewNode(vertex.Properties).Get("attributes", "instances").Value, &instances); err != nil {
+	if err := ardReflector.ToComposite(ard.NewNode(vertex.Properties).Get("attributes", "instances").Value, &instances); err != nil {
 		panic(err)
 	}
 
@@ -62,7 +58,7 @@ func GetContainers(vertex *cloutpkg.Vertex, capabilityName string, capability ar
 			Host string `ard:"host"`
 		} `ard:"attributes"`
 	}
-	if err := reflector.ToComposite(capability, &capability_); err != nil {
+	if err := ardReflector.ToComposite(capability, &capability_); err != nil {
 		panic(err)
 	}
 

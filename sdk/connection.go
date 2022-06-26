@@ -3,7 +3,6 @@ package sdk
 import (
 	"fmt"
 
-	"github.com/tliron/kutil/ard"
 	cloutpkg "github.com/tliron/puccini/clout"
 	cloututil "github.com/tliron/puccini/clout/util"
 )
@@ -23,10 +22,6 @@ type Connection struct {
 }
 
 func GetConnection(vertex *cloutpkg.Vertex, edgesOutIndex int, edge *cloutpkg.Edge) Connection {
-	reflector := ard.NewReflector()
-	reflector.IgnoreMissingStructFields = true
-	reflector.NilMeansZero = true
-
 	var relationship struct {
 		Name       string `ard:"name"`
 		Attributes struct {
@@ -34,7 +29,7 @@ func GetConnection(vertex *cloutpkg.Vertex, edgesOutIndex int, edge *cloutpkg.Ed
 			Port int64  `ard:"port"`
 		} `ard:"attributes"`
 	}
-	if err := reflector.ToComposite(edge.Properties, &relationship); err != nil {
+	if err := ardReflector.ToComposite(edge.Properties, &relationship); err != nil {
 		panic(err)
 	}
 

@@ -24,14 +24,10 @@ type Process struct {
 func GetProcesses(vertex *cloutpkg.Vertex, capabilityName string, capability ard.Value) []*Process {
 	var processes []*Process
 
-	reflector := ard.NewReflector()
-	reflector.IgnoreMissingStructFields = true
-	reflector.NilMeansZero = true
-
 	var instances []struct {
 		Name string `ard:"name"`
 	}
-	if err := reflector.ToComposite(ard.NewNode(vertex.Properties).Get("attributes", "instances").Value, &instances); err != nil {
+	if err := ardReflector.ToComposite(ard.NewNode(vertex.Properties).Get("attributes", "instances").Value, &instances); err != nil {
 		panic(err)
 	}
 
@@ -47,7 +43,7 @@ func GetProcesses(vertex *cloutpkg.Vertex, capabilityName string, capability ard
 			Host string `ard:"host"`
 		} `ard:"attributes"`
 	}
-	if err := reflector.ToComposite(capability, &capability_); err != nil {
+	if err := ardReflector.ToComposite(capability, &capability_); err != nil {
 		panic(err)
 	}
 

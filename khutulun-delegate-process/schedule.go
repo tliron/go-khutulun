@@ -3,7 +3,6 @@ package main
 import (
 	"github.com/tliron/khutulun/delegate"
 	"github.com/tliron/khutulun/sdk"
-	"github.com/tliron/kutil/ard"
 	cloutpkg "github.com/tliron/puccini/clout"
 )
 
@@ -22,9 +21,9 @@ func (self *Delegate) Schedule(namespace string, serviceName string, clout *clou
 			process.Host = self.host
 
 			if _, capability, err := process.Find(clout); err == nil {
-				host, _ := ard.NewNode(capability).Get("attributes").Get("host").StringMap()
-				host["$value"] = process.Host
-				changed = true
+				if sdk.Schedule(capability, process.Host) {
+					changed = true
+				}
 			} else {
 				log.Errorf("%s", err)
 			}

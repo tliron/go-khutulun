@@ -85,11 +85,7 @@ func (self *GRPC) Start() error {
 		}
 	}
 
-	if err := start(self.Address); err != nil {
-		return err
-	}
-
-	return nil
+	return start(self.Address)
 }
 
 func (self *GRPC) Stop() {

@@ -10,9 +10,9 @@ import (
 
 func main() {
 	util.ExitOnSIGTERM()
-	sdk.ConfigurePluginLogging(1)
+	sdk.ConfigureDelegateLogging(1)
 	host, _ := os.Hostname()
-	server := delegate.NewDelegatePluginServer(&Delegate{host: host})
-	server.Start()
-	util.Exit(0)
+	server := delegate.NewDelegateGRPCServer(&Delegate{host: host})
+	err := server.Start("tcp6", "::1", 8250)
+	util.FailOnError(err)
 }

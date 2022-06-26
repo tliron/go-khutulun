@@ -3,10 +3,13 @@ package delegate
 import (
 	contextpkg "context"
 	"io"
+	"net"
 
 	"github.com/tliron/khutulun/api"
 	"github.com/tliron/khutulun/sdk"
+	"github.com/tliron/kutil/util"
 	cloutpkg "github.com/tliron/puccini/clout"
+	"google.golang.org/grpc"
 )
 
 //
@@ -21,6 +24,18 @@ type DelegateGRPCServer struct {
 
 func NewDelegateGRPCServer(implementation Delegate) *DelegateGRPCServer {
 	return &DelegateGRPCServer{implementation: implementation}
+}
+
+func (self *DelegateGRPCServer) Start(protocol string, address string, port int) error {
+	grpcServer := grpc.NewServer()
+	api.RegisterDelegateServer(grpcServer, self)
+
+	if listener, err := net.Listen(protocol, util.JoinIPAddressPort(address, port)); err == nil {
+		log.Noticef("starting server on %s", listener.Addr().String())
+		return grpcServer.Serve(listener)
+	} else {
+		return err
+	}
 }
 
 // api.DelegateServer interface

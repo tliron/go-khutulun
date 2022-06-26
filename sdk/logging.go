@@ -7,7 +7,7 @@ import (
 	"github.com/tliron/kutil/logging/simple"
 )
 
-func ConfigurePluginLogging(verbosity int) {
+func ConfigureDelegateLogging(verbosity int) {
 	backend := simple.NewBackend()
 	backend.Configure(verbosity, nil)
 	backend.Format = format

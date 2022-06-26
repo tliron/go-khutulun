@@ -1,8 +1,12 @@
 package main
 
 import (
+	"fmt"
+	"strconv"
+
 	"github.com/tliron/khutulun/delegate"
 	"github.com/tliron/khutulun/sdk"
+	"github.com/tliron/kutil/util"
 	cloutpkg "github.com/tliron/puccini/clout"
 )
 
@@ -27,7 +31,42 @@ func (self *Delegate) Reconcile(namespace string, serviceName string, clout *clo
 	return nil, nil, nil
 }
 
-func (self *Delegate) CreateProcessUserService(container *sdk.Process) error {
-	//serviceName := fmt.Sprintf("%s-%s.service", servicePrefix, container.Name)
-	return nil
+func (self *Delegate) CreateProcessUserService(process *sdk.Process) error {
+	serviceName := fmt.Sprintf("%s-%s.service", servicePrefix, process.Name)
+
+	file, err := sdk.CreateUserSystemdFile(serviceName, log)
+	if err != nil {
+		return err
+	}
+
+	var command string
+	if len(process.Arguments) > 0 {
+		command = fmt.Sprintf("%q %s", process.Command, util.JoinQuote(process.Arguments, " "))
+	} else {
+		command = strconv.Quote(process.Command)
+	}
+
+	text := `
+[Unit]
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+Restart=always
+ExecStart=%s
+
+[Install]
+WantedBy=default.target
+`
+	text = fmt.Sprintf(text, command)
+
+	_, err = file.WriteString(text)
+	if err != nil {
+		file.Close()
+		return fmt.Errorf("write: %w", err)
+	}
+
+	file.Close()
+	return sdk.EnableUserSystemd(serviceName, log)
 }

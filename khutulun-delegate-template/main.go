@@ -10,7 +10,7 @@ import (
 
 func main() {
 	util.ExitOnSIGTERM()
-	sdk.ConfigurePluginLogging(1)
+	sdk.ConfigureDelegateLogging(1)
 	host, _ := os.Hostname()
 	server := delegate.NewDelegatePluginServer(&Delegate{host: host})
 	server.Start()
