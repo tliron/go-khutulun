@@ -1,15 +1,23 @@
-package agent
+package sdk
 
 import (
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"sort"
 
 	"github.com/tliron/kutil/util"
 )
 
-func (self *Agent) ListNamespaces() ([]string, error) {
-	if files, err := ioutil.ReadDir(self.statePath); err == nil {
+func (self *State) GetNamespaceDir(namespace string) string {
+	if namespace == "" {
+		namespace = "_"
+	}
+	return filepath.Join(self.RootDir, namespace)
+}
+
+func (self *State) ListNamespaces() ([]string, error) {
+	if files, err := ioutil.ReadDir(self.RootDir); err == nil {
 		var names []string
 		for _, file := range files {
 			name := file.Name()
@@ -28,7 +36,7 @@ func (self *Agent) ListNamespaces() ([]string, error) {
 	}
 }
 
-func (self *Agent) namespaceToNamespaces(namespace string) ([]string, error) {
+func (self *State) ListNamespacesFor(namespace string) ([]string, error) {
 	if namespace == "" {
 		return self.ListNamespaces()
 	} else {

@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	delegatepkg "github.com/tliron/khutulun/delegate"
+	"github.com/tliron/khutulun/sdk"
 	"github.com/tliron/kutil/logging"
 	cloutpkg "github.com/tliron/puccini/clout"
 )
@@ -50,14 +51,14 @@ func (self ResourceIdentifiers) Less(i, j int) bool {
 func (self *Agent) ListResources(namespace string, serviceName string, type_ string) (ResourceIdentifiers, error) {
 	var resources ResourceIdentifiers
 
-	var packages []PackageIdentifier
+	var packages []sdk.PackageIdentifier
 	if serviceName == "" {
 		var err error
-		if packages, err = self.ListPackages(namespace, "service"); err != nil {
+		if packages, err = self.state.ListPackages(namespace, "service"); err != nil {
 			return nil, err
 		}
 	} else {
-		packages = []PackageIdentifier{
+		packages = []sdk.PackageIdentifier{
 			{
 				Namespace: namespace,
 				Type:      "service",

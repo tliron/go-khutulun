@@ -53,14 +53,14 @@ func (self *DelegateGRPCServer) ListResources(listResources *api.DelegateListRes
 					Host: resource.Host,
 				}
 				if err := server.Send(&resource_); err != nil {
-					return sdk.Aborted(err)
+					return sdk.GRPCAborted(err)
 				}
 			}
 		} else {
-			return sdk.Aborted(err)
+			return sdk.GRPCAborted(err)
 		}
 	} else {
-		return sdk.Aborted(err)
+		return sdk.GRPCAborted(err)
 	}
 
 	return nil
@@ -73,18 +73,18 @@ func (self *DelegateGRPCServer) ProcessService(context contextpkg.Context, proce
 			if clout_, next, err := self.implementation.ProcessService(processService.Service.Namespace, processService.Service.Name, processService.Phase, clout, coercedClout); err == nil {
 				var result api.ProcessServiceResult
 				if result.Clout, err = CloutToAPI(clout_, false); err != nil {
-					return new(api.ProcessServiceResult), sdk.Aborted(err)
+					return new(api.ProcessServiceResult), sdk.GRPCAborted(err)
 				}
 				result.Next = NextsToAPI(next)
 				return &result, nil
 			} else {
-				return new(api.ProcessServiceResult), sdk.Aborted(err)
+				return new(api.ProcessServiceResult), sdk.GRPCAborted(err)
 			}
 		} else {
-			return new(api.ProcessServiceResult), sdk.Aborted(err)
+			return new(api.ProcessServiceResult), sdk.GRPCAborted(err)
 		}
 	} else {
-		return new(api.ProcessServiceResult), sdk.Aborted(err)
+		return new(api.ProcessServiceResult), sdk.GRPCAborted(err)
 	}
 }
 

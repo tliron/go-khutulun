@@ -32,7 +32,7 @@ func (self *Agent) DeployService(templateNamespace string, templateName string, 
 }
 
 func (self *Agent) ProcessAllServices(phase string) {
-	if identifiers, err := self.ListPackages("", "service"); err == nil {
+	if identifiers, err := self.state.ListPackages("", "service"); err == nil {
 		delegates := self.NewDelegates()
 		defer delegates.Release()
 

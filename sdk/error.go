@@ -8,31 +8,31 @@ import (
 	statuspkg "google.golang.org/grpc/status"
 )
 
-func Abortedf(format string, args ...any) error {
+func GRPCAbortedf(format string, args ...any) error {
 	return statuspkg.Errorf(codes.Aborted, format, args...)
 }
 
-func Aborted(err error) error {
-	return statuspkg.Errorf(codes.Aborted, "%s", err.Error())
+func GRPCAborted(err error) error {
+	return statuspkg.Errorf(codes.Aborted, "%w", err.Error())
 }
 
-type statusError struct {
+type grpcStatusError struct {
 	status *statuspkg.Status
 }
 
 // error interface
-func (self statusError) Error() string {
+func (self grpcStatusError) Error() string {
 	return fmt.Sprintf("%s: %s", self.status.Code().String(), self.status.Message())
 }
 
-func (self statusError) Unwrap() error {
+func (self grpcStatusError) Unwrap() error {
 	return self.status.Err()
 }
 
 func UnpackGRPCError(err error) error {
 	if status, ok := statuspkg.FromError(err); ok {
 		if status.Code() != codes.OK {
-			return statusError{status}
+			return grpcStatusError{status}
 		} else {
 			return nil
 		}
@@ -42,7 +42,7 @@ func UnpackGRPCError(err error) error {
 }
 
 func InteractionErrorDetails(err error) *api.InteractionErrorDetails {
-	if statusError_, ok := err.(statusError); ok {
+	if statusError_, ok := err.(grpcStatusError); ok {
 		for _, details := range statusError_.status.Details() {
 			if details_, ok := details.(*api.InteractionErrorDetails); ok {
 				return details_

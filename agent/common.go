@@ -5,7 +5,6 @@ import (
 )
 
 var log = logging.GetLogger("khutulun.agent")
-var watcherLog = logging.NewScopeLogger(log, "watcher")
 var grpcLog = logging.NewScopeLogger(log, "grpc")
 var gossipLog = logging.NewScopeLogger(log, "gossip")
 var broadcastLog = logging.NewScopeLogger(log, "broadcast")

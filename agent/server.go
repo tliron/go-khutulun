@@ -5,6 +5,7 @@ import (
 	"net"
 	"time"
 
+	"github.com/tliron/khutulun/sdk"
 	"github.com/tliron/kutil/logging"
 	"github.com/tliron/kutil/util"
 )
@@ -35,7 +36,7 @@ type Server struct {
 	gossip      *Gossip
 	broadcaster *Broadcaster
 	receiver    *Receiver
-	watcher     *Watcher
+	watcher     *sdk.Watcher
 	ticker      *Ticker
 }
 
@@ -48,12 +49,20 @@ func NewServer(agent *Agent) *Server {
 func (self *Server) Start(watcher bool, ticker bool) error {
 	var err error
 
+	var host sdk.Host
+	if host.Address, err = util.ToReachableIPAddress(self.GRPCAddress); err != nil {
+		return err
+	}
+	if err := self.agent.state.SetHost(self.agent.host, &host); err != nil {
+		return err
+	}
+
 	// TODO?
 	watcher = false
 
 	if watcher {
-		if self.watcher, err = NewWatcher(self.agent, func(change Change, identifier []string) {
-			if change != Changed {
+		if self.watcher, err = sdk.NewWatcher(self.agent.state, func(change sdk.Change, identifier []string) {
+			if change != sdk.Changed {
 				fmt.Printf("%s %v\n", change.String(), identifier)
 			}
 		}); err == nil {
@@ -160,6 +169,6 @@ func (self *Server) Stop() {
 	}
 
 	if self.watcher != nil {
-		logging.CallAndLogError(self.watcher.Stop, "stop", watcherLog)
+		logging.CallAndLogError(self.watcher.Stop, "stop watcher", log)
 	}
 }

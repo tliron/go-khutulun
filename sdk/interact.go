@@ -34,7 +34,7 @@ func Interact(server GRPCInteractor, interact map[string]InteractFunc) error {
 			return statuspkg.Error(codes.InvalidArgument, "first message must contain \"start\"")
 		}
 	} else {
-		return Aborted(err)
+		return GRPCAborted(err)
 	}
 }
 

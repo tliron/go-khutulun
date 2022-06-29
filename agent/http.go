@@ -79,7 +79,7 @@ func (self *HTTP) Stop() error {
 }
 
 func (self *HTTP) listNamespaces(writer http.ResponseWriter, request *http.Request) {
-	if namespaces, err := self.agent.ListNamespaces(); err == nil {
+	if namespaces, err := self.agent.state.ListNamespaces(); err == nil {
 		transcribe.WriteJSON(namespaces, writer, "")
 	} else {
 		writer.WriteHeader(500)
@@ -90,7 +90,7 @@ func (self *HTTP) listPackages(writer http.ResponseWriter, request *http.Request
 	namespace := request.URL.Query().Get("namespace")
 	type_ := request.URL.Query().Get("type")
 	if type_ != "" {
-		if identifiers, err := self.agent.ListPackages(namespace, type_); err == nil {
+		if identifiers, err := self.agent.state.ListPackages(namespace, type_); err == nil {
 			transcribe.WriteJSON(identifiers, writer, "")
 		} else {
 			writer.WriteHeader(500)

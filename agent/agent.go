@@ -3,6 +3,7 @@ package agent
 import (
 	"os"
 
+	"github.com/tliron/khutulun/sdk"
 	"github.com/tliron/kutil/ard"
 	urlpkg "github.com/tliron/kutil/url"
 	"github.com/tliron/kutil/util"
@@ -16,16 +17,16 @@ type OnMessageFunc func(bytes []byte, broadcast bool)
 
 type Agent struct {
 	host       string
-	statePath  string
+	state      *sdk.State
 	urlContext *urlpkg.Context
 	gossip     *Gossip
 }
 
-func NewAgent(statePath string) (*Agent, error) {
+func NewAgent(stateRootDir string) (*Agent, error) {
 	if host, err := os.Hostname(); err == nil {
 		return &Agent{
 			host:       host,
-			statePath:  statePath,
+			state:      sdk.NewState(stateRootDir),
 			urlContext: urlpkg.NewContext(),
 		}, nil
 	} else {

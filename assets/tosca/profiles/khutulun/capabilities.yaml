@@ -53,15 +53,20 @@ capability_types:
   # Activities
 
   Process:
+    description: >-
+      Base type for bare processes.
     derived_from: Activity
-    properties:
-      command:
-        type: Command
     attributes:
       delegate:
         default: process
       host:
         type: string
+
+  CommandProcess:
+    derived_from: Process
+    properties:
+      command:
+        type: Command
 
   Container:
     derived_from: Activity

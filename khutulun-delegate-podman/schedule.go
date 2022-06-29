@@ -21,8 +21,10 @@ func (self *Delegate) Schedule(namespace string, serviceName string, clout *clou
 			container.Host = self.host
 
 			if _, capability, err := container.Find(clout); err == nil {
-				if sdk.Schedule(capability, container.Host) {
+				if sdk.ScheduleHost(capability, container.Host) {
 					changed = true
+				} else {
+					// TODO
 				}
 			} else {
 				log.Errorf("%s", err)

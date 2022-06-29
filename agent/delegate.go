@@ -37,10 +37,10 @@ type PluginDelegate struct {
 }
 
 func (self *Agent) NewPluginDelegate(namespace string, delegateName string) (*PluginDelegate, error) {
-	if lock, err := self.lockPackage(namespace, "delegate", delegateName, false); err == nil {
+	if lock, err := self.state.LockPackage(namespace, "delegate", delegateName, false); err == nil {
 		defer logging.CallAndLogError(lock.Unlock, "unlock", delegateLog)
 
-		command := self.getPackageMainFile(namespace, "delegate", delegateName)
+		command := self.state.GetPackageMainFile(namespace, "delegate", delegateName)
 		pluginDelegate := PluginDelegate{
 			name:   delegateName,
 			client: delegatepkg.NewDelegatePluginClient(delegateName, command),

@@ -126,7 +126,7 @@ func (self *GRPC) AddHost(context contextpkg.Context, addHost *api.AddHost) (*em
 		if err := self.agent.gossip.AddHosts([]string{addHost.GossipAddress}); err == nil {
 			return new(emptypb.Empty), nil
 		} else {
-			return new(emptypb.Empty), sdk.Aborted(err)
+			return new(emptypb.Empty), sdk.GRPCAborted(err)
 		}
 	} else {
 		return new(emptypb.Empty), statuspkg.Error(codes.Aborted, "gossip not enabled")
@@ -137,15 +137,15 @@ func (self *GRPC) AddHost(context contextpkg.Context, addHost *api.AddHost) (*em
 func (self *GRPC) ListNamespaces(empty *emptypb.Empty, server api.Agent_ListNamespacesServer) error {
 	grpcLog.Info("listNamespaces()")
 
-	if namespaces, err := self.agent.ListNamespaces(); err == nil {
+	if namespaces, err := self.agent.state.ListNamespaces(); err == nil {
 		for _, namespace := range namespaces {
 			if err := server.Send(&api.Namespace{Name: namespace}); err != nil {
-				return sdk.Aborted(err)
+				return sdk.GRPCAborted(err)
 			}
 		}
 		return nil
 	} else {
-		return sdk.Aborted(err)
+		return sdk.GRPCAborted(err)
 	}
 }
 
@@ -153,7 +153,7 @@ func (self *GRPC) ListNamespaces(empty *emptypb.Empty, server api.Agent_ListName
 func (self *GRPC) ListPackages(listPackages *api.ListPackages, server api.Agent_ListPackagesServer) error {
 	grpcLog.Infof("listPackages(%q, %q)", listPackages.Namespace, listPackages.Type.Name)
 
-	if identifiers, err := self.agent.ListPackages(listPackages.Namespace, listPackages.Type.Name); err == nil {
+	if identifiers, err := self.agent.state.ListPackages(listPackages.Namespace, listPackages.Type.Name); err == nil {
 		for _, identifier := range identifiers {
 			identifier_ := api.PackageIdentifier{
 				Namespace: identifier.Namespace,
@@ -162,11 +162,11 @@ func (self *GRPC) ListPackages(listPackages *api.ListPackages, server api.Agent_
 			}
 
 			if err := server.Send(&identifier_); err != nil {
-				return sdk.Aborted(err)
+				return sdk.GRPCAborted(err)
 			}
 		}
 	} else {
-		return sdk.Aborted(err)
+		return sdk.GRPCAborted(err)
 	}
 
 	return nil
@@ -176,17 +176,17 @@ func (self *GRPC) ListPackages(listPackages *api.ListPackages, server api.Agent_
 func (self *GRPC) ListPackageFiles(identifier *api.PackageIdentifier, server api.Agent_ListPackageFilesServer) error {
 	grpcLog.Infof("listPackageFiles(%q, %q, %q)", identifier.Namespace, identifier.Type.Name, identifier.Name)
 
-	if packageFiles, err := self.agent.ListPackageFiles(identifier.Namespace, identifier.Type.Name, identifier.Name); err == nil {
+	if packageFiles, err := self.agent.state.ListPackageFiles(identifier.Namespace, identifier.Type.Name, identifier.Name); err == nil {
 		for _, packageFile := range packageFiles {
 			if err := server.Send(&api.PackageFile{
 				Path:       packageFile.Path,
 				Executable: packageFile.Executable,
 			}); err != nil {
-				return sdk.Aborted(err)
+				return sdk.GRPCAborted(err)
 			}
 		}
 	} else {
-		return sdk.Aborted(err)
+		return sdk.GRPCAborted(err)
 	}
 
 	return nil
@@ -196,11 +196,11 @@ func (self *GRPC) ListPackageFiles(identifier *api.PackageIdentifier, server api
 func (self *GRPC) GetPackageFiles(getPackageFiles *api.GetPackageFiles, server api.Agent_GetPackageFilesServer) error {
 	grpcLog.Infof("getPackageFiles(%q, %q, %q)", getPackageFiles.Identifier.Namespace, getPackageFiles.Identifier.Type.Name, getPackageFiles.Identifier.Name)
 
-	if lock, err := self.agent.lockPackage(getPackageFiles.Identifier.Namespace, getPackageFiles.Identifier.Type.Name, getPackageFiles.Identifier.Name, false); err == nil {
+	if lock, err := self.agent.state.LockPackage(getPackageFiles.Identifier.Namespace, getPackageFiles.Identifier.Type.Name, getPackageFiles.Identifier.Name, false); err == nil {
 		defer logging.CallAndLogError(lock.Unlock, "unlock", grpcLog)
 
 		buffer := make([]byte, BUFFER_SIZE)
-		dir := self.agent.getPackageDir(getPackageFiles.Identifier.Namespace, getPackageFiles.Identifier.Type.Name, getPackageFiles.Identifier.Name)
+		dir := self.agent.state.GetPackageDir(getPackageFiles.Identifier.Namespace, getPackageFiles.Identifier.Type.Name, getPackageFiles.Identifier.Name)
 
 		for _, path := range getPackageFiles.Paths {
 			if file, err := self.agent.OpenFile(filepath.Join(dir, path), getPackageFiles.Coerce); err == nil {
@@ -212,7 +212,7 @@ func (self *GRPC) GetPackageFiles(getPackageFiles *api.GetPackageFiles, server a
 							if err := file.Close(); err != nil {
 								grpcLog.Errorf("file close: %s", err.Error())
 							}
-							return sdk.Aborted(err)
+							return sdk.GRPCAborted(err)
 						}
 					}
 					if err != nil {
@@ -222,20 +222,20 @@ func (self *GRPC) GetPackageFiles(getPackageFiles *api.GetPackageFiles, server a
 							if err := file.Close(); err != nil {
 								grpcLog.Errorf("file close: %s", err.Error())
 							}
-							return sdk.Aborted(err)
+							return sdk.GRPCAborted(err)
 						}
 					}
 				}
 
 				logging.CallAndLogError(file.Close, "file close", grpcLog)
 			} else {
-				return sdk.Aborted(err)
+				return sdk.GRPCAborted(err)
 			}
 		}
 
 		return nil
 	} else {
-		return sdk.Aborted(err)
+		return sdk.GRPCAborted(err)
 	}
 }
 
@@ -248,7 +248,7 @@ func (self *GRPC) SetPackageFiles(server api.Agent_SetPackageFilesServer) error 
 			namespace := first.Start.Identifier.Namespace
 			type_ := first.Start.Identifier.Type.Name
 			name := first.Start.Identifier.Name
-			if lock, err := self.agent.lockPackage(namespace, type_, name, true); err == nil {
+			if lock, err := self.agent.state.LockPackage(namespace, type_, name, true); err == nil {
 				defer logging.CallAndLogError(lock.Unlock, "unlock", grpcLog)
 
 				var file *os.File
@@ -262,19 +262,19 @@ func (self *GRPC) SetPackageFiles(server api.Agent_SetPackageFilesServer) error 
 						}
 
 						if content.File != nil {
-							if content.File.Path == LOCK_FILE {
+							if content.File.Path == sdk.LOCK_FILE {
 								// TODO
 							}
 
 							if file != nil {
 								if err := file.Close(); err != nil {
-									return sdk.Aborted(err)
+									return sdk.GRPCAborted(err)
 								}
 								file = nil
 							}
-							path := filepath.Join(self.agent.getPackageDir(namespace, type_, name), content.File.Path)
+							path := filepath.Join(self.agent.state.GetPackageDir(namespace, type_, name), content.File.Path)
 							if err := os.MkdirAll(filepath.Dir(path), 0777); err != nil {
-								return sdk.Aborted(err)
+								return sdk.GRPCAborted(err)
 							}
 
 							var mode fs.FileMode = 0666
@@ -283,7 +283,7 @@ func (self *GRPC) SetPackageFiles(server api.Agent_SetPackageFilesServer) error 
 							}
 
 							if file, err = os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, mode); err != nil {
-								return sdk.Aborted(err)
+								return sdk.GRPCAborted(err)
 							}
 						}
 
@@ -293,7 +293,7 @@ func (self *GRPC) SetPackageFiles(server api.Agent_SetPackageFilesServer) error 
 
 						if _, err := file.Write(content.Bytes); err != nil {
 							logging.CallAndLogError(file.Close, "file close", grpcLog)
-							return sdk.Aborted(err)
+							return sdk.GRPCAborted(err)
 						}
 					} else {
 						if err == io.EOF {
@@ -302,7 +302,7 @@ func (self *GRPC) SetPackageFiles(server api.Agent_SetPackageFilesServer) error 
 							if file != nil {
 								logging.CallAndLogError(file.Close, "file close", grpcLog)
 							}
-							return sdk.Aborted(err)
+							return sdk.GRPCAborted(err)
 						}
 					}
 				}
@@ -313,13 +313,13 @@ func (self *GRPC) SetPackageFiles(server api.Agent_SetPackageFilesServer) error 
 
 				return nil
 			} else {
-				return sdk.Aborted(err)
+				return sdk.GRPCAborted(err)
 			}
 		} else {
 			return statuspkg.Error(codes.InvalidArgument, "first message must contain \"start\"")
 		}
 	} else {
-		return sdk.Aborted(err)
+		return sdk.GRPCAborted(err)
 	}
 }
 
@@ -327,10 +327,10 @@ func (self *GRPC) SetPackageFiles(server api.Agent_SetPackageFilesServer) error 
 func (self *GRPC) RemovePackage(context contextpkg.Context, packageIdentifer *api.PackageIdentifier) (*emptypb.Empty, error) {
 	grpcLog.Infof("removePackage(%q, %q, %q)", packageIdentifer.Namespace, packageIdentifer.Type.Name, packageIdentifer.Name)
 
-	if err := self.agent.DeletePackage(packageIdentifer.Namespace, packageIdentifer.Type.Name, packageIdentifer.Name); err == nil {
+	if err := self.agent.state.DeletePackage(packageIdentifer.Namespace, packageIdentifer.Type.Name, packageIdentifer.Name); err == nil {
 		return new(emptypb.Empty), nil
 	} else {
-		return new(emptypb.Empty), sdk.Aborted(err)
+		return new(emptypb.Empty), sdk.GRPCAborted(err)
 	}
 }
 
@@ -341,7 +341,7 @@ func (self *GRPC) DeployService(context contextpkg.Context, deployService *api.D
 	if err := self.agent.DeployService(deployService.Template.Namespace, deployService.Template.Name, deployService.Service.Namespace, deployService.Service.Name, deployService.Async); err == nil {
 		return new(emptypb.Empty), nil
 	} else {
-		return new(emptypb.Empty), sdk.Aborted(err)
+		return new(emptypb.Empty), sdk.GRPCAborted(err)
 	}
 }
 
@@ -362,11 +362,11 @@ func (self *GRPC) ListResources(listResources *api.ListResources, server api.Age
 			}
 
 			if err := server.Send(&identifier_); err != nil {
-				return sdk.Aborted(err)
+				return sdk.GRPCAborted(err)
 			}
 		}
 	} else {
-		return sdk.Aborted(err)
+		return sdk.GRPCAborted(err)
 	}
 
 	return nil
@@ -443,17 +443,17 @@ func (self *GRPC) Interact(server api.Agent_InteractServer) error {
 								return delegate.Interact(server, start)
 							}
 						} else {
-							return sdk.Aborted(err)
+							return sdk.GRPCAborted(err)
 						}
 					}
 				} else {
-					return sdk.Aborted(err)
+					return sdk.GRPCAborted(err)
 				}
 			} else {
-				return sdk.Aborted(err)
+				return sdk.GRPCAborted(err)
 			}
 
-			return sdk.Abortedf("activity not found: %s/%s->%s", namespace, serviceName, resourceName)
+			return sdk.GRPCAbortedf("activity not found: %s/%s->%s", namespace, serviceName, resourceName)
 		},
 	})
 }

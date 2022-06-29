@@ -13,8 +13,8 @@ import (
 func (self *Agent) ParseTOSCA(templateNamespace string, templateName string) (*normal.ServiceTemplate, *problemspkg.Problems, error) {
 	parserContext := parser.NewContext()
 
-	profilePath := self.getPackageTypeDir(templateNamespace, "profile")
-	commonProfilePath := self.getPackageTypeDir("common", "profile")
+	profilePath := self.state.GetPackageTypeDir(templateNamespace, "profile")
+	commonProfilePath := self.state.GetPackageTypeDir("common", "profile")
 
 	// TODO: lock *all* profiles
 
@@ -23,10 +23,10 @@ func (self *Agent) ParseTOSCA(templateNamespace string, templateName string) (*n
 		urlpkg.NewFileURL(commonProfilePath, self.urlContext),
 	}
 
-	if lock, err := self.lockPackage(templateNamespace, "template", templateName, false); err == nil {
+	if lock, err := self.state.LockPackage(templateNamespace, "template", templateName, false); err == nil {
 		defer logging.CallAndLogError(lock.Unlock, "unlock", log)
 
-		templatePath := self.getPackageMainFile(templateNamespace, "template", templateName)
+		templatePath := self.state.GetPackageMainFile(templateNamespace, "template", templateName)
 		if url, err := urlpkg.NewValidURL(templatePath, nil, self.urlContext); err == nil {
 			if _, serviceTemplate, problems, err := parserContext.Parse(url, origins, nil, nil, nil); err == nil {
 				return serviceTemplate, problems, nil
@@ -53,7 +53,7 @@ func (self *Agent) CompileTOSCA(templateNamespace string, templateName string, s
 				return nil, nil, problems.WithError(nil, false)
 			}
 
-			if lock, err := self.lockPackage(serviceNamespace, "service", serviceName, true); err == nil {
+			if lock, err := self.state.LockPackage(serviceNamespace, "service", serviceName, true); err == nil {
 				defer logging.CallAndLogError(lock.Unlock, "unlock", log)
 
 				if err := self.SaveServiceClout(serviceNamespace, serviceName, clout); err == nil {

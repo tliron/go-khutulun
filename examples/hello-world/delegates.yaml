@@ -15,7 +15,7 @@ service_template:
       - connection: ipport
 
     ipport:
-      type: kh:Process
+      type: kh:CommandProcess
       capabilities:
         activity:
           properties:
