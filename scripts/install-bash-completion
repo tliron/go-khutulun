@@ -14,5 +14,4 @@ if [ -z "$USER_DIR" ]; then
 fi
 
 mkdir --parents "$USER_DIR/completions"
-puccini-tosca bash > "$USER_DIR/completions/puccini-tosca"
-puccini-clout bash > "$USER_DIR/completions/puccini-clout"
+khutulun completion bash > "$USER_DIR/completions/khutulun"

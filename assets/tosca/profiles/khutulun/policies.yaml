@@ -33,8 +33,8 @@ policy_types:
         type: Count
         required: false
     targets:
-    - Instantiated
-    - InstantiatedGroup
+    - Instantiable
+    - InstantiableGroup
 
   # Affinity
 
@@ -42,8 +42,8 @@ policy_types:
     description: >-
       Base type for affinity policies.
     targets:
-    - Instantiated
-    - InstantiatedGroup
+    - Instantiable
+    - InstantiableGroup
 
   Colocation:
     description: >-
@@ -72,8 +72,8 @@ policy_types:
         type: HostSelector
         required: false
     targets:
-    - Instantiated
-    - InstantiatedGroup
+    - Instantiable
+    - InstantiableGroup
 
   Scattering:
     description: >-

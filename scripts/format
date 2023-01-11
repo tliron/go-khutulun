@@ -5,4 +5,17 @@ HERE=$(dirname "$(readlink --canonicalize "$BASH_SOURCE")")
 . "$HERE/_env"
 
 gofmt -w -s -e \
-	"$ROOT/client"
+	"$ROOT/agent" \
+	"$ROOT/client" \
+	"$ROOT/configuration" \
+	"$ROOT/dashboard" \
+	"$ROOT/delegate" \
+	"$ROOT/khutulun" \
+	"$ROOT/khutulun/commands" \
+	"$ROOT/khutulun-agent" \
+	"$ROOT/khutulun-agent/commands" \
+	"$ROOT/khutulun-delegate-ipport" \
+	"$ROOT/khutulun-delegate-podman" \
+	"$ROOT/khutulun-delegate-process" \
+	"$ROOT/khutulun-delegate-template" \
+	"$ROOT/sdk"

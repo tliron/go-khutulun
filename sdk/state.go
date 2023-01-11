@@ -24,19 +24,19 @@ func NewState(rootDir string) *State {
 //
 
 type LockedReadCloser struct {
-	readCloser io.ReadCloser
-	lock       fslock.Handle
+	ReadCloser io.ReadCloser
+	Lock       fslock.Handle
 }
 
 // io.Reader interface
 func (self *LockedReadCloser) Read(p []byte) (n int, err error) {
-	return self.readCloser.Read(p)
+	return self.ReadCloser.Read(p)
 }
 
 // io.Closer interface
 func (self *LockedReadCloser) Close() error {
-	logging.CallAndLogError(self.readCloser.Close, "close", stateLog)
-	return self.lock.Unlock()
+	logging.CallAndLogError(self.ReadCloser.Close, "close", stateLog)
+	return self.Lock.Unlock()
 }
 
 //
@@ -44,17 +44,17 @@ func (self *LockedReadCloser) Close() error {
 //
 
 type LockedWriteCloser struct {
-	writeCloser io.WriteCloser
-	lock        fslock.Handle
+	WriteCloser io.WriteCloser
+	Lock        fslock.Handle
 }
 
 // io.Writer interface
 func (self *LockedWriteCloser) Write(p []byte) (n int, err error) {
-	return self.writeCloser.Write(p)
+	return self.WriteCloser.Write(p)
 }
 
 // io.Closer interface
 func (self *LockedWriteCloser) Close() error {
-	logging.CallAndLogError(self.writeCloser.Close, "close", stateLog)
-	return self.lock.Unlock()
+	logging.CallAndLogError(self.WriteCloser.Close, "close", stateLog)
+	return self.Lock.Unlock()
 }

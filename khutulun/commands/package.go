@@ -19,7 +19,7 @@ func listPackages(namespace string, type_ string) {
 	identifiers, err := client.ListPackages(namespace, type_)
 	util.FailOnError(err)
 	if len(identifiers) > 0 {
-		err = transcribe.Print(identifiers, format, terminal.Stdout, strict, pretty)
+		err = transcribe.Print(identifiers, format, os.Stdout, strict, pretty)
 		util.FailOnError(err)
 	}
 }
@@ -62,7 +62,7 @@ func registerPackage(namespace string, type_ string, args []string) {
 		case "profile", "template":
 			path += ".yaml"
 		}
-		url, err = urlpkg.ReadToInternalURL(path, os.Stdin)
+		url, err = urlpkg.ReadToInternalURL(path, os.Stdin, context)
 	}
 	util.FailOnError(err)
 
@@ -90,10 +90,10 @@ func fetchPackage(namespace string, type_ string, args []string) {
 			var buffer strings.Builder
 			err = client.GetPackageFile(namespace, type_, name, path, coerce, &buffer)
 			util.FailOnError(err)
-			err = transcribe.PrettifyYAML(buffer.String(), terminal.Stdout)
+			err = transcribe.ColorizeYAML(buffer.String(), os.Stdout)
 			util.FailOnError(err)
 		} else {
-			err = client.GetPackageFile(namespace, type_, name, path, coerce, terminal.Stdout)
+			err = client.GetPackageFile(namespace, type_, name, path, coerce, os.Stdout)
 			util.FailOnError(err)
 		}
 	} else {

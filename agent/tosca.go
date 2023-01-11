@@ -56,7 +56,7 @@ func (self *Agent) CompileTOSCA(templateNamespace string, templateName string, s
 			if lock, err := self.state.LockPackage(serviceNamespace, "service", serviceName, true); err == nil {
 				defer logging.CallAndLogError(lock.Unlock, "unlock", log)
 
-				if err := self.SaveServiceClout(serviceNamespace, serviceName, clout); err == nil {
+				if err := self.state.SaveServiceClout(serviceNamespace, serviceName, clout); err == nil {
 					return clout, problems, nil
 				} else {
 					return nil, nil, err

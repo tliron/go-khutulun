@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/danjacques/gofslock/fslock"
 	delegatepkg "github.com/tliron/khutulun/delegate"
 	"github.com/tliron/kutil/ard"
 	"github.com/tliron/kutil/logging"
@@ -32,24 +33,26 @@ func (self *Agent) NewDelegate(namespace string, delegateName string) (Delegate,
 type PluginDelegate struct {
 	namespace string
 	name      string
-	delegate  delegatepkg.Delegate
-	client    *delegatepkg.DelegatePluginClient
+
+	delegate delegatepkg.Delegate
+	client   *delegatepkg.DelegatePluginClient
+	lock     fslock.Handle
 }
 
 func (self *Agent) NewPluginDelegate(namespace string, delegateName string) (*PluginDelegate, error) {
 	if lock, err := self.state.LockPackage(namespace, "delegate", delegateName, false); err == nil {
-		defer logging.CallAndLogError(lock.Unlock, "unlock", delegateLog)
-
 		command := self.state.GetPackageMainFile(namespace, "delegate", delegateName)
 		pluginDelegate := PluginDelegate{
 			name:   delegateName,
 			client: delegatepkg.NewDelegatePluginClient(delegateName, command),
+			lock:   lock,
 		}
 
 		if pluginDelegate.delegate, err = pluginDelegate.client.Delegate(); err == nil {
 			return &pluginDelegate, nil
 		} else {
 			logging.CallAndLogError(pluginDelegate.Release, "release", delegateLog)
+			logging.CallAndLogError(lock.Unlock, "unlock", delegateLog)
 			return nil, err
 		}
 	} else if os.IsNotExist(err) {
@@ -72,7 +75,7 @@ func (self *PluginDelegate) Delegate() delegatepkg.Delegate {
 // Delegate interface
 func (self *PluginDelegate) Release() error {
 	self.client.Close()
-	return nil
+	return self.lock.Unlock()
 }
 
 //
@@ -135,25 +138,19 @@ func (self *Delegates) All() []delegatepkg.Delegate {
 }
 
 func (self *Delegates) Fill(namespace string, coercedClout *cloutpkg.Clout) {
-	for _, vertex := range coercedClout.Vertexes {
-		for _, edge := range vertex.EdgesOut {
-			if cloututil.IsToscaType(edge.Properties, "cloud.puccini.khutulun::Connection") {
-				if delegateName, ok := ard.NewNode(edge.Properties).Get("attributes").Get("delegate").String(); ok {
-					if _, err := self.Get(namespace, delegateName); err != nil {
-						delegateLog.Errorf("%s", err.Error())
-					}
+	for _, vertex := range cloututil.GetToscaNodeTemplates(coercedClout, "") {
+		for _, relationship := range cloututil.GetToscaRelationships(vertex, "cloud.puccini.khutulun::Connection") {
+			if delegateName, ok := ard.NewNode(relationship).Get("attributes", "delegate").String(); ok {
+				if _, err := self.Get(namespace, delegateName); err != nil {
+					delegateLog.Errorf("%s", err.Error())
 				}
 			}
 		}
 
-		if capabilities, ok := ard.NewNode(vertex.Properties).Get("capabilities").StringMap(); ok {
-			for _, capability := range capabilities {
-				if cloututil.IsToscaType(capability, "cloud.puccini.khutulun::Activity") {
-					if delegateName, ok := ard.NewNode(capability).Get("attributes").Get("delegate").String(); ok {
-						if _, err := self.Get(namespace, delegateName); err != nil {
-							delegateLog.Errorf("%s", err.Error())
-						}
-					}
+		for _, capability := range cloututil.GetToscaCapabilities(vertex, "cloud.puccini.khutulun::Activity") {
+			if delegateName, ok := ard.NewNode(capability).Get("attributes", "delegate").String(); ok {
+				if _, err := self.Get(namespace, delegateName); err != nil {
+					delegateLog.Errorf("%s", err.Error())
 				}
 			}
 		}

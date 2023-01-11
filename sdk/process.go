@@ -21,14 +21,14 @@ type Process struct {
 	Arguments []string
 }
 
-func GetProcesses(vertex *cloutpkg.Vertex, capabilityName string, capability ard.Value) []*Process {
+func GetProcesses(vertex *cloutpkg.Vertex, capabilityName string, capability ard.Value) ([]*Process, error) {
 	var processes []*Process
 
 	var instances []struct {
 		Name string `ard:"name"`
 	}
-	if err := ardReflector.ToComposite(ard.NewNode(vertex.Properties).Get("attributes", "instances").Value, &instances); err != nil {
-		panic(err)
+	if err := ardReflector.Pack(ard.NewNode(vertex.Properties).Get("attributes", "instances").Value, &instances); err != nil {
+		return nil, err
 	}
 
 	var capability_ struct {
@@ -43,8 +43,8 @@ func GetProcesses(vertex *cloutpkg.Vertex, capabilityName string, capability ard
 			Host string `ard:"host"`
 		} `ard:"attributes"`
 	}
-	if err := ardReflector.ToComposite(capability, &capability_); err != nil {
-		panic(err)
+	if err := ardReflector.Pack(capability, &capability_); err != nil {
+		return nil, err
 	}
 
 	for _, instance := range instances {
@@ -66,25 +66,29 @@ func GetProcesses(vertex *cloutpkg.Vertex, capabilityName string, capability ard
 		processes = append(processes, &process)
 	}
 
-	return processes
+	return processes, nil
 }
 
-func GetVertexProcesses(vertex *cloutpkg.Vertex) []*Process {
+func GetVertexProcesses(vertex *cloutpkg.Vertex) ([]*Process, error) {
 	var processes []*Process
-	if capabilities, ok := ard.NewNode(vertex.Properties).Get("capabilities").StringMap(); ok {
-		for capabilityName, capability := range capabilities {
-			if cloututil.IsToscaType(capability, "cloud.puccini.khutulun::Process") {
-				processes = append(processes, GetProcesses(vertex, capabilityName, capability)...)
-			}
+	for capabilityName, capability := range cloututil.GetToscaCapabilities(vertex, "cloud.puccini.khutulun::Process") {
+		if processes_, err := GetProcesses(vertex, capabilityName, capability); err == nil {
+			processes = append(processes, processes_...)
+		} else {
+			return nil, err
 		}
 	}
-	return processes
+	return processes, nil
 }
 
-func GetCloutProcesses(clout *cloutpkg.Clout) []*Process {
+func GetCloutProcesses(clout *cloutpkg.Clout) ([]*Process, error) {
 	var processes []*Process
 	for _, vertex := range cloututil.GetToscaNodeTemplates(clout, "cloud.puccini.khutulun::Instantiated") {
-		processes = append(processes, GetVertexProcesses(vertex)...)
+		if processes_, err := GetVertexProcesses(vertex); err == nil {
+			processes = append(processes, processes_...)
+		} else {
+			return nil, err
+		}
 	}
-	return processes
+	return processes, nil
 }

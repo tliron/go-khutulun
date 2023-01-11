@@ -68,7 +68,7 @@ func (self *Agent) ListResources(namespace string, serviceName string, type_ str
 	}
 
 	for _, package_ := range packages {
-		if lock, clout, err := self.OpenServiceClout(package_.Namespace, package_.Name); err == nil {
+		if lock, clout, err := self.state.OpenServiceClout(package_.Namespace, package_.Name, self.urlContext); err == nil {
 			logging.CallAndLogError(lock.Unlock, "unlock", log)
 			if clout, err = self.CoerceClout(clout, false); err == nil {
 				if resources_, err := self.getResources(package_.Namespace, package_.Name, clout, type_); err == nil {

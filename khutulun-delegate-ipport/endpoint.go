@@ -1,8 +1,59 @@
 package main
 
 import (
+	"os"
+
+	"github.com/danjacques/gofslock/fslock"
+	"github.com/tliron/khutulun/sdk"
+	"github.com/tliron/kutil/logging"
 	"github.com/tliron/kutil/util"
+	"gopkg.in/yaml.v2"
 )
+
+func LockAndGetHostEndpoints(state *sdk.State, host string) (fslock.Handle, *HostEndpoints, error) {
+	hostEndpoints := NewHostEndpoints(host, "")
+
+	if lock, err := state.LockPackage("common", "host", host, false); err == nil {
+		if reader, err := state.OpenPackageFile("common", "host", host, "endpoints.yaml"); err == nil {
+			if err := yaml.NewDecoder(reader).Decode(hostEndpoints); err == nil {
+				return lock, hostEndpoints, nil
+			} else {
+				logging.CallAndLogError(lock.Unlock, "unlock", log)
+				return nil, nil, err
+			}
+		} else if os.IsNotExist(err) {
+			var host_ sdk.Host
+			if reader, err := state.OpenPackageFile("common", "host", host, "host.yaml"); err == nil {
+				if err := yaml.NewDecoder(reader).Decode(host_); err == nil {
+					hostEndpoints.Address = host_.Address
+					hostEndpoints.AddPortRange(9000, 9999)
+					return lock, hostEndpoints, nil
+				} else {
+					logging.CallAndLogError(lock.Unlock, "unlock", log)
+					return nil, nil, err
+				}
+			} else {
+				logging.CallAndLogError(lock.Unlock, "unlock", log)
+				return nil, nil, err
+			}
+		} else {
+			logging.CallAndLogError(lock.Unlock, "unlock", log)
+			return nil, nil, err
+		}
+	} else {
+		return nil, nil, err
+	}
+}
+
+func SetHostEndpoints(state *sdk.State, hostEndpoints *HostEndpoints) error {
+	if writer, err := state.CreatePackageFile("common", "host", hostEndpoints.Host, "endpoints.yaml"); err == nil {
+		defer logging.CallAndLogError(writer.Close, "close", log)
+
+		return yaml.NewEncoder(writer).Encode(hostEndpoints)
+	} else {
+		return err
+	}
+}
 
 //
 // Endpoint
@@ -71,6 +122,16 @@ func (self *HostEndpoints) getReservation(port int64) *Endpoint {
 func (self *HostEndpoints) Reserve(endpoint *Endpoint) bool {
 	self.lock.Lock()
 	defer self.lock.Unlock()
+
+	// Is already reserved?
+	for _, endpoint_ := range self.Reservations {
+		if (endpoint.Namespace == endpoint_.Namespace) && (endpoint.Service == endpoint_.Service) && (endpoint.Name == endpoint_.Name) {
+			endpoint.Address = endpoint_.Address
+			endpoint.Host = endpoint_.Host
+			endpoint.Port = endpoint_.Port
+			return true
+		}
+	}
 
 	for _, portRange := range self.PortRanges {
 		for port := portRange.Start; port <= portRange.End; port++ {

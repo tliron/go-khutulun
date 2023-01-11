@@ -3,20 +3,25 @@ package main
 import (
 	"github.com/tliron/khutulun/delegate"
 	"github.com/tliron/khutulun/sdk"
+	"github.com/tliron/kutil/logging"
 	cloutpkg "github.com/tliron/puccini/clout"
 )
 
 func (self *Delegate) Schedule(namespace string, serviceName string, clout *cloutpkg.Clout, coercedClout *cloutpkg.Clout) (*cloutpkg.Clout, []delegate.Next, error) {
-	connections := sdk.GetCloutConnections(coercedClout)
+	connections, err := sdk.GetCloutConnections(coercedClout)
+	if err != nil {
+		return nil, nil, err
+	}
 	if len(connections) == 0 {
 		return nil, nil, nil
 	}
 
 	state := sdk.NewState("/mnt/khutulun")
-	hostEndpoints, err := GetHostEndpoints(state, self.host)
+	lock, hostEndpoints, err := LockAndGetHostEndpoints(state, self.host)
 	if err != nil {
 		return nil, nil, err
 	}
+	defer logging.CallAndLogError(lock.Unlock, "unlock", log)
 
 	var changed bool
 	for _, connection := range connections {
@@ -47,7 +52,7 @@ func (self *Delegate) Schedule(namespace string, serviceName string, clout *clou
 	}
 
 	if changed {
-		if err := SaveHostEndpoints(state, hostEndpoints); err == nil {
+		if err := SetHostEndpoints(state, hostEndpoints); err == nil {
 			return clout, nil, nil
 		} else {
 			return nil, nil, err
@@ -55,21 +60,4 @@ func (self *Delegate) Schedule(namespace string, serviceName string, clout *clou
 	} else {
 		return nil, nil, nil
 	}
-}
-
-func GetHostEndpoints(state *sdk.State, host string) (*HostEndpoints, error) {
-	hostEndpoints := NewHostEndpoints(host, "")
-	if err := state.GetHostFileYAML(host, "endpoints.yaml", hostEndpoints); err != nil {
-		if host_, err := state.GetHost(host); err == nil {
-			hostEndpoints.Address = host_.Address
-			hostEndpoints.AddPortRange(9000, 9999)
-		} else {
-			return nil, err
-		}
-	}
-	return hostEndpoints, nil
-}
-
-func SaveHostEndpoints(state *sdk.State, hostEndpoints *HostEndpoints) error {
-	return state.SetHostFileYAML(hostEndpoints.Host, "endpoints.yaml", hostEndpoints)
 }

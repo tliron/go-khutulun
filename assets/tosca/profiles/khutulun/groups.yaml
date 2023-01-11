@@ -6,6 +6,6 @@ imports:
 
 group_types:
 
-  InstantiatedGroup:
+  InstantiableGroup:
     members:
-    - Instantiated
+    - Instantiable

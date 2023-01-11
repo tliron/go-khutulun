@@ -24,9 +24,9 @@ func init() {
 	rootCommand.PersistentFlags().BoolVarP(&terminal.Quiet, "quiet", "q", false, "suppress output")
 	rootCommand.PersistentFlags().StringVarP(&logTo, "log", "l", "", "log to file (defaults to stderr)")
 	rootCommand.PersistentFlags().CountVarP(&verbose, "verbose", "v", "add a log verbosity level (can be used twice)")
-	rootCommand.PersistentFlags().StringVarP(&format, "format", "f", "", "force output format (\"yaml\", \"json\", \"cjson\", \"xml\", \"cbor\", or \"go\")")
+	rootCommand.PersistentFlags().StringVarP(&format, "format", "f", "", "force output format (\"yaml\", \"json\", \"cjson\", \"xml\", \"cbor\", \"messagepack\", or \"go\")")
 	rootCommand.PersistentFlags().StringVarP(&colorize, "colorize", "z", "true", "colorize output (boolean or \"force\")")
-	rootCommand.PersistentFlags().BoolVarP(&strict, "strict", "y", false, "strict output (for \"YAML\" format only)")
+	rootCommand.PersistentFlags().BoolVarP(&strict, "strict", "y", false, "strict output (for \"yaml\" format only)")
 	rootCommand.PersistentFlags().BoolVarP(&pretty, "pretty", "p", true, "prettify output")
 	rootCommand.PersistentFlags().StringVarP(&configurationPath, "config", "k", defaultConfigurationPath, "configuration file path")
 }
@@ -35,8 +35,11 @@ var rootCommand = &cobra.Command{
 	Use:   toolName,
 	Short: "Manage Khutulun",
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		err := terminal.ProcessColorizeFlag(colorize)
+		cleanup, err := terminal.ProcessColorizeFlag(colorize)
 		util.FailOnError(err)
+		if cleanup != nil {
+			util.OnExitError(cleanup)
+		}
 		if logTo == "" {
 			if terminal.Quiet {
 				verbose = -4

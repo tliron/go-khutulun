@@ -7,36 +7,44 @@ imports:
 
 relationship_types:
 
-  Connection:
-    attributes:
-      delegate:
-        type: string
+  Responsive:
+    description: >-
+      Base type for relationships that can respond to events.
     interfaces:
       events:
         type: Events
 
+  # Connections
+
+  Connection:
+    derived_from: Responsive
+    attributes:
+      delegate:
+        type: string
+
+  IP:
+    derived_from: Connection
+    attributes:
+      delegate:
+        type: string
+        default: ipport
+      address:
+        type: IPAddress
+        default: '::'
+      port:
+        type: AssignablePort
+        default: 0
+
+  # Storage
+
   Storage:
-    metadata:
-      khutulun.plugin: storage
-    interfaces:
-      events:
-        type: Events
+    derived_from: Responsive
+    attributes:
+      delegate:
+        type: string
 
   BlockStorage:
     derived_from: Storage
 
   Filesystem:
     derived_from: Storage
-
-  IPPort:
-    derived_from: Connection
-    attributes:
-      delegate:
-        type: string
-        default: ipport
-      ip:
-        type: IPAddress
-        default: '::'
-      port:
-        type: AssignablePort
-        default: 0

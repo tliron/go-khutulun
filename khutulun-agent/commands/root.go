@@ -28,8 +28,11 @@ var rootCommand = &cobra.Command{
 	Use:   toolName,
 	Short: "Khutulun agent",
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		err := terminal.ProcessColorizeFlag(colorize)
+		cleanup, err := terminal.ProcessColorizeFlag(colorize)
 		util.FailOnError(err)
+		if cleanup != nil {
+			util.OnExitError(cleanup)
+		}
 		if journalLog {
 			logging.SetBackend(journal.NewBackend())
 		} else {

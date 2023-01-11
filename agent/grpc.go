@@ -419,7 +419,7 @@ func (self *GRPC) Interact(server api.Agent_InteractServer) error {
 			serviceName := start.Identifier[2]
 			resourceName := start.Identifier[3]
 
-			if lock, clout, err := self.agent.OpenServiceClout(namespace, serviceName); err == nil {
+			if lock, clout, err := self.agent.state.OpenServiceClout(namespace, serviceName, self.agent.urlContext); err == nil {
 				logging.CallAndLogError(lock.Unlock, "unlock", delegateLog)
 				if clout, err = self.agent.CoerceClout(clout, false); err == nil {
 					delegates := self.agent.NewDelegates()

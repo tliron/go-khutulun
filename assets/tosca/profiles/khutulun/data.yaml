@@ -134,13 +134,27 @@ data_types:
         type: list
         entry_schema: scalar-unit.time
 
-  ContainerImageReference:
+  OCIImageReference:
+    description: >-
+      One and only one of these three groups of properties must be set:
+
+      * `artifact`
+      * `reference`
+      * `host`, `image`, `tag`
+
+      For the last group you may optionally add `port`, `repository`, and both `digest-algorithm` and `digest-hex`.
     properties:
+      artifact:
+        description: >-
+          URL or file path pointing to a tarball, e.g. as created by `podman export`.
+
+          You can also use get_artifact for an OCIContainerImage.
+        type: string
+        required: false
       reference:
         # See: https://github.com/distribution/distribution/blob/main/reference/reference.go
         description: >-
           [host[:port]/][repository/]image[:tag][@digest-algorithm:digest-hex]
-          If not provided a ContainerImage artifact would have to be attached instead.
         type: string
         required: false
         # TODO: pattern constraint
@@ -165,23 +179,52 @@ data_types:
       digest-hex:
         type: Hex
         required: false
-
-  ContainerPort:
-    properties:
-      external:
-        type: AssignablePort
-        required: false
-      internal:
-        type: AssignablePort
-      protocol:
-        type: string
         constraints:
-        - valid_values: [ TCP, UDP, SCTP ]
-        default: TCP
+        - pattern: ^[0-9a-fA-F]{32,}$ # At least 128 bit digest value
+
+  SystemImageReference:
+    description: >-
+      Only one property should be set.
+    properties:
+      artifact:
+        description: >-
+          URL or file path pointing to a tarball or raw image.
+
+          You can also use use get_artifact.
+        type: string
+        required: false
+      local-directory:
+        type: string
+        required: false
+      tar-url:
+        type: string
+        required: false
+      raw-url:
+        type: string
+        required: false
+
+  VirtualMachineReference:
+    properties:
+      artifact:
+        description: >-
+          URL or file path pointing to a qcow2 or iso image.
+
+          You can also use get_artifact for a QEMUImage or a CDImage.
+        type: string
+        required: false
 
   Instance:
     properties:
       name:
+        type: string
+        required: false
+
+  ActivityInstance:
+    properties:
+      name:
+        type: string
+        required: false
+      host:
         type: string
         required: false
 
@@ -204,3 +247,12 @@ data_types:
       count:
         type: Count
         required: false
+
+  MappedIPPort:
+    properties:
+      address:
+        type: IPAddress
+        default: '::'
+      external:
+        type: AssignablePort
+        default: 0

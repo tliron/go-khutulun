@@ -17,11 +17,11 @@ type Connection struct {
 	Name   string
 	IP     string
 	Port   int64
-	Source *Container
-	Target *Container
+	Source *OCIContainer
+	Target *OCIContainer
 }
 
-func GetConnection(vertex *cloutpkg.Vertex, edgesOutIndex int, edge *cloutpkg.Edge) Connection {
+func GetConnection(vertex *cloutpkg.Vertex, edgesOutIndex int, edge *cloutpkg.Edge) (*Connection, error) {
 	var relationship struct {
 		Name       string `ard:"name"`
 		Attributes struct {
@@ -29,8 +29,8 @@ func GetConnection(vertex *cloutpkg.Vertex, edgesOutIndex int, edge *cloutpkg.Ed
 			Port int64  `ard:"port"`
 		} `ard:"attributes"`
 	}
-	if err := ardReflector.ToComposite(edge.Properties, &relationship); err != nil {
-		panic(err)
+	if err := ardReflector.Pack(edge.Properties, &relationship); err != nil {
+		return nil, err
 	}
 
 	connection := Connection{
@@ -43,31 +43,47 @@ func GetConnection(vertex *cloutpkg.Vertex, edgesOutIndex int, edge *cloutpkg.Ed
 		},
 	}
 
-	if sources := GetVertexContainers(vertex); len(sources) > 0 {
-		connection.Source = sources[0]
-	}
-
-	if edge.Target != nil {
-		if targets := GetVertexContainers(edge.Target); len(targets) > 0 {
-			connection.Target = targets[0]
+	if sources, err := GetVertexOCIContainers(vertex); err == nil {
+		if len(sources) > 0 {
+			connection.Source = sources[0]
+		} else {
+			return nil, err
 		}
 	}
 
-	return connection
+	if edge.Target != nil {
+		if targets, err := GetVertexOCIContainers(edge.Target); err == nil {
+			if len(targets) > 0 {
+				connection.Target = targets[0]
+			}
+		} else {
+			return nil, err
+		}
+	}
+
+	return &connection, nil
 }
 
-func GetVertexConnections(vertex *cloutpkg.Vertex) []Connection {
-	var connections []Connection
+func GetVertexConnections(vertex *cloutpkg.Vertex) ([]*Connection, error) {
+	var connections []*Connection
 	for index, edge := range cloututil.GetToscaRelationships(vertex, "cloud.puccini.khutulun::IPPort") {
-		connections = append(connections, GetConnection(vertex, index, edge))
+		if connection, err := GetConnection(vertex, index, edge); err == nil {
+			connections = append(connections, connection)
+		} else {
+			return nil, err
+		}
 	}
-	return connections
+	return connections, nil
 }
 
-func GetCloutConnections(clout *cloutpkg.Clout) []Connection {
-	var connections []Connection
+func GetCloutConnections(clout *cloutpkg.Clout) ([]*Connection, error) {
+	var connections []*Connection
 	for _, vertex := range cloututil.GetToscaNodeTemplates(clout, "") {
-		connections = append(connections, GetVertexConnections(vertex)...)
+		if connections_, err := GetVertexConnections(vertex); err == nil {
+			connections = append(connections, connections_...)
+		} else {
+			return nil, err
+		}
 	}
-	return connections
+	return connections, nil
 }

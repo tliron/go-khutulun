@@ -7,7 +7,10 @@ import (
 )
 
 func (self *Delegate) Schedule(namespace string, serviceName string, clout *cloutpkg.Clout, coercedClout *cloutpkg.Clout) (*cloutpkg.Clout, []delegate.Next, error) {
-	processes := sdk.GetCloutProcesses(coercedClout)
+	processes, err := sdk.GetCloutProcesses(coercedClout)
+	if err != nil {
+		return nil, nil, err
+	}
 	if len(processes) == 0 {
 		return nil, nil, nil
 	}

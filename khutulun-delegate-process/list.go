@@ -7,7 +7,10 @@ import (
 )
 
 func (self *Delegate) ListResources(namespace string, serviceName string, coercedClout *cloutpkg.Clout) ([]delegate.Resource, error) {
-	processes := sdk.GetCloutProcesses(coercedClout)
+	processes, err := sdk.GetCloutProcesses(coercedClout)
+	if err != nil {
+		return nil, err
+	}
 	var resources []delegate.Resource
 
 	for _, container := range processes {

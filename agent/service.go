@@ -53,7 +53,7 @@ func (self *Agent) ProcessService(namespace string, serviceName string, phase st
 
 	var next []delegatepkg.Next
 
-	if lock, clout, err := self.OpenServiceClout(namespace, serviceName); err == nil {
+	if lock, clout, err := self.state.OpenServiceClout(namespace, serviceName, self.urlContext); err == nil {
 		defer logging.CallAndLogError(lock.Unlock, "unlock", delegateLog)
 
 		if coercedClout, err := self.CoerceClout(clout, true); err == nil {
@@ -94,7 +94,7 @@ func (self *Agent) ProcessService(namespace string, serviceName string, phase st
 			}
 
 			if saveClout != nil {
-				if err := self.SaveServiceClout(namespace, serviceName, saveClout); err != nil {
+				if err := self.state.SaveServiceClout(namespace, serviceName, saveClout); err != nil {
 					delegateLog.Errorf("%s", err.Error())
 				}
 			}

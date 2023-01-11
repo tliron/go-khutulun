@@ -95,24 +95,22 @@ func (self *State) ListPackages(namespace string, type_ string) (PackageIdentifi
 
 func (self *State) LockPackage(namespace string, type_ string, name string, create bool) (fslock.Handle, error) {
 	path := filepath.Join(self.GetPackageDir(namespace, type_, name), LOCK_FILE)
-	blocker := newFslockBlocker(time.Second, 5)
+	blocker := newFsLockBlocker(time.Second, 5)
 	if lock, err := fslock.LockSharedBlocking(path, blocker); err == nil {
 		return lock, nil
-	} else {
-		if os.IsNotExist(err) {
-			if create {
-				// Touch and try again
-				if err := util.Touch(path, 0666, 0777); err == nil {
-					return fslock.LockSharedBlocking(path, blocker)
-				} else {
-					return nil, err
-				}
+	} else if os.IsNotExist(err) {
+		if create {
+			// Touch and try again
+			if err := util.Touch(path, 0666, 0777); err == nil {
+				return fslock.LockSharedBlocking(path, blocker)
 			} else {
 				return nil, err
 			}
 		} else {
 			return nil, err
 		}
+	} else {
+		return nil, err
 	}
 }
 
@@ -146,11 +144,21 @@ func (self *State) ListPackageFiles(namespace string, type_ string, name string)
 }
 
 func (self *State) OpenPackageFile(namespace string, type_ string, name string, path string) (io.ReadCloser, error) {
+	path = filepath.Join(self.GetPackageDir(namespace, type_, name), path)
+	stateLog.Debugf("reading from %q", path)
+	return os.Open(path)
+}
+
+func (self *State) CreatePackageFile(namespace string, type_ string, name string, path string) (io.WriteCloser, error) {
+	path = filepath.Join(self.GetPackageDir(namespace, type_, name), path)
+	stateLog.Debugf("writing to %q", path)
+	return os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0666)
+}
+
+func (self *State) LockAndOpenPackageFile(namespace string, type_ string, name string, path string) (*LockedReadCloser, error) {
 	if lock, err := self.LockPackage(namespace, type_, name, false); err == nil {
-		path = filepath.Join(self.GetPackageDir(namespace, type_, name), path)
-		stateLog.Debugf("reading from %q", path)
-		if file, err := os.Open(path); err == nil {
-			return &LockedReadCloser{file, lock}, nil
+		if reader, err := self.OpenPackageFile(namespace, type_, name, path); err == nil {
+			return &LockedReadCloser{reader, lock}, nil
 		} else {
 			logging.CallAndLogError(lock.Unlock, "unlock", stateLog)
 			return nil, err
@@ -160,12 +168,10 @@ func (self *State) OpenPackageFile(namespace string, type_ string, name string, 
 	}
 }
 
-func (self *State) CreatePackageFile(namespace string, type_ string, name string, path string) (io.WriteCloser, error) {
+func (self *State) LockAndCreatePackageFile(namespace string, type_ string, name string, path string) (*LockedWriteCloser, error) {
 	if lock, err := self.LockPackage(namespace, type_, name, true); err == nil {
-		path = filepath.Join(self.GetPackageDir(namespace, type_, name), path)
-		stateLog.Debugf("writing to %q", path)
-		if file, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0666); err == nil {
-			return &LockedWriteCloser{file, lock}, nil
+		if writer, err := self.CreatePackageFile(namespace, type_, name, path); err == nil {
+			return &LockedWriteCloser{writer, lock}, nil
 		} else {
 			logging.CallAndLogError(lock.Unlock, "unlock", stateLog)
 			return nil, err
@@ -201,7 +207,7 @@ func (self *State) DeletePackage(namespace string, type_ string, name string) er
 
 // Utils
 
-func newFslockBlocker(wait time.Duration, maxAttempts int) fslock.Blocker {
+func newFsLockBlocker(wait time.Duration, maxAttempts int) fslock.Blocker {
 	var attempts int
 	return func() error {
 		time.Sleep(wait)

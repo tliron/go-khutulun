@@ -7,7 +7,7 @@ Khutulun
 [![Latest Release](https://img.shields.io/github/release/tliron/khutulun.svg)](https://github.com/tliron/khutulun/releases/latest)
 [![Go Report Card](https://goreportcard.com/badge/github.com/tliron/khutulun)](https://goreportcard.com/report/github.com/tliron/khutulun)
 
-A distributed orchestrator for services that speaks
+A distributed declarative orchestrator for services that speaks
 [TOSCA](https://www.oasis-open.org/committees/tosca/).
 
 Khutulun is a straightforward, flexible alternative to [Kubernetes](https://kubernetes.io/),

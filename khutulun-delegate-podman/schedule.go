@@ -7,7 +7,10 @@ import (
 )
 
 func (self *Delegate) Schedule(namespace string, serviceName string, clout *cloutpkg.Clout, coercedClout *cloutpkg.Clout) (*cloutpkg.Clout, []delegate.Next, error) {
-	containers := sdk.GetCloutContainers(coercedClout)
+	containers, err := sdk.GetCloutOCIContainers(coercedClout)
+	if err != nil {
+		return nil, nil, err
+	}
 	if len(containers) == 0 {
 		return nil, nil, nil
 	}

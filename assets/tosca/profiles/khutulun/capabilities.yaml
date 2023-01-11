@@ -6,9 +6,13 @@ imports:
 
 capability_types:
 
+  # Activities
+
   Activity:
     description: >-
       Base type for continuously-running services and short-running tasks.
+
+      Activities assume they are in an Instantiable node type.
     properties:
       temporality:
         type: string
@@ -29,12 +33,106 @@ capability_types:
           Operating system user owning the activity. If not provided will be the user owning the host service.
         type: string
         required: false
-      systemd:
-        type: boolean
-        default: true
+      # systemd:
+      #   type: boolean
+      #   default: true
     attributes:
       delegate:
         type: string
+      instances:
+        type: list
+        entry_schema: ActivityInstance
+
+  Process:
+    description: >-
+      Base type for bare processes running on the host.
+    derived_from: Activity
+    attributes:
+      delegate:
+        default: process
+
+  CommandProcess:
+    description: >-
+      Executes a command on the host.
+    derived_from: Process
+    properties:
+      command:
+        type: Command
+
+  DelegateProcess:
+    description: >-
+      Executes a delegate. The delegate's executable must be registered in this Khutulun
+      namespace.
+    derived_from: Process
+    properties:
+      delegate:
+        type: string
+  
+  OCI:
+    description: >-
+      Base type for OCI-compliant containers and pods.
+    derived_from: Activity
+    properties:
+      name:
+        description: >-
+          If specified will be appended to the instance name.
+        type: string
+        required: false
+      create-arguments:
+        type: list
+        entry_schema: string
+        required: false
+    attributes:
+      delegate:
+        default: podman
+
+  OCIContainer:
+    description: >-
+      Executes a container using an OCI-compliant container runtime, such as Podman or Docker.
+    derived_from: OCI
+    properties:
+      image:
+        description: >-
+          If not provided an OCIContainerImage artifact would have to be attached instead.
+        type: OCIImageReference
+    attributes:
+      instance-names:
+        type: list
+        entry_schema: string
+
+  OCIPod:
+    description: >-
+      Executes a pod of containers using an OCI-compliant container runtime, such as Podman or Docker.
+    derived_from: OCI
+    properties:
+      images:
+        description: >-
+          If not provided OCIContainerImage artifacts would have to be attached instead.
+        type: list
+        entry_schema: OCIImageReference
+
+  SystemContainer:
+    description: >-
+      Only one of the properties can be specified. If none are provided a SystemContainerImage artifact
+      would have to be attached instead.
+    derived_from: Activity
+    properties:
+      image:
+        type: SystemImageReference
+    attributes:
+      delegate:
+        default: nspawn
+
+  VirtualMachine:
+    derived_from: Activity
+    properties:
+      image:
+        type: VirtualMachineReference
+    attributes:
+      delegate:
+        default: libvirt
+
+  # Connectables
 
   Connectable:
     description: >-
@@ -48,82 +146,24 @@ capability_types:
         type: boolean
         default: false
 
-  Storage: {}
-
-  # Activities
-
-  Process:
-    description: >-
-      Base type for bare processes.
-    derived_from: Activity
-    attributes:
-      delegate:
-        default: process
-      host:
-        type: string
-
-  CommandProcess:
-    derived_from: Process
-    properties:
-      command:
-        type: Command
-
-  Container:
-    derived_from: Activity
-    properties:
-      name:
-        description: >-
-          If specified will be appended to the instance name.
-        type: string
-        required: false
-      image:
-        description: >-
-          OCI pseudo-URI. If not provided a ContainerImage artifact would have to be attached instead.
-        type: ContainerImageReference
-        required: false
-      create-arguments:
-        type: list
-        entry_schema: string
-        required: false
-    attributes:
-      delegate:
-        default: podman
-      host:
-        type: string
-
-  Pod:
-    derived_from: Activity
-    properties:
-      images:
-        description: >-
-          OCI pseudo-URIs. If not provided ContainerImage artifacts would have to be attached instead.
-        type: list
-        entry_schema: ContainerImageReference
-        required: false
-    attributes:
-      delegate:
-        default: podman
-      host:
-        type: string
-
-  VirtualMachine:
-    derived_from: Activity
-    attributes:
-      delegate:
-        default: podman
-      host:
-        type: string
-
-  # Connectable
-
-  ContainerConnectable:
+  MappedIPPort:
     derived_from: Connectable
+    properties:
+      internal:
+        type: AssignablePort
+      protocol:
+        type: string
+        constraints:
+        - valid_values: [ TCP, UDP, SCTP ]
+        default: TCP
     attributes:
-      ports:
-        type: list
-        entry_schema: ContainerPort
+      mappings:
+        type: map
+        entry_schema: MappedIPPort
 
   # Storage
+
+  Storage: {}
 
   LocalDirectory:
     derived_from: Storage

@@ -8,22 +8,42 @@ imports:
 
 node_types:
 
-  Instantiated:
+  Responsive:
+    description: >-
+      Base type for nodes that can respond to events.
+    interfaces:
+      events:
+        type: Events
+
+  Instantiable:
     description: >-
       Base type for nodes that can have zero or more instances.
 
       See `Redundancy` policy.
+    derived_from: Responsive
     attributes:
-      count:
-        type: Count
-        default: 0
+      # TODO: do we need both?
+      # count:
+      #   type: Count
+      #   default: 0
       instances:
         type: list
         entry_schema: Instance
         #default: [ { name: "hello" } ]
 
+  # Endpoints
+
   Endpoint:
-    derived_from: Instantiated
+    description: >-
+      An endpoint is a node that contains connections. The intention is that its connectivity
+      is to be used by "something else". It thus represents a logical "end" of a specific
+      network graph.
+
+      The "something else" can be incoming clients, ingress from another cluster or system, or
+      nodes (activities) in another service. Indeed, endpoints can be used in service
+      composition as logical relays for completing a network graph comprising multiple
+      services.
+    derived_from: Instantiable
     properties:
       ingress:
         type: boolean
@@ -33,10 +53,16 @@ node_types:
         capability: Connectable
         relationship: Connection
 
+  IPEndpoint:
+    derived_from: Endpoint
+    requirements:
+    - connection:
+        relationship: IP
+
   DelegateEndpoint:
     description: >-
-      An endpoint that registers a delegate.
-    derived_from: Endpoint
+      An IP-port endpoint that registers a delegate.
+    derived_from: IPEndpoint
     properties:
       name:
         description: >-
@@ -46,15 +72,14 @@ node_types:
 
   # Activities
 
-  Process:
-    derived_from: Instantiated
-    interfaces:
-      events:
-        type: Events
-    capabilities:
-      activity:
-        type: Process
-      connectable: Connectable
+  Activity:
+    description: >-
+      Convenience base type for activities.
+
+      Activities are instantiable nodes with one or more Activity capabilities, which
+      encapsulate the actual functionality. Note that there a single node can potentially
+      have Activity capabilities scheduled to different hosts.
+    derived_from: Instantiable
     requirements:
     - connection:
         capability: Connectable
@@ -63,54 +88,66 @@ node_types:
         capability: Storage
         relationship: Storage
 
-  Container:
-    derived_from: Instantiated
-    interfaces:
-      events:
-        type: Events
+  CommandProcess:
+    description: >-
+      A node representing a single command-activated process.
+    derived_from: Activity
     capabilities:
-      activity: Container
-      connectable: ContainerConnectable
+      command-process: CommandProcess
+
+  OCIContainer:
+    description: >-
+      A node representing a single OCI-compliant container.
+    derived_from: Activity
+    capabilities:
+      container: OCIContainer
     requirements:
     - connection:
-        capability: Connectable
-        relationship: Connection
-    - storage:
-        capability: Storage
-        relationship: Storage
+        relationship: IP
 
-  LoadBalancer:
-    derived_from: Container
+  ConnectableOCIContainer:
+    description: >-
+      An OCI-compliant container with a single mapped port for incoming connections.
+
+      This is a convenience node type. If you need containers with multiple
+      ports or other kinds of connections then you will need to declare your
+      own node types.
+    derived_from: OCIContainer
     capabilities:
-      activity:
-        type: Container
+      port: MappedIPPort
+
+  IPLoadBalancer:
+    derived_from: ConnectableOCIContainer
+    capabilities:
+      container:
         properties:
           image:
             default:
-              reference: docker.io/nginx:1.22.0
+              host: docker.io
+              image: nginx
+              tag: 1.23.0
+      port:
+        properties:
+          internal:
+            default: 80
+    requirements:
+    - connection:
+        relationship: IP
     # TODO: attach an artifact that sets up loadbalancing
 
   VirtualMachine:
-    derived_from: Instantiated
-    interfaces:
-      events:
-        type: Events
+    description: >-
+      A node representing a single virtual machine.
+    derived_from: Activity
     capabilities:
-      activity: VirtualMachine
-      connectable: Connectable
-    requirements:
-    - connection:
-        capability: Connectable
-        relationship: Connection
-    - storage:
-        capability: Storage
-        relationship: Storage
+      virtual-machine: VirtualMachine
 
   # Storage
 
+  Storage:
+    derived_from: Responsive
+
   LocalDirectory:
-    interfaces:
-      events:
-        type: Events
+    derived_from: Storage
     capabilities:
-      storage: LocalDirectory
+      local-directory: LocalDirectory

@@ -1,9 +1,10 @@
 package commands
 
 import (
+	"os"
+
 	"github.com/spf13/cobra"
 	clientpkg "github.com/tliron/khutulun/client"
-	"github.com/tliron/kutil/terminal"
 	"github.com/tliron/kutil/transcribe"
 	"github.com/tliron/kutil/util"
 )
@@ -23,7 +24,7 @@ var namespaceListCommand = &cobra.Command{
 		namespaces, err := client.ListNamespaces()
 		util.FailOnError(err)
 		if len(namespaces) > 0 {
-			err = transcribe.Print(namespaces, format, terminal.Stdout, strict, pretty)
+			err = transcribe.Print(namespaces, format, os.Stdout, strict, pretty)
 			util.FailOnError(err)
 		}
 	},

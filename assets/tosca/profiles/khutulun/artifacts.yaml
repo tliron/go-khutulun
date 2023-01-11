@@ -2,6 +2,16 @@ tosca_definitions_version: tosca_2_0
 
 artifact_types:
 
-  ContainerImage: {}
+  OCIContainerImage:
+    file_ext: [ tar, tar.gz ]
+
+  SystemContainerImage:
+    file_ext: [ raw, tar, tar.xz ]
+
+  QEMUImage:
+    file_ext: [ qcow2 ]
+
+  CDImage:
+    file_ext: [ iso ]
 
   SystemdUnit: {}

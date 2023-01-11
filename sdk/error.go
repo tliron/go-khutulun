@@ -13,7 +13,7 @@ func GRPCAbortedf(format string, args ...any) error {
 }
 
 func GRPCAborted(err error) error {
-	return statuspkg.Errorf(codes.Aborted, "%w", err.Error())
+	return statuspkg.Errorf(codes.Aborted, "%s", err.Error())
 }
 
 type grpcStatusError struct {

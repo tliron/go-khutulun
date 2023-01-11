@@ -15,51 +15,57 @@ service_template:
   node_templates:
 
     endpoint:
-      type: kh:Endpoint
+      description: >-
+        Ingress for web clients to connect to the service.
+      type: kh:IPEndpoint
+      properties:
+        ingress: true
       requirements:
       - connection: frontend
 
     frontend:
-      type: kh:LoadBalancer
+      type: kh:IPLoadBalancer
       requirements:
       - connection: web-server
 
     web-server:
-      type: kh:Container
+      type: kh:ConnectableOCIContainer
       capabilities:
-        activity:
+        container:
           properties:
             image:
-              reference: docker.io/nginx:1.22.0
-        connectable:
-          attributes:
-            ports:
-            - internal: 80
-              protocol: TCP
+              host: docker.io
+              image: nginx
+              tag: 1.23.1
+        port:
+          properties:
+            internal: 80
       requirements:
-      - connection:
-          node: database
-          relationship:
-            type: kh:IPPort
-          # event: reconfigure
+      - connection: database
+      # event: reconfigure
 
     database:
-      type: kh:Container
+      type: kh:ConnectableOCIContainer
       capabilities:
-        activity:
+        container:
           properties:
             image:
-              reference: docker.io/postgres:14.2
+              host: docker.io
+              image: postgres
+              tag: '14.4'
             create-arguments: [ --env=POSTGRES_PASSWORD=postgres ]
-          attributes:
-            host: lab1 # TEMP: use policy
+          #attributes:
+          #  host: lab1 # TEMP: use policy
+        port:
+          properties:
+            internal: 5432
       requirements:
       - storage: directory
 
     directory:
       type: kh:LocalDirectory
       capabilities:
-        storage:
+        local-directory:
           properties:
             temporary: true
 
@@ -99,5 +105,5 @@ service_template:
 
     port:
       value:
-        concat:
-        - { get_attribute: [ web-server, connectable, ports, 0, internal ] }
+        $concat:
+        - { $get_attribute: [ endpoint, connection, 0, port ] }

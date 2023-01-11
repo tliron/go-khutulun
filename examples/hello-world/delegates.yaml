@@ -17,7 +17,7 @@ service_template:
     ipport:
       type: kh:CommandProcess
       capabilities:
-        activity:
+        process:
           properties:
             command:
               name: /mnt/khutulun/common/delegate/ipport/khutulun-delegate-ipport
