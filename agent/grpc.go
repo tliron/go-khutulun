@@ -77,8 +77,7 @@ func (self *GRPC) Start() error {
 			if err := start("::1"); err != nil {
 				return err
 			}
-		}
-		if (self.Protocol == "tcp") || (self.Protocol == "tcp4") {
+		} else if self.Protocol == "tcp4" {
 			if err := start("127.0.0.1"); err != nil {
 				return err
 			}

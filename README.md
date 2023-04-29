@@ -14,44 +14,41 @@ Khutulun is a straightforward, flexible alternative to [Kubernetes](https://kube
 [Nomad](https://www.nomadproject.io/), etc.
 
 Its primary design goal is that the outcome of orchestration would be no different from what a
-sysadmin would do themselves. If you want to simply install and run a bare process on a machine,
-Khutulun will do that for you. If you want straightforward networking based on reserved TCP ports,
-Khutulun won't do anything more than keep track of those ports for you. More complex deployments
-using containers, virtual machines, and virtual networks are also supported, but Khutulun's aim is
-to manage complexity without getting in the way of simplicity.
+sysadmin or DevOps team would do themselves. Drifting away from this goal would mean losing control
+over orchestration and unraveling the narrative.
 
-The guiding paradigm is policy-driven service composition based on graph representations of the
-service's topology. Khutulun provides custom discovery that allows components to find each other,
-form a service mesh, and modify the topologies to which they belong ("Day 2" and the "operator
-pattern"). There are tools for injecting discovered data into configuration files and environment
-variables to allow "legacy" applications to participate in the mesh.
+In practice, this means that if you want to simply install and run a bare process on a machine,
+Khutulun will do that for you. If you want straightforward networking based on reserved TCP ports,
+Khutulun won't do anything more than keep track of those ports for you. More complex deployments using
+containers, virtual machines, and virtual networks are also supported, but Khutulun's aim is to manage
+complexity without getting in the way of simplicity.
 
 Delegates
 ---------
 
 Khutulun is modular and extensible. Resource types are handled by a cooperative ecosystem of
 delegates, the main delegate types being for running compute workloads, for networking, and for
-storage. Delegates can call other delegates. They can be implemented as in-process plugins,
-services, and even packaged into workloads on the cluster.
+storage. Delegates can call on other delegates using the operator pattern. They can be implemented
+as in-process plugins, system services, and even packaged into workloads on the cluster.
 
 Some included resource types and delegates:
 
 * Bare processes: self-contained or otherwise installable executables and scripts
-* Containers using [Podman](https://podman.io/) or 
+* Containers using [Podman](https://podman.io/) or [Docker](https://www.docker.com/) or
   [systemd-nspawn](https://www.freedesktop.org/software/systemd/man/systemd-nspawn.html)
+* Virtualized containers using [Kata Containers](https://katacontainers.io/)
+* Pods of containers using Podman or Docker
 * Pristine containers using [Distrobox](https://distrobox.privatedns.org/) (on top of Podman)
   or systemd-nspawn
-* Pods of containers using Podman
 * Virtual machines using [libvirt](https://libvirt.org/)
-* TCP port reservation with support for exposure through [Firewalld](https://firewalld.org/)
+* TCP port reservation/discovery with support for exposure through [Firewalld](https://firewalld.org/)
 * Local or networked directory storage
 
-Plugins can optionally wrap resources in usermode systemd units. This provides a unified admin
+Plugins can optionally wrap executables in usermode systemd units. This provides a unified admin
 experience as well as resilience in the case of failures and restarts.
 
-Note that Khutulun does not demand that every container (pod) have its own IP address in an
-internal network. (Very much unlike Kubernetes.) If desired this feature could be implemented by
-a networking delegate.
+Note that unlike Kubernetes Khutulun does not demand that every container (or pod) have its own IP
+address in an internal network. If desired this feature could be implemented by a networking delegate.
 
 Clusters
 --------
@@ -62,9 +59,11 @@ multicast for automatic mutual discovery. At the minimum you need just one "seed
 a cluster, but because all hosts are "masters" the cluster can survive with as little as one arbitrary
 host.
 
-Khutulun doesn't distribute its management state among hosts. Instead it simply requires that all
-hosts have access to the same shared filesystem. A simple NFS share should be enough even for large
-clusters. Coordination is handled via [flock](https://man7.org/linux/man-pages/man2/flock.2.html).
+Khutulun doesn't distribute its management state among hosts. That's too much responsibility and
+hard to design for scale. It's also a solved problem. So, instead Khutulun simply requires that all
+hosts have access to the same shared filesystem. A simple NFS share can be enough even for large
+clusters. Change coordination is handled via
+[fileystem flock](https://man7.org/linux/man-pages/man2/flock.2.html).
 
 What about setting up the cluster hosts? Bare metal tasks like partitioning drives, installing
 operating systems, and configuring networking and other essential services? Or cloud tasks like
@@ -73,12 +72,12 @@ the scope of Khutulun. Use a dedicated infrastructure manager instead. Khutulun 
 tools, for example to allow workloads to modify their own cluster, or to use a Khutulun cluster as
 a dedicated "management cluster" that, well, manages the hardware of all other clusters.
 
-Included is are plugins for [Terraform](https://www.terraform.io/) and
-[Ansible](https://www.ansible.com/) that make it easy to install Khutulun on your infrastructure
-while preparing it.
+Included are plugins for [Terraform](https://www.terraform.io/) and
+[Ansible](https://www.ansible.com/) that make it easier to include Khutulun installation on your
+infrastructure.
 
-By the way, hosts do not have to be dedicated to Khutulun and its workloads. You can use Khutulun to
-manage services across many machines without having to conceptualize them as a "cloud".
+By the way, individual hosts do not have to be dedicated to Khutulun and its workloads. You can use
+Khutulun to manage services across many machines without having to conceptualize them as a "cloud".
 
 Get It
 ------
@@ -98,7 +97,8 @@ decisions:
   of this requirement is too high to bear. ([Multus](https://github.com/k8snetworkplumbingwg/multus-cni)
   enables "side-loading" networking, but we still need a primary IP address on the Kubernetes
   control plane.) Distributed storage solutions must also be made to participate in this networking
-  scheme.
+  scheme. Thus developing for the "cloud native" environment is often a synonym for "workarounds for
+  an overly opinionated architecture".
 * Kubernetes is focused on one kind of activity: pods of Docker-style containers. This means that we
   also require a Docker-style container image repository (either external or internal to the cluster).
   That's a not-insignficant cost. And what if we don't need or want to use containers? Sometimes we want
@@ -158,7 +158,7 @@ worlds.
 What's wrong with just having a filesystem shared among all hosts? Seriously, why make things more
 complicated than they have to be?
 
-Note that etcd has strict limits on the size of documents, which is an obstacle for sharing large,
+Note that etcd has strict limits on the size of documents (~1KB), which is an obstacle for sharing large,
 useful binary artifacts. That means that if you need to share large, useful binary artifacts you will
 need to deploy yet another storage system. Are we winning yet?
 
