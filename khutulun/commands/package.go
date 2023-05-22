@@ -4,10 +4,10 @@ import (
 	"os"
 	"strings"
 
+	"github.com/tliron/exturl"
 	clientpkg "github.com/tliron/khutulun/client"
 	"github.com/tliron/kutil/terminal"
 	"github.com/tliron/kutil/transcribe"
-	urlpkg "github.com/tliron/kutil/url"
 	"github.com/tliron/kutil/util"
 )
 
@@ -48,25 +48,25 @@ func registerPackage(namespace string, type_ string, args []string) {
 		util.Failf("\"--unpack\" must be \"tar\", \"tgz\", \"zip\", \"auto\" or \"false\": %s", unpack)
 	}
 
-	context := urlpkg.NewContext()
+	context := exturl.NewContext()
 	util.OnExitError(context.Release)
 
-	var url urlpkg.URL
+	var url exturl.URL
 	var err error
 
 	if len(args) == 2 {
-		url, err = urlpkg.NewValidURL(args[1], nil, context)
+		url, err = exturl.NewValidURL(args[1], nil, context)
 	} else {
 		path := type_
 		switch type_ {
 		case "profile", "template":
 			path += ".yaml"
 		}
-		url, err = urlpkg.ReadToInternalURL(path, os.Stdin, context)
+		url, err = exturl.ReadToInternalURL(path, os.Stdin, context)
 	}
 	util.FailOnError(err)
 
-	fileProviders, err := urlpkg.NewFileProviders(url, unpack)
+	fileProviders, err := exturl.NewFileProviders(url, unpack)
 	util.FailOnError(err)
 	if fileProviders != nil {
 		client, err := clientpkg.NewClientFromConfiguration(configurationPath, clusterName)

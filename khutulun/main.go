@@ -4,7 +4,7 @@ import (
 	"github.com/tliron/khutulun/khutulun/commands"
 	"github.com/tliron/kutil/util"
 
-	_ "github.com/tliron/kutil/logging/simple"
+	_ "github.com/tliron/commonlog/simple"
 )
 
 func main() {

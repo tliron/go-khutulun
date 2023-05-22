@@ -1,13 +1,13 @@
 package sdk
 
 import (
-	"github.com/tliron/kutil/ard"
-	"github.com/tliron/kutil/logging"
+	"github.com/tliron/commonlog"
+	"github.com/tliron/go-ard"
 	"github.com/tliron/kutil/util"
 )
 
-var stateLog = logging.GetLogger("khutulun.state")
-var watcherLog = logging.GetLogger("khutulun.watcher")
+var stateLog = commonlog.GetLogger("khutulun.state")
+var watcherLog = commonlog.GetLogger("khutulun.watcher")
 
 var ardReflector = ard.NewReflector()
 

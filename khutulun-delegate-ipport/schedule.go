@@ -1,9 +1,9 @@
 package main
 
 import (
+	"github.com/tliron/commonlog"
 	"github.com/tliron/khutulun/delegate"
 	"github.com/tliron/khutulun/sdk"
-	"github.com/tliron/kutil/logging"
 	cloutpkg "github.com/tliron/puccini/clout"
 )
 
@@ -21,7 +21,7 @@ func (self *Delegate) Schedule(namespace string, serviceName string, clout *clou
 	if err != nil {
 		return nil, nil, err
 	}
-	defer logging.CallAndLogError(lock.Unlock, "unlock", log)
+	defer commonlog.CallAndLogError(lock.Unlock, "unlock", log)
 
 	var changed bool
 	for _, connection := range connections {

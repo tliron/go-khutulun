@@ -8,10 +8,10 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/tliron/commonlog"
 	"github.com/tliron/khutulun/api"
 	clientpkg "github.com/tliron/khutulun/client"
 	"github.com/tliron/khutulun/sdk"
-	"github.com/tliron/kutil/logging"
 	"github.com/tliron/kutil/util"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -196,7 +196,7 @@ func (self *GRPC) GetPackageFiles(getPackageFiles *api.GetPackageFiles, server a
 	grpcLog.Infof("getPackageFiles(%q, %q, %q)", getPackageFiles.Identifier.Namespace, getPackageFiles.Identifier.Type.Name, getPackageFiles.Identifier.Name)
 
 	if lock, err := self.agent.state.LockPackage(getPackageFiles.Identifier.Namespace, getPackageFiles.Identifier.Type.Name, getPackageFiles.Identifier.Name, false); err == nil {
-		defer logging.CallAndLogError(lock.Unlock, "unlock", grpcLog)
+		defer commonlog.CallAndLogError(lock.Unlock, "unlock", grpcLog)
 
 		buffer := make([]byte, BUFFER_SIZE)
 		dir := self.agent.state.GetPackageDir(getPackageFiles.Identifier.Namespace, getPackageFiles.Identifier.Type.Name, getPackageFiles.Identifier.Name)
@@ -226,7 +226,7 @@ func (self *GRPC) GetPackageFiles(getPackageFiles *api.GetPackageFiles, server a
 					}
 				}
 
-				logging.CallAndLogError(file.Close, "file close", grpcLog)
+				commonlog.CallAndLogError(file.Close, "file close", grpcLog)
 			} else {
 				return sdk.GRPCAborted(err)
 			}
@@ -248,14 +248,14 @@ func (self *GRPC) SetPackageFiles(server api.Agent_SetPackageFilesServer) error 
 			type_ := first.Start.Identifier.Type.Name
 			name := first.Start.Identifier.Name
 			if lock, err := self.agent.state.LockPackage(namespace, type_, name, true); err == nil {
-				defer logging.CallAndLogError(lock.Unlock, "unlock", grpcLog)
+				defer commonlog.CallAndLogError(lock.Unlock, "unlock", grpcLog)
 
 				var file *os.File
 				for {
 					if content, err := server.Recv(); err == nil {
 						if content.Start != nil {
 							if file != nil {
-								logging.CallAndLogError(file.Close, "file close", grpcLog)
+								commonlog.CallAndLogError(file.Close, "file close", grpcLog)
 							}
 							return statuspkg.Error(codes.InvalidArgument, "received more than one message with \"start\"")
 						}
@@ -291,7 +291,7 @@ func (self *GRPC) SetPackageFiles(server api.Agent_SetPackageFilesServer) error 
 						}
 
 						if _, err := file.Write(content.Bytes); err != nil {
-							logging.CallAndLogError(file.Close, "file close", grpcLog)
+							commonlog.CallAndLogError(file.Close, "file close", grpcLog)
 							return sdk.GRPCAborted(err)
 						}
 					} else {
@@ -299,7 +299,7 @@ func (self *GRPC) SetPackageFiles(server api.Agent_SetPackageFilesServer) error 
 							break
 						} else {
 							if file != nil {
-								logging.CallAndLogError(file.Close, "file close", grpcLog)
+								commonlog.CallAndLogError(file.Close, "file close", grpcLog)
 							}
 							return sdk.GRPCAborted(err)
 						}
@@ -307,7 +307,7 @@ func (self *GRPC) SetPackageFiles(server api.Agent_SetPackageFilesServer) error 
 				}
 
 				if file != nil {
-					logging.CallAndLogError(file.Close, "file close", grpcLog)
+					commonlog.CallAndLogError(file.Close, "file close", grpcLog)
 				}
 
 				return nil
@@ -419,7 +419,7 @@ func (self *GRPC) Interact(server api.Agent_InteractServer) error {
 			resourceName := start.Identifier[3]
 
 			if lock, clout, err := self.agent.state.OpenServiceClout(namespace, serviceName, self.agent.urlContext); err == nil {
-				logging.CallAndLogError(lock.Unlock, "unlock", delegateLog)
+				commonlog.CallAndLogError(lock.Unlock, "unlock", delegateLog)
 				if clout, err = self.agent.CoerceClout(clout, false); err == nil {
 					delegates := self.agent.NewDelegates()
 					defer delegates.Release()

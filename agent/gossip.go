@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/hashicorp/memberlist"
-	"github.com/tliron/kutil/logging"
-	"github.com/tliron/kutil/logging/sink"
+	"github.com/tliron/commonlog"
+	"github.com/tliron/commonlog/sink"
 	"github.com/tliron/kutil/transcribe"
 	"github.com/tliron/kutil/util"
 )
@@ -78,7 +78,7 @@ func (self *Gossip) Announce() error {
 func (self *Gossip) Stop() error {
 	if self.members != nil {
 		err := self.members.Leave(time.Second * 5)
-		logging.CallAndLogError(self.members.Shutdown, "shutdown", gossipLog)
+		commonlog.CallAndLogError(self.members.Shutdown, "shutdown", gossipLog)
 		return err
 	} else {
 		return nil

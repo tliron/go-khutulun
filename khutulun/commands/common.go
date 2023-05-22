@@ -1,12 +1,12 @@
 package commands
 
 import (
-	"github.com/tliron/kutil/logging"
+	"github.com/tliron/commonlog"
 )
 
 const toolName = "khutulun"
 
-var log = logging.GetLogger(toolName)
+var log = commonlog.GetLogger(toolName)
 
 var clusterName string
 var pseudoTerminal bool

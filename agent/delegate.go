@@ -5,9 +5,9 @@ import (
 	"os"
 
 	"github.com/danjacques/gofslock/fslock"
+	"github.com/tliron/commonlog"
+	"github.com/tliron/go-ard"
 	delegatepkg "github.com/tliron/khutulun/delegate"
-	"github.com/tliron/kutil/ard"
-	"github.com/tliron/kutil/logging"
 	cloutpkg "github.com/tliron/puccini/clout"
 	cloututil "github.com/tliron/puccini/clout/util"
 )
@@ -51,8 +51,8 @@ func (self *Agent) NewPluginDelegate(namespace string, delegateName string) (*Pl
 		if pluginDelegate.delegate, err = pluginDelegate.client.Delegate(); err == nil {
 			return &pluginDelegate, nil
 		} else {
-			logging.CallAndLogError(pluginDelegate.Release, "release", delegateLog)
-			logging.CallAndLogError(lock.Unlock, "unlock", delegateLog)
+			commonlog.CallAndLogError(pluginDelegate.Release, "release", delegateLog)
+			commonlog.CallAndLogError(lock.Unlock, "unlock", delegateLog)
 			return nil, err
 		}
 	} else if os.IsNotExist(err) {
@@ -159,6 +159,6 @@ func (self *Delegates) Fill(namespace string, coercedClout *cloutpkg.Clout) {
 
 func (self *Delegates) Release() {
 	for _, delegate := range self.delegates {
-		logging.CallAndLogError(delegate.Release, "release", delegateLog)
+		commonlog.CallAndLogError(delegate.Release, "release", delegateLog)
 	}
 }

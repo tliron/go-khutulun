@@ -7,15 +7,15 @@ import (
 	"io"
 	execpkg "os/exec"
 
+	"github.com/tliron/commonlog"
 	"github.com/tliron/khutulun/api"
 	"github.com/tliron/kutil/exec"
-	"github.com/tliron/kutil/logging"
 	"github.com/tliron/kutil/util"
 	"google.golang.org/grpc/codes"
 	statuspkg "google.golang.org/grpc/status"
 )
 
-func NewCommand(start *api.Interaction_Start, log logging.Logger) *exec.Command {
+func NewCommand(start *api.Interaction_Start, log commonlog.Logger) *exec.Command {
 	command := exec.NewCommand()
 
 	if start.PseudoTerminal {
@@ -46,7 +46,7 @@ func NewCommand(start *api.Interaction_Start, log logging.Logger) *exec.Command 
 	return command
 }
 
-func StartCommand(command *exec.Command, server GRPCInteractor, log logging.Logger) error {
+func StartCommand(command *exec.Command, server GRPCInteractor, log commonlog.Logger) error {
 	context, cancel := contextpkg.WithCancel(contextpkg.Background())
 	defer cancel()
 

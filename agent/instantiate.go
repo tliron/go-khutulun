@@ -3,7 +3,7 @@ package agent
 import (
 	"fmt"
 
-	"github.com/tliron/kutil/ard"
+	"github.com/tliron/go-ard"
 	cloutpkg "github.com/tliron/puccini/clout"
 	cloututil "github.com/tliron/puccini/clout/util"
 )

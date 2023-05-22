@@ -4,7 +4,7 @@ import (
 	"io"
 
 	"github.com/danjacques/gofslock/fslock"
-	"github.com/tliron/kutil/logging"
+	"github.com/tliron/commonlog"
 )
 
 //
@@ -35,7 +35,7 @@ func (self *LockedReadCloser) Read(p []byte) (n int, err error) {
 
 // io.Closer interface
 func (self *LockedReadCloser) Close() error {
-	logging.CallAndLogError(self.ReadCloser.Close, "close", stateLog)
+	commonlog.CallAndLogError(self.ReadCloser.Close, "close", stateLog)
 	return self.Lock.Unlock()
 }
 
@@ -55,6 +55,6 @@ func (self *LockedWriteCloser) Write(p []byte) (n int, err error) {
 
 // io.Closer interface
 func (self *LockedWriteCloser) Close() error {
-	logging.CallAndLogError(self.WriteCloser.Close, "close", stateLog)
+	commonlog.CallAndLogError(self.WriteCloser.Close, "close", stateLog)
 	return self.Lock.Unlock()
 }

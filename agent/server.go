@@ -5,8 +5,8 @@ import (
 	"net"
 	"time"
 
+	"github.com/tliron/commonlog"
 	"github.com/tliron/khutulun/sdk"
-	"github.com/tliron/kutil/logging"
 	"github.com/tliron/kutil/util"
 )
 
@@ -134,7 +134,7 @@ func (self *Server) Start(watcher bool, ticker bool) error {
 			//self.host.Schedule()
 			//self.host.Reconcile()
 			if self.gossip != nil {
-				logging.CallAndLogError(self.gossip.Announce, "announce", log)
+				commonlog.CallAndLogError(self.gossip.Announce, "announce", log)
 			}
 		})
 		self.ticker.Start()
@@ -157,11 +157,11 @@ func (self *Server) Stop() {
 	}
 
 	if self.gossip != nil {
-		logging.CallAndLogError(self.gossip.Stop, "stop", gossipLog)
+		commonlog.CallAndLogError(self.gossip.Stop, "stop", gossipLog)
 	}
 
 	if self.http != nil {
-		logging.CallAndLogError(self.http.Stop, "stop", httpLog)
+		commonlog.CallAndLogError(self.http.Stop, "stop", httpLog)
 	}
 
 	if self.grpc != nil {
@@ -169,6 +169,6 @@ func (self *Server) Stop() {
 	}
 
 	if self.watcher != nil {
-		logging.CallAndLogError(self.watcher.Stop, "stop watcher", log)
+		commonlog.CallAndLogError(self.watcher.Stop, "stop watcher", log)
 	}
 }

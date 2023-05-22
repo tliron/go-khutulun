@@ -5,7 +5,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/tliron/kutil/logging"
+	"github.com/tliron/commonlog"
 	problemspkg "github.com/tliron/kutil/problems"
 	"github.com/tliron/kutil/transcribe"
 	cloutpkg "github.com/tliron/puccini/clout"
@@ -28,7 +28,7 @@ func (self *Agent) CoerceClout(clout *cloutpkg.Clout, copy_ bool) (*cloutpkg.Clo
 func (self *Agent) OpenFile(path string, coerceClout bool) (io.ReadCloser, error) {
 	if coerceClout {
 		if file, err := os.Open(path); err == nil {
-			defer logging.CallAndLogError(file.Close, "file close", log)
+			defer commonlog.CallAndLogError(file.Close, "file close", log)
 			if clout, err := cloutpkg.Read(file, "yaml"); err == nil {
 				if clout, err = self.CoerceClout(clout, false); err == nil {
 					if code, err := transcribe.EncodeYAML(clout, "  ", false); err == nil {

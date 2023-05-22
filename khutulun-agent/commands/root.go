@@ -4,9 +4,9 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	"github.com/tliron/kutil/logging"
-	"github.com/tliron/kutil/logging/journal"
-	"github.com/tliron/kutil/logging/simple"
+	"github.com/tliron/commonlog"
+	"github.com/tliron/commonlog/journal"
+	"github.com/tliron/commonlog/simple"
 	"github.com/tliron/kutil/terminal"
 	"github.com/tliron/kutil/util"
 )
@@ -34,17 +34,17 @@ var rootCommand = &cobra.Command{
 			util.OnExitError(cleanup)
 		}
 		if journalLog {
-			logging.SetBackend(journal.NewBackend())
+			commonlog.SetBackend(journal.NewBackend())
 		} else {
-			logging.SetBackend(simple.NewBackend())
+			commonlog.SetBackend(simple.NewBackend())
 		}
 		if logTo == "" {
 			if terminal.Quiet {
 				verbose = -4
 			}
-			logging.Configure(verbose, nil)
+			commonlog.Configure(verbose, nil)
 		} else {
-			logging.Configure(verbose, &logTo)
+			commonlog.Configure(verbose, &logTo)
 		}
 	},
 }
@@ -55,7 +55,7 @@ func Execute() {
 }
 
 // simple.FormatFunc signature
-func SimpleFormat(message string, id []string, level logging.Level, colorize bool) string {
+func SimpleFormat(message string, id []string, level commonlog.Level, colorize bool) string {
 	var builder strings.Builder
 
 	simple.FormatLevel(&builder, level, false)

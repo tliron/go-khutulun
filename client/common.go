@@ -1,7 +1,7 @@
 package client
 
 import (
-	"github.com/tliron/kutil/logging"
+	"github.com/tliron/commonlog"
 )
 
-var log = logging.GetLogger("khutulun.client")
+var log = commonlog.GetLogger("khutulun.client")

@@ -1,9 +1,9 @@
 package agent
 
 import (
-	"github.com/tliron/kutil/logging"
+	"github.com/tliron/commonlog"
+	"github.com/tliron/exturl"
 	problemspkg "github.com/tliron/kutil/problems"
-	urlpkg "github.com/tliron/kutil/url"
 	cloutpkg "github.com/tliron/puccini/clout"
 	"github.com/tliron/puccini/clout/js"
 	"github.com/tliron/puccini/tosca/normal"
@@ -18,16 +18,16 @@ func (self *Agent) ParseTOSCA(templateNamespace string, templateName string) (*n
 
 	// TODO: lock *all* profiles
 
-	origins := []urlpkg.URL{
-		urlpkg.NewFileURL(profilePath, self.urlContext),
-		urlpkg.NewFileURL(commonProfilePath, self.urlContext),
+	origins := []exturl.URL{
+		exturl.NewFileURL(profilePath, self.urlContext),
+		exturl.NewFileURL(commonProfilePath, self.urlContext),
 	}
 
 	if lock, err := self.state.LockPackage(templateNamespace, "template", templateName, false); err == nil {
-		defer logging.CallAndLogError(lock.Unlock, "unlock", log)
+		defer commonlog.CallAndLogError(lock.Unlock, "unlock", log)
 
 		templatePath := self.state.GetPackageMainFile(templateNamespace, "template", templateName)
-		if url, err := urlpkg.NewValidURL(templatePath, nil, self.urlContext); err == nil {
+		if url, err := exturl.NewValidURL(templatePath, nil, self.urlContext); err == nil {
 			if _, serviceTemplate, problems, err := parserContext.Parse(url, origins, nil, nil, nil); err == nil {
 				return serviceTemplate, problems, nil
 			} else {
@@ -54,7 +54,7 @@ func (self *Agent) CompileTOSCA(templateNamespace string, templateName string, s
 			}
 
 			if lock, err := self.state.LockPackage(serviceNamespace, "service", serviceName, true); err == nil {
-				defer logging.CallAndLogError(lock.Unlock, "unlock", log)
+				defer commonlog.CallAndLogError(lock.Unlock, "unlock", log)
 
 				if err := self.state.SaveServiceClout(serviceNamespace, serviceName, clout); err == nil {
 					return clout, problems, nil

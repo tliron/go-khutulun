@@ -1,14 +1,14 @@
 package sdk
 
 import (
-	"github.com/tliron/kutil/logging"
+	"github.com/tliron/commonlog"
 	"gopkg.in/yaml.v3"
 )
 
 func (self *State) GetHost(name string) (*Host, error) {
 	var host Host
 	if reader, err := self.LockAndOpenPackageFile("common", "host", name, "host.yaml"); err == nil {
-		defer logging.CallAndLogError(reader.Close, "close", stateLog)
+		defer commonlog.CallAndLogError(reader.Close, "close", stateLog)
 
 		if err := yaml.NewDecoder(reader).Decode(&host); err == nil {
 			return &host, nil
@@ -22,7 +22,7 @@ func (self *State) GetHost(name string) (*Host, error) {
 
 func (self *State) SetHost(name string, host *Host) error {
 	if writer, err := self.LockAndCreatePackageFile("common", "host", name, "host.yaml"); err == nil {
-		defer logging.CallAndLogError(writer.Close, "close", stateLog)
+		defer commonlog.CallAndLogError(writer.Close, "close", stateLog)
 
 		return yaml.NewEncoder(writer).Encode(host)
 	} else {

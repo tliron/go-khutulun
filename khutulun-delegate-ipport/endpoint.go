@@ -4,8 +4,8 @@ import (
 	"os"
 
 	"github.com/danjacques/gofslock/fslock"
+	"github.com/tliron/commonlog"
 	"github.com/tliron/khutulun/sdk"
-	"github.com/tliron/kutil/logging"
 	"github.com/tliron/kutil/util"
 	"gopkg.in/yaml.v2"
 )
@@ -18,7 +18,7 @@ func LockAndGetHostEndpoints(state *sdk.State, host string) (fslock.Handle, *Hos
 			if err := yaml.NewDecoder(reader).Decode(hostEndpoints); err == nil {
 				return lock, hostEndpoints, nil
 			} else {
-				logging.CallAndLogError(lock.Unlock, "unlock", log)
+				commonlog.CallAndLogError(lock.Unlock, "unlock", log)
 				return nil, nil, err
 			}
 		} else if os.IsNotExist(err) {
@@ -29,15 +29,15 @@ func LockAndGetHostEndpoints(state *sdk.State, host string) (fslock.Handle, *Hos
 					hostEndpoints.AddPortRange(9000, 9999)
 					return lock, hostEndpoints, nil
 				} else {
-					logging.CallAndLogError(lock.Unlock, "unlock", log)
+					commonlog.CallAndLogError(lock.Unlock, "unlock", log)
 					return nil, nil, err
 				}
 			} else {
-				logging.CallAndLogError(lock.Unlock, "unlock", log)
+				commonlog.CallAndLogError(lock.Unlock, "unlock", log)
 				return nil, nil, err
 			}
 		} else {
-			logging.CallAndLogError(lock.Unlock, "unlock", log)
+			commonlog.CallAndLogError(lock.Unlock, "unlock", log)
 			return nil, nil, err
 		}
 	} else {
@@ -47,7 +47,7 @@ func LockAndGetHostEndpoints(state *sdk.State, host string) (fslock.Handle, *Hos
 
 func SetHostEndpoints(state *sdk.State, hostEndpoints *HostEndpoints) error {
 	if writer, err := state.CreatePackageFile("common", "host", hostEndpoints.Host, "endpoints.yaml"); err == nil {
-		defer logging.CallAndLogError(writer.Close, "close", log)
+		defer commonlog.CallAndLogError(writer.Close, "close", log)
 
 		return yaml.NewEncoder(writer).Encode(hostEndpoints)
 	} else {

@@ -3,9 +3,9 @@ package agent
 import (
 	"os"
 
+	"github.com/tliron/exturl"
+	"github.com/tliron/go-ard"
 	"github.com/tliron/khutulun/sdk"
-	"github.com/tliron/kutil/ard"
-	urlpkg "github.com/tliron/kutil/url"
 	"github.com/tliron/kutil/util"
 )
 
@@ -18,7 +18,7 @@ type OnMessageFunc func(bytes []byte, broadcast bool)
 type Agent struct {
 	host       string
 	state      *sdk.State
-	urlContext *urlpkg.Context
+	urlContext *exturl.Context
 	gossip     *Gossip
 }
 
@@ -27,7 +27,7 @@ func NewAgent(stateRootDir string) (*Agent, error) {
 		return &Agent{
 			host:       host,
 			state:      sdk.NewState(stateRootDir),
-			urlContext: urlpkg.NewContext(),
+			urlContext: exturl.NewContext(),
 		}, nil
 	} else {
 		return nil, err

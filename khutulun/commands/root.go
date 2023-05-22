@@ -2,8 +2,8 @@ package commands
 
 import (
 	"github.com/spf13/cobra"
+	"github.com/tliron/commonlog"
 	"github.com/tliron/khutulun/configuration"
-	"github.com/tliron/kutil/logging"
 	"github.com/tliron/kutil/terminal"
 	"github.com/tliron/kutil/util"
 )
@@ -44,9 +44,9 @@ var rootCommand = &cobra.Command{
 			if terminal.Quiet {
 				verbose = -4
 			}
-			logging.Configure(verbose, nil)
+			commonlog.Configure(verbose, nil)
 		} else {
-			logging.Configure(verbose, &logTo)
+			commonlog.Configure(verbose, &logTo)
 		}
 	},
 }

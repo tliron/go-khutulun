@@ -1,12 +1,12 @@
 package agent
 
 import (
-	"github.com/tliron/kutil/logging"
+	"github.com/tliron/commonlog"
 )
 
-var log = logging.GetLogger("khutulun.agent")
-var grpcLog = logging.NewScopeLogger(log, "grpc")
-var gossipLog = logging.NewScopeLogger(log, "gossip")
-var broadcastLog = logging.NewScopeLogger(log, "broadcast")
-var httpLog = logging.NewScopeLogger(log, "http")
-var delegateLog = logging.NewScopeLogger(log, "delegate")
+var log = commonlog.GetLogger("khutulun.agent")
+var grpcLog = commonlog.NewScopeLogger(log, "grpc")
+var gossipLog = commonlog.NewScopeLogger(log, "gossip")
+var broadcastLog = commonlog.NewScopeLogger(log, "broadcast")
+var httpLog = commonlog.NewScopeLogger(log, "http")
+var delegateLog = commonlog.NewScopeLogger(log, "delegate")

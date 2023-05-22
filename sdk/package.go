@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/danjacques/gofslock/fslock"
-	"github.com/tliron/kutil/logging"
+	"github.com/tliron/commonlog"
 	"github.com/tliron/kutil/util"
 )
 
@@ -116,7 +116,7 @@ func (self *State) LockPackage(namespace string, type_ string, name string, crea
 
 func (self *State) ListPackageFiles(namespace string, type_ string, name string) ([]PackageFile, error) {
 	if lock, err := self.LockPackage(namespace, type_, name, false); err == nil {
-		defer logging.CallAndLogError(lock.Unlock, "unlock", stateLog)
+		defer commonlog.CallAndLogError(lock.Unlock, "unlock", stateLog)
 
 		path := self.GetPackageDir(namespace, type_, name)
 		length := len(path) + 1
@@ -160,7 +160,7 @@ func (self *State) LockAndOpenPackageFile(namespace string, type_ string, name s
 		if reader, err := self.OpenPackageFile(namespace, type_, name, path); err == nil {
 			return &LockedReadCloser{reader, lock}, nil
 		} else {
-			logging.CallAndLogError(lock.Unlock, "unlock", stateLog)
+			commonlog.CallAndLogError(lock.Unlock, "unlock", stateLog)
 			return nil, err
 		}
 	} else {
@@ -173,7 +173,7 @@ func (self *State) LockAndCreatePackageFile(namespace string, type_ string, name
 		if writer, err := self.CreatePackageFile(namespace, type_, name, path); err == nil {
 			return &LockedWriteCloser{writer, lock}, nil
 		} else {
-			logging.CallAndLogError(lock.Unlock, "unlock", stateLog)
+			commonlog.CallAndLogError(lock.Unlock, "unlock", stateLog)
 			return nil, err
 		}
 	} else {
@@ -183,7 +183,7 @@ func (self *State) LockAndCreatePackageFile(namespace string, type_ string, name
 
 func (self *State) DeletePackage(namespace string, type_ string, name string) error {
 	if lock, err := self.LockPackage(namespace, type_, name, false); err == nil {
-		defer logging.CallAndLogError(lock.Unlock, "unlock", stateLog)
+		defer commonlog.CallAndLogError(lock.Unlock, "unlock", stateLog)
 
 		path := self.GetPackageDir(namespace, type_, name)
 		stateLog.Infof("deleting package %q", path)

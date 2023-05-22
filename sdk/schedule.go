@@ -1,8 +1,6 @@
 package sdk
 
-import (
-	"github.com/tliron/kutil/ard"
-)
+import "github.com/tliron/go-ard"
 
 func ScheduleHost(capability ard.Value, host string) bool {
 	if hostAttribute, ok := ard.NewNode(capability).Get("attributes").Get("host").StringMap(); ok {

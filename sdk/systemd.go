@@ -7,13 +7,13 @@ import (
 	"os/user"
 	"path/filepath"
 
-	"github.com/tliron/kutil/logging"
+	"github.com/tliron/commonlog"
 	"github.com/tliron/kutil/util"
 )
 
 const servicePrefix = "khutulun"
 
-func CreateUserSystemdFile(name string, log logging.Logger) (*os.File, error) {
+func CreateUserSystemdFile(name string, log commonlog.Logger) (*os.File, error) {
 	user_, err := user.Current()
 	if err != nil {
 		return nil, fmt.Errorf("current user: %w", err)
@@ -44,7 +44,7 @@ func CreateUserSystemdFile(name string, log logging.Logger) (*os.File, error) {
 	return file, nil
 }
 
-func EnableUserSystemd(name string, log logging.Logger) error {
+func EnableUserSystemd(name string, log commonlog.Logger) error {
 	command := exec.Command("/usr/bin/systemctl", "--user", "daemon-reload")
 	if err := command.Run(); err != nil {
 		return fmt.Errorf("systemctl daemon-reload: %w", err)

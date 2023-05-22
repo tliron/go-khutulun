@@ -1,8 +1,8 @@
 package agent
 
 import (
+	"github.com/tliron/commonlog"
 	delegatepkg "github.com/tliron/khutulun/delegate"
-	"github.com/tliron/kutil/logging"
 	cloutpkg "github.com/tliron/puccini/clout"
 )
 
@@ -54,7 +54,7 @@ func (self *Agent) ProcessService(namespace string, serviceName string, phase st
 	var next []delegatepkg.Next
 
 	if lock, clout, err := self.state.OpenServiceClout(namespace, serviceName, self.urlContext); err == nil {
-		defer logging.CallAndLogError(lock.Unlock, "unlock", delegateLog)
+		defer commonlog.CallAndLogError(lock.Unlock, "unlock", delegateLog)
 
 		if coercedClout, err := self.CoerceClout(clout, true); err == nil {
 

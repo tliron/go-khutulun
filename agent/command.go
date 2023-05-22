@@ -1,8 +1,6 @@
 package agent
 
-import (
-	"github.com/tliron/kutil/ard"
-)
+import "github.com/tliron/go-ard"
 
 const (
 	ADD_HOST        = "khutulun.addHost"

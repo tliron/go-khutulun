@@ -3,8 +3,8 @@ package sdk
 import (
 	"io"
 
+	"github.com/tliron/commonlog"
 	"github.com/tliron/khutulun/api"
-	"github.com/tliron/kutil/logging"
 	"google.golang.org/grpc/codes"
 	statuspkg "google.golang.org/grpc/status"
 )
@@ -38,7 +38,7 @@ func Interact(server GRPCInteractor, interact map[string]InteractFunc) error {
 	}
 }
 
-func InteractRelay(server GRPCInteractor, client GRPCInteractor, start *api.Interaction_Start, log logging.Logger) error {
+func InteractRelay(server GRPCInteractor, client GRPCInteractor, start *api.Interaction_Start, log commonlog.Logger) error {
 	if err := client.Send(&api.Interaction{Start: start}); err != nil {
 		return err
 	}

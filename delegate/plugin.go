@@ -5,9 +5,9 @@ import (
 	"os/exec"
 
 	"github.com/hashicorp/go-plugin"
+	"github.com/tliron/commonlog"
+	"github.com/tliron/commonlog/sink"
 	"github.com/tliron/khutulun/api"
-	"github.com/tliron/kutil/logging"
-	"github.com/tliron/kutil/logging/sink"
 	"google.golang.org/grpc"
 )
 
@@ -65,7 +65,7 @@ func (self *DelegatePluginClient) Delegate() (Delegate, error) {
 		if service, err := protocol.Dispense("delegate"); err == nil {
 			return service.(Delegate), nil
 		} else {
-			logging.CallAndLogError(protocol.Close, "close", log)
+			commonlog.CallAndLogError(protocol.Close, "close", log)
 			return nil, err
 		}
 	} else {

@@ -3,10 +3,10 @@ package client
 import (
 	"io"
 
+	"github.com/tliron/commonlog"
+	"github.com/tliron/exturl"
 	"github.com/tliron/khutulun/api"
 	"github.com/tliron/khutulun/sdk"
-	"github.com/tliron/kutil/logging"
-	"github.com/tliron/kutil/url"
 )
 
 const BUFFER_SIZE = 65536
@@ -122,8 +122,8 @@ func (self *Client) GetPackageFile(namespace string, type_ string, name string, 
 	}
 }
 
-func (self *Client) SetPackageFiles(namespace string, type_ string, name string, fileProviders url.FileProviders) error {
-	defer logging.CallAndLogError(fileProviders.Close, "close package file sources", log)
+func (self *Client) SetPackageFiles(namespace string, type_ string, name string, fileProviders exturl.FileProviders) error {
+	defer commonlog.CallAndLogError(fileProviders.Close, "close package file sources", log)
 
 	context, cancel := self.newContextWithTimeout()
 	defer cancel()
