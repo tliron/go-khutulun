@@ -1,11 +1,13 @@
 package commands
 
 import (
+	contextpkg "context"
 	"os"
 	"strings"
 
 	"github.com/tliron/exturl"
 	clientpkg "github.com/tliron/khutulun/client"
+	"github.com/tliron/kutil/streampackage"
 	"github.com/tliron/kutil/terminal"
 	"github.com/tliron/kutil/transcribe"
 	"github.com/tliron/kutil/util"
@@ -24,7 +26,7 @@ func listPackages(namespace string, type_ string) {
 	}
 }
 
-func registerPackage(namespace string, type_ string, args []string) {
+func registerPackage(context contextpkg.Context, namespace string, type_ string, args []string) {
 	name := args[0]
 
 	switch unpack {
@@ -48,34 +50,33 @@ func registerPackage(namespace string, type_ string, args []string) {
 		util.Failf("\"--unpack\" must be \"tar\", \"tgz\", \"zip\", \"auto\" or \"false\": %s", unpack)
 	}
 
-	context := exturl.NewContext()
-	util.OnExitError(context.Release)
+	urlContext := exturl.NewContext()
+	util.OnExitError(urlContext.Release)
 
 	var url exturl.URL
 	var err error
 
 	if len(args) == 2 {
-		url, err = exturl.NewValidURL(args[1], nil, context)
+		url, err = urlContext.NewValidURL(context, args[1], nil)
 	} else {
 		path := type_
 		switch type_ {
 		case "profile", "template":
 			path += ".yaml"
 		}
-		url, err = exturl.ReadToInternalURL(path, os.Stdin, context)
+		url, err = urlContext.ReadToInternalURL(path, os.Stdin)
 	}
 	util.FailOnError(err)
 
-	fileProviders, err := exturl.NewFileProviders(url, unpack)
+	streamPackage, err := streampackage.NewStreamPackage(context, url, unpack)
 	util.FailOnError(err)
-	if fileProviders != nil {
-		client, err := clientpkg.NewClientFromConfiguration(configurationPath, clusterName)
-		util.FailOnError(err)
-		util.OnExitError(client.Close)
 
-		err = client.SetPackageFiles(namespace, type_, name, fileProviders)
-		util.FailOnError(err)
-	}
+	client, err := clientpkg.NewClientFromConfiguration(configurationPath, clusterName)
+	util.FailOnError(err)
+	util.OnExitError(client.Close)
+
+	err = client.SetPackageFiles(context, namespace, type_, name, streamPackage)
+	util.FailOnError(err)
 }
 
 func fetchPackage(namespace string, type_ string, args []string) {

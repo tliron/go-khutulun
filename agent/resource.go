@@ -1,6 +1,7 @@
 package agent
 
 import (
+	contextpkg "context"
 	"os"
 	"sort"
 	"strings"
@@ -48,7 +49,7 @@ func (self ResourceIdentifiers) Less(i, j int) bool {
 	}
 }
 
-func (self *Agent) ListResources(namespace string, serviceName string, type_ string) (ResourceIdentifiers, error) {
+func (self *Agent) ListResources(context contextpkg.Context, namespace string, serviceName string, type_ string) (ResourceIdentifiers, error) {
 	var resources ResourceIdentifiers
 
 	var packages []sdk.PackageIdentifier
@@ -68,7 +69,7 @@ func (self *Agent) ListResources(namespace string, serviceName string, type_ str
 	}
 
 	for _, package_ := range packages {
-		if lock, clout, err := self.state.OpenServiceClout(package_.Namespace, package_.Name, self.urlContext); err == nil {
+		if lock, clout, err := self.state.OpenServiceClout(context, package_.Namespace, package_.Name, self.urlContext); err == nil {
 			commonlog.CallAndLogError(lock.Unlock, "unlock", log)
 			if clout, err = self.CoerceClout(clout, false); err == nil {
 				if resources_, err := self.getResources(package_.Namespace, package_.Name, clout, type_); err == nil {

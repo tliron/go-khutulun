@@ -1,6 +1,7 @@
 package agent
 
 import (
+	contextpkg "context"
 	"os"
 
 	"github.com/tliron/exturl"
@@ -41,7 +42,7 @@ func (self *Agent) Release() error {
 // OnMessageFunc signature
 func (self *Agent) onMessage(bytes []byte, broadcast bool) {
 	if message, _, err := ard.DecodeJSON(util.BytesToString(bytes), false); err == nil {
-		go self.handleCommand(message, broadcast)
+		go self.handleCommand(contextpkg.TODO(), message, broadcast)
 	} else {
 		log.Errorf("%s", err.Error())
 	}

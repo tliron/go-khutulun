@@ -1,6 +1,7 @@
 package sdk
 
 import (
+	contextpkg "context"
 	"os"
 
 	"github.com/danjacques/gofslock/fslock"
@@ -10,11 +11,11 @@ import (
 	cloutpkg "github.com/tliron/puccini/clout"
 )
 
-func (self *State) OpenServiceClout(namespace string, serviceName string, urlContext *exturl.Context) (fslock.Handle, *cloutpkg.Clout, error) {
+func (self *State) OpenServiceClout(context contextpkg.Context, namespace string, serviceName string, urlContext *exturl.Context) (fslock.Handle, *cloutpkg.Clout, error) {
 	if lock, err := self.LockPackage(namespace, "service", serviceName, false); err == nil {
 		cloutPath := self.GetPackageMainFile(namespace, "service", serviceName)
 		stateLog.Debugf("reading clout: %q", cloutPath)
-		if clout, err := cloutpkg.Load(cloutPath, "yaml", urlContext); err == nil {
+		if clout, err := cloutpkg.Load(context, cloutPath, "yaml", urlContext); err == nil {
 			return lock, clout, nil
 		} else {
 			commonlog.CallAndLogError(lock.Unlock, "unlock", stateLog)

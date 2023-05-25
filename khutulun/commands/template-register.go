@@ -1,6 +1,8 @@
 package commands
 
 import (
+	contextpkg "context"
+
 	"github.com/spf13/cobra"
 )
 
@@ -14,6 +16,6 @@ var templateRegisterCommand = &cobra.Command{
 	Short: "Register a template",
 	Args:  cobra.RangeArgs(1, 2),
 	Run: func(cmd *cobra.Command, args []string) {
-		registerPackage(namespace, "template", args)
+		registerPackage(contextpkg.TODO(), namespace, "template", args)
 	},
 }

@@ -1,6 +1,8 @@
 package commands
 
 import (
+	contextpkg "context"
+
 	"github.com/spf13/cobra"
 	"github.com/tliron/exturl"
 	"github.com/tliron/go-ard"
@@ -29,7 +31,7 @@ var serviceDeployCommand = &cobra.Command{
 	Short: "Deploy a service",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		ParseInputs()
+		ParseInputs(contextpkg.TODO())
 
 		serviceName := args[0]
 		if template == "" {
@@ -49,17 +51,18 @@ var serviceDeployCommand = &cobra.Command{
 	},
 }
 
-func ParseInputs() {
+func ParseInputs(context contextpkg.Context) {
 	if inputsUrl != "" {
 		log.Infof("load inputs from %q", inputsUrl)
 
 		urlContext := exturl.NewContext()
 		util.OnExitError(urlContext.Release)
 
-		url, err := exturl.NewValidURL(inputsUrl, nil, urlContext)
+		url, err := urlContext.NewValidURL(context, inputsUrl, nil)
 		util.FailOnError(err)
-		reader, err := url.Open()
+		reader, err := url.Open(context)
 		util.FailOnError(err)
+		reader = util.NewContextualReadCloser(context, reader)
 		defer reader.Close()
 		data, err := yamlkeys.DecodeAll(reader)
 		util.FailOnError(err)

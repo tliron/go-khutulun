@@ -1,12 +1,14 @@
 package client
 
 import (
+	contextpkg "context"
 	"io"
 
 	"github.com/tliron/commonlog"
-	"github.com/tliron/exturl"
 	"github.com/tliron/khutulun/api"
 	"github.com/tliron/khutulun/sdk"
+	"github.com/tliron/kutil/streampackage"
+	"github.com/tliron/kutil/util"
 )
 
 const BUFFER_SIZE = 65536
@@ -122,8 +124,8 @@ func (self *Client) GetPackageFile(namespace string, type_ string, name string, 
 	}
 }
 
-func (self *Client) SetPackageFiles(namespace string, type_ string, name string, fileProviders exturl.FileProviders) error {
-	defer commonlog.CallAndLogError(fileProviders.Close, "close package file sources", log)
+func (self *Client) SetPackageFiles(context contextpkg.Context, namespace string, type_ string, name string, streamPackage streampackage.StreamPackage) error {
+	defer commonlog.CallAndLogError(streamPackage.Close, "close package file sources", log)
 
 	context, cancel := self.newContextWithTimeout()
 	defer cancel()
@@ -142,18 +144,19 @@ func (self *Client) SetPackageFiles(namespace string, type_ string, name string,
 		buffer := make([]byte, BUFFER_SIZE)
 
 		for {
-			fileProvider, err := fileProviders.Next()
+			stream, err := streamPackage.Next()
 			if err != nil {
 				return err
 			}
-			if fileProvider == nil {
+			if stream == nil {
 				break
 			}
 
-			path, executable, reader, err := fileProvider.Open()
+			path, executable, reader, err := stream.Open(context)
 			if err != nil {
 				return err
 			}
+			reader = util.NewContextualReader(context, reader)
 
 			content := api.PackageContent{
 				File: &api.PackageFile{
@@ -176,7 +179,7 @@ func (self *Client) SetPackageFiles(namespace string, type_ string, name string,
 				}
 				if err != nil {
 					if err == io.EOF {
-						if err := fileProvider.Close(); err != nil {
+						if err := stream.Close(); err != nil {
 							return err
 						}
 						break

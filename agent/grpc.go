@@ -202,13 +202,14 @@ func (self *GRPC) GetPackageFiles(getPackageFiles *api.GetPackageFiles, server a
 		dir := self.agent.state.GetPackageDir(getPackageFiles.Identifier.Namespace, getPackageFiles.Identifier.Type.Name, getPackageFiles.Identifier.Name)
 
 		for _, path := range getPackageFiles.Paths {
-			if file, err := self.agent.OpenFile(filepath.Join(dir, path), getPackageFiles.Coerce); err == nil {
+			if reader, err := self.agent.OpenFile(filepath.Join(dir, path), getPackageFiles.Coerce); err == nil {
+				reader = util.NewContextualReadCloser(server.Context(), reader)
 				for {
-					count, err := file.Read(buffer)
+					count, err := reader.Read(buffer)
 					if count > 0 {
 						content := api.PackageContent{Bytes: buffer[:count]}
 						if err := server.Send(&content); err != nil {
-							if err := file.Close(); err != nil {
+							if err := reader.Close(); err != nil {
 								grpcLog.Errorf("file close: %s", err.Error())
 							}
 							return sdk.GRPCAborted(err)
@@ -218,7 +219,7 @@ func (self *GRPC) GetPackageFiles(getPackageFiles *api.GetPackageFiles, server a
 						if err == io.EOF {
 							break
 						} else {
-							if err := file.Close(); err != nil {
+							if err := reader.Close(); err != nil {
 								grpcLog.Errorf("file close: %s", err.Error())
 							}
 							return sdk.GRPCAborted(err)
@@ -226,7 +227,7 @@ func (self *GRPC) GetPackageFiles(getPackageFiles *api.GetPackageFiles, server a
 					}
 				}
 
-				commonlog.CallAndLogError(file.Close, "file close", grpcLog)
+				commonlog.CallAndLogError(reader.Close, "file close", grpcLog)
 			} else {
 				return sdk.GRPCAborted(err)
 			}
@@ -337,7 +338,7 @@ func (self *GRPC) RemovePackage(context contextpkg.Context, packageIdentifer *ap
 func (self *GRPC) DeployService(context contextpkg.Context, deployService *api.DeployService) (*emptypb.Empty, error) {
 	grpcLog.Infof("deployService(%q, %q, %q, %q, %t)", deployService.Template.Namespace, deployService.Template.Name, deployService.Service.Name, deployService.Template.Name, deployService.Async)
 
-	if err := self.agent.DeployService(deployService.Template.Namespace, deployService.Template.Name, deployService.Service.Namespace, deployService.Service.Name, deployService.Async); err == nil {
+	if err := self.agent.DeployService(context, deployService.Template.Namespace, deployService.Template.Name, deployService.Service.Namespace, deployService.Service.Name, deployService.Async); err == nil {
 		return new(emptypb.Empty), nil
 	} else {
 		return new(emptypb.Empty), sdk.GRPCAborted(err)
@@ -348,7 +349,7 @@ func (self *GRPC) DeployService(context contextpkg.Context, deployService *api.D
 func (self *GRPC) ListResources(listResources *api.ListResources, server api.Agent_ListResourcesServer) error {
 	grpcLog.Infof("listResources(%q, %q, %q)", listResources.Service.Namespace, listResources.Service.Name, listResources.Type)
 
-	if identifiers, err := self.agent.ListResources(listResources.Service.Namespace, listResources.Service.Name, listResources.Type); err == nil {
+	if identifiers, err := self.agent.ListResources(server.Context(), listResources.Service.Namespace, listResources.Service.Name, listResources.Type); err == nil {
 		for _, identifier := range identifiers {
 			identifier_ := api.ResourceIdentifier{
 				Service: &api.ServiceIdentifier{
@@ -418,7 +419,7 @@ func (self *GRPC) Interact(server api.Agent_InteractServer) error {
 			serviceName := start.Identifier[2]
 			resourceName := start.Identifier[3]
 
-			if lock, clout, err := self.agent.state.OpenServiceClout(namespace, serviceName, self.agent.urlContext); err == nil {
+			if lock, clout, err := self.agent.state.OpenServiceClout(server.Context(), namespace, serviceName, self.agent.urlContext); err == nil {
 				commonlog.CallAndLogError(lock.Unlock, "unlock", delegateLog)
 				if clout, err = self.agent.CoerceClout(clout, false); err == nil {
 					delegates := self.agent.NewDelegates()

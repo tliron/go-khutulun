@@ -1,6 +1,8 @@
 package agent
 
 import (
+	contextpkg "context"
+
 	"github.com/tliron/commonlog"
 	"github.com/tliron/exturl"
 	problemspkg "github.com/tliron/kutil/problems"
@@ -10,7 +12,7 @@ import (
 	"github.com/tliron/puccini/tosca/parser"
 )
 
-func (self *Agent) ParseTOSCA(templateNamespace string, templateName string) (*normal.ServiceTemplate, *problemspkg.Problems, error) {
+func (self *Agent) ParseTOSCA(context contextpkg.Context, templateNamespace string, templateName string) (*normal.ServiceTemplate, *problemspkg.Problems, error) {
 	parserContext := parser.NewContext()
 
 	profilePath := self.state.GetPackageTypeDir(templateNamespace, "profile")
@@ -19,16 +21,16 @@ func (self *Agent) ParseTOSCA(templateNamespace string, templateName string) (*n
 	// TODO: lock *all* profiles
 
 	origins := []exturl.URL{
-		exturl.NewFileURL(profilePath, self.urlContext),
-		exturl.NewFileURL(commonProfilePath, self.urlContext),
+		self.urlContext.NewFileURL(profilePath),
+		self.urlContext.NewFileURL(commonProfilePath),
 	}
 
 	if lock, err := self.state.LockPackage(templateNamespace, "template", templateName, false); err == nil {
 		defer commonlog.CallAndLogError(lock.Unlock, "unlock", log)
 
 		templatePath := self.state.GetPackageMainFile(templateNamespace, "template", templateName)
-		if url, err := exturl.NewValidURL(templatePath, nil, self.urlContext); err == nil {
-			if _, serviceTemplate, problems, err := parserContext.Parse(url, origins, nil, nil, nil); err == nil {
+		if url, err := self.urlContext.NewValidURL(context, templatePath, nil); err == nil {
+			if _, serviceTemplate, problems, err := parserContext.Parse(context, url, origins, nil, nil, nil); err == nil {
 				return serviceTemplate, problems, nil
 			} else {
 				if problems != nil {
@@ -45,8 +47,8 @@ func (self *Agent) ParseTOSCA(templateNamespace string, templateName string) (*n
 	}
 }
 
-func (self *Agent) CompileTOSCA(templateNamespace string, templateName string, serviceNamespace string, serviceName string) (*cloutpkg.Clout, *problemspkg.Problems, error) {
-	if serviceTemplate, problems, err := self.ParseTOSCA(templateNamespace, templateName); err == nil {
+func (self *Agent) CompileTOSCA(context contextpkg.Context, templateNamespace string, templateName string, serviceNamespace string, serviceName string) (*cloutpkg.Clout, *problemspkg.Problems, error) {
+	if serviceTemplate, problems, err := self.ParseTOSCA(context, templateNamespace, templateName); err == nil {
 		if clout, err := serviceTemplate.Compile(); err == nil {
 			js.Resolve(clout, problems, self.urlContext, true, "yaml", true, false)
 			if !problems.Empty() {

@@ -1,6 +1,8 @@
 package commands
 
 import (
+	contextpkg "context"
+
 	"github.com/spf13/cobra"
 )
 
@@ -14,6 +16,6 @@ var profileRegisterCommand = &cobra.Command{
 	Short: "Register a profile",
 	Args:  cobra.RangeArgs(1, 2),
 	Run: func(cmd *cobra.Command, args []string) {
-		registerPackage(namespace, "profile", args)
+		registerPackage(contextpkg.TODO(), namespace, "profile", args)
 	},
 }

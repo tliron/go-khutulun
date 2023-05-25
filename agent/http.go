@@ -105,7 +105,7 @@ func (self *HTTP) listResources(writer http.ResponseWriter, request *http.Reques
 	service := request.URL.Query().Get("service")
 	type_ := request.URL.Query().Get("type")
 	if type_ != "" {
-		if resources, err := self.agent.ListResources(namespace, service, type_); err == nil {
+		if resources, err := self.agent.ListResources(contextpkg.TODO(), namespace, service, type_); err == nil {
 			transcribe.WriteJSON(resources, writer, "")
 		} else {
 			writer.WriteHeader(500)

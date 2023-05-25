@@ -1,18 +1,20 @@
 package agent
 
 import (
+	contextpkg "context"
+
 	"github.com/tliron/commonlog"
 	delegatepkg "github.com/tliron/khutulun/delegate"
 	cloutpkg "github.com/tliron/puccini/clout"
 )
 
-func (self *Agent) DeployService(templateNamespace string, templateName string, serviceNamespace string, serviceName string, async bool) error {
-	if _, problems, err := self.CompileTOSCA(templateNamespace, templateName, serviceNamespace, serviceName); err == nil {
+func (self *Agent) DeployService(context contextpkg.Context, templateNamespace string, templateName string, serviceNamespace string, serviceName string, async bool) error {
+	if _, problems, err := self.CompileTOSCA(context, templateNamespace, templateName, serviceNamespace, serviceName); err == nil {
 		schedule := func() {
 			delegates := self.NewDelegates()
 			defer delegates.Release()
 
-			self.ProcessService(serviceNamespace, serviceName, "schedule", delegates)
+			self.ProcessService(context, serviceNamespace, serviceName, "schedule", delegates)
 		}
 
 		if async {
@@ -31,20 +33,20 @@ func (self *Agent) DeployService(templateNamespace string, templateName string, 
 	}
 }
 
-func (self *Agent) ProcessAllServices(phase string) {
+func (self *Agent) ProcessAllServices(context contextpkg.Context, phase string) {
 	if identifiers, err := self.state.ListPackages("", "service"); err == nil {
 		delegates := self.NewDelegates()
 		defer delegates.Release()
 
 		for _, identifier := range identifiers {
-			self.ProcessService(identifier.Namespace, identifier.Name, phase, delegates)
+			self.ProcessService(context, identifier.Namespace, identifier.Name, phase, delegates)
 		}
 	} else {
 		delegateLog.Errorf("%s", err.Error())
 	}
 }
 
-func (self *Agent) ProcessService(namespace string, serviceName string, phase string, delegates *Delegates) {
+func (self *Agent) ProcessService(context contextpkg.Context, namespace string, serviceName string, phase string, delegates *Delegates) {
 	if namespace == "" {
 		namespace = "_"
 	}
@@ -53,7 +55,7 @@ func (self *Agent) ProcessService(namespace string, serviceName string, phase st
 
 	var next []delegatepkg.Next
 
-	if lock, clout, err := self.state.OpenServiceClout(namespace, serviceName, self.urlContext); err == nil {
+	if lock, clout, err := self.state.OpenServiceClout(context, namespace, serviceName, self.urlContext); err == nil {
 		defer commonlog.CallAndLogError(lock.Unlock, "unlock", delegateLog)
 
 		if coercedClout, err := self.CoerceClout(clout, true); err == nil {
@@ -105,14 +107,14 @@ func (self *Agent) ProcessService(namespace string, serviceName string, phase st
 		delegateLog.Errorf("%s", err.Error())
 	}
 
-	self.ProcessNext(next, delegates)
+	self.ProcessNext(context, next, delegates)
 }
 
-func (self *Agent) ProcessNext(next []delegatepkg.Next, delegates *Delegates) {
+func (self *Agent) ProcessNext(context contextpkg.Context, next []delegatepkg.Next, delegates *Delegates) {
 	//log.Infof("NEXT: %v", next)
 	for _, next_ := range next {
 		if next_.Host == self.host {
-			self.ProcessService(next_.Namespace, next_.ServiceName, next_.Phase, delegates)
+			self.ProcessService(context, next_.Namespace, next_.ServiceName, next_.Phase, delegates)
 		} else {
 			if err := self.gossip.SendJSON(next_.Host, NewProcessServiceCommand(next_.Namespace, next_.ServiceName, next_.Phase)); err != nil {
 				delegateLog.Errorf("%s", err.Error())

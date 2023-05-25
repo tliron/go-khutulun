@@ -1,6 +1,10 @@
 package agent
 
-import "github.com/tliron/go-ard"
+import (
+	contextpkg "context"
+
+	"github.com/tliron/go-ard"
+)
 
 const (
 	ADD_HOST        = "khutulun.addHost"
@@ -23,7 +27,7 @@ func NewProcessServiceCommand(namespace string, serviceName string, phase string
 	return command
 }
 
-func (self *Agent) handleCommand(message any, broadcast bool) {
+func (self *Agent) handleCommand(context contextpkg.Context, message any, broadcast bool) {
 	command, _ := ard.NewNode(message).Get("command").String()
 
 	switch command {
@@ -41,7 +45,7 @@ func (self *Agent) handleCommand(message any, broadcast bool) {
 		log.Infof("received processService(%q, %q, %q)", namespace, serviceName, phase)
 		delegates := self.NewDelegates()
 		defer delegates.Release()
-		self.ProcessService(namespace, serviceName, phase, delegates)
+		self.ProcessService(context, namespace, serviceName, phase, delegates)
 
 	default:
 		log.Errorf("received unsupported message: %s", message)
