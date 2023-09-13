@@ -1,12 +1,10 @@
 package commands
 
 import (
-	"os"
 	"strings"
 
 	"github.com/spf13/cobra"
 	clientpkg "github.com/tliron/khutulun/client"
-	"github.com/tliron/kutil/transcribe"
 	"github.com/tliron/kutil/util"
 	cloutpkg "github.com/tliron/puccini/clout"
 	cloututil "github.com/tliron/puccini/clout/util"
@@ -45,10 +43,10 @@ func serviceOutput(serviceName string, outputName *string) {
 	if outputs, ok := cloututil.GetToscaOutputs(clout.Properties); ok {
 		if outputName != nil {
 			if output, ok := outputs[*outputName]; ok {
-				transcribe.Print(output, format, os.Stdout, strict, pretty)
+				Transcriber().Write(output)
 			}
 		} else {
-			transcribe.Print(outputs, format, os.Stdout, strict, pretty)
+			Transcriber().Write(outputs)
 		}
 	}
 }

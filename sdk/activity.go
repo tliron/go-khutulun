@@ -18,7 +18,7 @@ type Capability struct {
 
 func (self *Capability) Find(clout *cloutpkg.Clout) (*cloutpkg.Vertex, ard.Value, error) {
 	if vertex, ok := clout.Vertexes[self.vertexID]; ok {
-		if capabilities, ok := ard.NewNode(vertex.Properties).Get("capabilities").StringMap(); ok {
+		if capabilities, ok := ard.With(vertex.Properties).Get("capabilities").StringMap(); ok {
 			if capability, ok := capabilities[self.capabilityName]; ok {
 				return vertex, capability, nil
 			} else {

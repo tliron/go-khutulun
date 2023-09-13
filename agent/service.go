@@ -42,7 +42,7 @@ func (self *Agent) ProcessAllServices(context contextpkg.Context, phase string) 
 			self.ProcessService(context, identifier.Namespace, identifier.Name, phase, delegates)
 		}
 	} else {
-		delegateLog.Errorf("%s", err.Error())
+		delegateLog.Error(err.Error())
 	}
 }
 
@@ -66,7 +66,7 @@ func (self *Agent) ProcessService(context contextpkg.Context, namespace string, 
 				if self.Instantiate(clout, coercedClout) {
 					// Re-coerce
 					if coercedClout, err = self.CoerceClout(clout, true); err != nil {
-						delegateLog.Errorf("%s", err.Error())
+						delegateLog.Error(err.Error())
 						return
 					}
 					saveClout = clout
@@ -87,24 +87,24 @@ func (self *Agent) ProcessService(context contextpkg.Context, namespace string, 
 						saveClout = changedClout
 
 						if coercedClout, err = self.CoerceClout(clout, true); err != nil {
-							delegateLog.Errorf("%s", err.Error())
+							delegateLog.Error(err.Error())
 						}
 					}
 				} else {
-					delegateLog.Errorf("%s", err.Error())
+					delegateLog.Error(err.Error())
 				}
 			}
 
 			if saveClout != nil {
 				if err := self.state.SaveServiceClout(namespace, serviceName, saveClout); err != nil {
-					delegateLog.Errorf("%s", err.Error())
+					delegateLog.Error(err.Error())
 				}
 			}
 		} else {
-			delegateLog.Errorf("%s", err.Error())
+			delegateLog.Error(err.Error())
 		}
 	} else {
-		delegateLog.Errorf("%s", err.Error())
+		delegateLog.Error(err.Error())
 	}
 
 	self.ProcessNext(context, next, delegates)
@@ -117,7 +117,7 @@ func (self *Agent) ProcessNext(context contextpkg.Context, next []delegatepkg.Ne
 			self.ProcessService(context, next_.Namespace, next_.ServiceName, next_.Phase, delegates)
 		} else {
 			if err := self.gossip.SendJSON(next_.Host, NewProcessServiceCommand(next_.Namespace, next_.ServiceName, next_.Phase)); err != nil {
-				delegateLog.Errorf("%s", err.Error())
+				delegateLog.Error(err.Error())
 			}
 		}
 	}

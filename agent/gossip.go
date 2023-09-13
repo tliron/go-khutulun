@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/memberlist"
 	"github.com/tliron/commonlog"
 	"github.com/tliron/commonlog/sink"
-	"github.com/tliron/kutil/transcribe"
+	"github.com/tliron/go-transcribe"
 	"github.com/tliron/kutil/util"
 )
 
@@ -37,7 +37,6 @@ func NewGossip(address string, port int) *Gossip {
 
 func (self *Gossip) Start() error {
 	var err error
-
 	if self.Address, err = util.ToReachableIPAddress(self.Address); err != nil {
 		return err
 	}
@@ -48,7 +47,7 @@ func (self *Gossip) Start() error {
 	config.AdvertisePort = self.Port
 	config.Delegate = self
 	config.Events = sink.NewMemberlistEventLog(gossipLog)
-	config.Logger = sink.NewMemberlistStandardLog([]string{"gossip"})
+	config.Logger = sink.NewMemberlistStandardLog("gossip")
 
 	gossipLog.Noticef("starting server on %s", util.JoinIPAddressPort(config.BindAddr, config.BindPort))
 	if self.members, err = memberlist.Create(config); err == nil {
@@ -137,7 +136,7 @@ func (self *Gossip) AddHosts(gossipAddresses []string) error {
 }
 
 func (self *Gossip) SendJSON(host string, message any) error {
-	if code, err := transcribe.EncodeJSON(message, ""); err == nil {
+	if code, err := transcribe.NewTranscriber().StringifyJSON(message); err == nil {
 		return self.Send(host, util.StringToBytes(code))
 	} else {
 		return err

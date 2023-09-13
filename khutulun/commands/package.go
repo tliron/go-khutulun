@@ -6,10 +6,10 @@ import (
 	"strings"
 
 	"github.com/tliron/exturl"
+	"github.com/tliron/go-transcribe"
 	clientpkg "github.com/tliron/khutulun/client"
 	"github.com/tliron/kutil/streampackage"
 	"github.com/tliron/kutil/terminal"
-	"github.com/tliron/kutil/transcribe"
 	"github.com/tliron/kutil/util"
 )
 
@@ -21,7 +21,7 @@ func listPackages(namespace string, type_ string) {
 	identifiers, err := client.ListPackages(namespace, type_)
 	util.FailOnError(err)
 	if len(identifiers) > 0 {
-		err = transcribe.Print(identifiers, format, os.Stdout, strict, pretty)
+		err = Transcriber().Write(identifiers)
 		util.FailOnError(err)
 	}
 }
@@ -87,7 +87,7 @@ func fetchPackage(namespace string, type_ string, args []string) {
 	name := args[0]
 	if len(args) > 1 {
 		path := args[1]
-		if (type_ == "service") && terminal.Colorize {
+		if (type_ == "service") && terminal.ColorizeStdout {
 			var buffer strings.Builder
 			err = client.GetPackageFile(namespace, type_, name, path, coerce, &buffer)
 			util.FailOnError(err)

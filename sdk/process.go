@@ -27,7 +27,7 @@ func GetProcesses(vertex *cloutpkg.Vertex, capabilityName string, capability ard
 	var instances []struct {
 		Name string `ard:"name"`
 	}
-	if err := ardReflector.Pack(ard.NewNode(vertex.Properties).Get("attributes", "instances").Value, &instances); err != nil {
+	if err := ardReflector.Pack(ard.With(vertex.Properties).Get("attributes", "instances").Value, &instances); err != nil {
 		return nil, err
 	}
 

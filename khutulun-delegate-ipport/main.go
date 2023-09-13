@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-	util.ExitOnSIGTERM()
+	util.ExitOnSignals()
 	sdk.ConfigureDelegateLogging(1)
 	host, _ := os.Hostname()
 	server := delegate.NewDelegatePluginServer(&Delegate{host: host})

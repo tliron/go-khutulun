@@ -38,7 +38,7 @@ func (self *DelegateGRPCServer) Start(protocol string, address string, port int)
 	}
 }
 
-// api.DelegateServer interface
+// ([api.DelegateServer] interface)
 func (self *DelegateGRPCServer) ListResources(listResources *api.DelegateListResources, server api.Delegate_ListResourcesServer) error {
 	if coercedClout, err := CloutFromAPI(listResources.CoercedClout); err == nil {
 		if resources, err := self.implementation.ListResources(listResources.Service.Namespace, listResources.Service.Name, coercedClout); err == nil {
@@ -66,7 +66,7 @@ func (self *DelegateGRPCServer) ListResources(listResources *api.DelegateListRes
 	return nil
 }
 
-// api.DelegateServer interface
+// ([api.DelegateServer] interface)
 func (self *DelegateGRPCServer) ProcessService(context contextpkg.Context, processService *api.ProcessService) (*api.ProcessServiceResult, error) {
 	if clout, err := CloutFromAPI(processService.Clout); err == nil {
 		if coercedClout, err := CloutFromAPI(processService.CoercedClout); err == nil {
@@ -88,7 +88,7 @@ func (self *DelegateGRPCServer) ProcessService(context contextpkg.Context, proce
 	}
 }
 
-// api.DelegateServer interface
+// ([api.DelegateServer] interface)
 func (self *DelegateGRPCServer) Interact(server api.Delegate_InteractServer) error {
 	return sdk.Interact(server, map[string]sdk.InteractFunc{
 		"activity": func(start *api.Interaction_Start) error {

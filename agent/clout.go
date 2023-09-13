@@ -6,8 +6,8 @@ import (
 	"strings"
 
 	"github.com/tliron/commonlog"
+	"github.com/tliron/go-transcribe"
 	problemspkg "github.com/tliron/kutil/problems"
-	"github.com/tliron/kutil/transcribe"
 	cloutpkg "github.com/tliron/puccini/clout"
 	"github.com/tliron/puccini/clout/js"
 )
@@ -21,7 +21,16 @@ func (self *Agent) CoerceClout(clout *cloutpkg.Clout, copy_ bool) (*cloutpkg.Clo
 		}
 	}
 	problems := problemspkg.NewProblems(nil)
-	js.Coerce(coercedClout, problems, self.urlContext, true, "yaml", false, true)
+	execContext := js.ExecContext{
+		Clout:      coercedClout,
+		Problems:   problems,
+		URLContext: self.urlContext,
+		History:    true,
+		Format:     "yaml",
+		Strict:     false,
+		Pretty:     false,
+	}
+	execContext.Coerce()
 	return coercedClout, problems.ToError(true)
 }
 
@@ -31,7 +40,7 @@ func (self *Agent) OpenFile(path string, coerceClout bool) (io.ReadCloser, error
 			defer commonlog.CallAndLogError(file.Close, "file close", log)
 			if clout, err := cloutpkg.Read(file, "yaml"); err == nil {
 				if clout, err = self.CoerceClout(clout, false); err == nil {
-					if code, err := transcribe.EncodeYAML(clout, "  ", false); err == nil {
+					if code, err := transcribe.NewTranscriber().SetIndentSpaces(2).StringifyYAML(clout); err == nil {
 						return io.NopCloser(strings.NewReader(code)), nil
 					} else {
 						return nil, err

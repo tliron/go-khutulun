@@ -28,20 +28,21 @@ func NewProcessServiceCommand(namespace string, serviceName string, phase string
 }
 
 func (self *Agent) handleCommand(context contextpkg.Context, message any, broadcast bool) {
-	command, _ := ard.NewNode(message).Get("command").String()
+	message_ := ard.With(message)
+	command, _ := message_.Get("command").String()
 
 	switch command {
 	case ADD_HOST:
-		address, _ := ard.NewNode(message).Get("address").String()
+		address, _ := message_.Get("address").String()
 		log.Infof("received addHost(%q)", address)
 		if err := self.gossip.AddHosts([]string{address}); err != nil {
-			log.Errorf("%s", err.Error())
+			log.Error(err.Error())
 		}
 
 	case PROCESS_SERVICE:
-		namespace, _ := ard.NewNode(message).Get("namespace").String()
-		serviceName, _ := ard.NewNode(message).Get("serviceName").String()
-		phase, _ := ard.NewNode(message).Get("phase").String()
+		namespace, _ := message_.Get("namespace").String()
+		serviceName, _ := message_.Get("serviceName").String()
+		phase, _ := message_.Get("phase").String()
 		log.Infof("received processService(%q, %q, %q)", namespace, serviceName, phase)
 		delegates := self.NewDelegates()
 		defer delegates.Release()

@@ -7,8 +7,8 @@ import (
 	"time"
 
 	fspkg "github.com/rakyll/statik/fs"
+	"github.com/tliron/go-transcribe"
 	_ "github.com/tliron/khutulun/web"
-	"github.com/tliron/kutil/transcribe"
 	"github.com/tliron/kutil/util"
 )
 
@@ -61,7 +61,7 @@ func (self *HTTP) Start() error {
 				if err == http.ErrServerClosed {
 					httpLog.Info("server closed")
 				} else {
-					httpLog.Errorf("%s", err.Error())
+					httpLog.Error(err.Error())
 				}
 			}
 		}()
@@ -80,7 +80,7 @@ func (self *HTTP) Stop() error {
 
 func (self *HTTP) listNamespaces(writer http.ResponseWriter, request *http.Request) {
 	if namespaces, err := self.agent.state.ListNamespaces(); err == nil {
-		transcribe.WriteJSON(namespaces, writer, "")
+		transcribe.NewTranscriber().SetWriter(writer).WriteJSON(namespaces)
 	} else {
 		writer.WriteHeader(500)
 	}
@@ -91,7 +91,7 @@ func (self *HTTP) listPackages(writer http.ResponseWriter, request *http.Request
 	type_ := request.URL.Query().Get("type")
 	if type_ != "" {
 		if identifiers, err := self.agent.state.ListPackages(namespace, type_); err == nil {
-			transcribe.WriteJSON(identifiers, writer, "")
+			(&transcribe.Transcriber{Writer: writer}).WriteJSON(identifiers)
 		} else {
 			writer.WriteHeader(500)
 		}
@@ -106,7 +106,7 @@ func (self *HTTP) listResources(writer http.ResponseWriter, request *http.Reques
 	type_ := request.URL.Query().Get("type")
 	if type_ != "" {
 		if resources, err := self.agent.ListResources(contextpkg.TODO(), namespace, service, type_); err == nil {
-			transcribe.WriteJSON(resources, writer, "")
+			transcribe.NewTranscriber().SetWriter(writer).WriteJSON(resources)
 		} else {
 			writer.WriteHeader(500)
 		}
@@ -117,7 +117,7 @@ func (self *HTTP) listResources(writer http.ResponseWriter, request *http.Reques
 
 func (self *HTTP) listHosts(writer http.ResponseWriter, request *http.Request) {
 	if self.agent.gossip != nil {
-		transcribe.WriteJSON(self.agent.gossip.ListHosts(), writer, "")
+		(&transcribe.Transcriber{Writer: writer}).WriteJSON(self.agent.gossip.ListHosts())
 	} else {
 		writer.WriteHeader(500)
 	}

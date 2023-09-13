@@ -8,19 +8,19 @@ import (
 	problemspkg "github.com/tliron/kutil/problems"
 	cloutpkg "github.com/tliron/puccini/clout"
 	"github.com/tliron/puccini/clout/js"
-	"github.com/tliron/puccini/tosca/normal"
+	"github.com/tliron/puccini/normal"
 	"github.com/tliron/puccini/tosca/parser"
 )
 
-func (self *Agent) ParseTOSCA(context contextpkg.Context, templateNamespace string, templateName string) (*normal.ServiceTemplate, *problemspkg.Problems, error) {
-	parserContext := parser.NewContext()
+var parser_ = parser.NewParser()
 
+func (self *Agent) ParseTOSCA(context contextpkg.Context, templateNamespace string, templateName string) (*normal.ServiceTemplate, *problemspkg.Problems, error) {
 	profilePath := self.state.GetPackageTypeDir(templateNamespace, "profile")
 	commonProfilePath := self.state.GetPackageTypeDir("common", "profile")
 
 	// TODO: lock *all* profiles
 
-	origins := []exturl.URL{
+	bases := []exturl.URL{
 		self.urlContext.NewFileURL(profilePath),
 		self.urlContext.NewFileURL(commonProfilePath),
 	}
@@ -30,9 +30,13 @@ func (self *Agent) ParseTOSCA(context contextpkg.Context, templateNamespace stri
 
 		templatePath := self.state.GetPackageMainFile(templateNamespace, "template", templateName)
 		if url, err := self.urlContext.NewValidURL(context, templatePath, nil); err == nil {
-			if _, serviceTemplate, problems, err := parserContext.Parse(context, url, origins, nil, nil, nil); err == nil {
-				return serviceTemplate, problems, nil
+			parserContext := parser_.NewContext()
+			parserContext.URL = url
+			parserContext.Bases = bases
+			if serviceTemplate, err := parserContext.Parse(context); err == nil {
+				return serviceTemplate, parserContext.GetProblems(), nil
 			} else {
+				problems := parserContext.GetProblems()
 				if problems != nil {
 					return nil, nil, problems.WithError(err, false)
 				} else {
@@ -50,7 +54,15 @@ func (self *Agent) ParseTOSCA(context contextpkg.Context, templateNamespace stri
 func (self *Agent) CompileTOSCA(context contextpkg.Context, templateNamespace string, templateName string, serviceNamespace string, serviceName string) (*cloutpkg.Clout, *problemspkg.Problems, error) {
 	if serviceTemplate, problems, err := self.ParseTOSCA(context, templateNamespace, templateName); err == nil {
 		if clout, err := serviceTemplate.Compile(); err == nil {
-			js.Resolve(clout, problems, self.urlContext, true, "yaml", true, false)
+			execContext := js.ExecContext{
+				Clout:      clout,
+				Problems:   problems,
+				URLContext: self.urlContext,
+				History:    true,
+				Format:     "yaml",
+			}
+
+			execContext.Resolve()
 			if !problems.Empty() {
 				return nil, nil, problems.WithError(nil, false)
 			}

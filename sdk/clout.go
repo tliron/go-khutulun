@@ -7,7 +7,7 @@ import (
 	"github.com/danjacques/gofslock/fslock"
 	"github.com/tliron/commonlog"
 	"github.com/tliron/exturl"
-	"github.com/tliron/kutil/transcribe"
+	"github.com/tliron/go-transcribe"
 	cloutpkg "github.com/tliron/puccini/clout"
 )
 
@@ -15,7 +15,7 @@ func (self *State) OpenServiceClout(context contextpkg.Context, namespace string
 	if lock, err := self.LockPackage(namespace, "service", serviceName, false); err == nil {
 		cloutPath := self.GetPackageMainFile(namespace, "service", serviceName)
 		stateLog.Debugf("reading clout: %q", cloutPath)
-		if clout, err := cloutpkg.Load(context, cloutPath, "yaml", urlContext); err == nil {
+		if clout, err := cloutpkg.Load(context, urlContext.NewAnyOrFileURL(cloutPath), ""); err == nil {
 			return lock, clout, nil
 		} else {
 			commonlog.CallAndLogError(lock.Unlock, "unlock", stateLog)
@@ -31,7 +31,7 @@ func (self *State) SaveServiceClout(serviceNamespace string, serviceName string,
 	stateLog.Infof("writing to %q", cloutPath)
 	if file, err := os.OpenFile(cloutPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0666); err == nil {
 		defer commonlog.CallAndLogError(file.Close, "file close", stateLog)
-		return transcribe.WriteYAML(clout, file, "  ", false)
+		return transcribe.NewTranscriber().SetWriter(file).SetIndentSpaces(2).WriteYAML(clout)
 	} else {
 		return err
 	}

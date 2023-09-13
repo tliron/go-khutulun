@@ -121,8 +121,12 @@ func (self *State) ListPackageFiles(namespace string, type_ string, name string)
 		path := self.GetPackageDir(namespace, type_, name)
 		length := len(path) + 1
 		var files []PackageFile
-		if err := filepath.WalkDir(path, func(path string, entry fs.DirEntry, err error) error {
-			if !entry.IsDir() {
+		if err := filepath.WalkDir(path, func(path string, dirEntry fs.DirEntry, err error) error {
+			if err != nil {
+				return err
+			}
+
+			if !dirEntry.IsDir() {
 				if stat, err := os.Stat(path); err == nil {
 					files = append(files, PackageFile{
 						Path:       path[length:],
@@ -132,6 +136,7 @@ func (self *State) ListPackageFiles(namespace string, type_ string, name string)
 					return err
 				}
 			}
+
 			return nil
 		}); err == nil {
 			return files, nil

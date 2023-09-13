@@ -19,7 +19,7 @@ const (
 	Changed = Change(3)
 )
 
-// fmt.Stringer interface
+// ([fmt.Stringer] interface)
 func (self Change) String() string {
 	switch self {
 	case Added:
@@ -45,7 +45,7 @@ func NewDir(path string) Dir {
 	return Dir(strings.Split(path, string(os.PathSeparator)))
 }
 
-// fmt.Stringer interface
+// ([fmt.Stringer] interface)
 func (self Dir) String() string {
 	return filepath.Join(self...)
 }
@@ -131,7 +131,7 @@ func (self *Watcher) Start() {
 						if stat.IsDir() {
 							dir := self.toDir(event.Name)
 							if err := self.add(dir); err != nil {
-								watcherLog.Warningf("%s", err.Error())
+								watcherLog.Warning(err.Error())
 							}
 
 							if identifier, packageFile := dir.Identifier(); identifier != nil {
@@ -143,13 +143,13 @@ func (self *Watcher) Start() {
 							}
 						}
 					} else {
-						watcherLog.Warningf("%s", err.Error())
+						watcherLog.Warning(err.Error())
 					}
 
 				case fsnotify.Remove, fsnotify.Rename:
 					// Note: we may receive this twice, once from the dir itself and once from its parent
 					if err := self.remove(self.toDir(event.Name)); err != nil {
-						watcherLog.Warningf("%s", err.Error())
+						watcherLog.Warning(err.Error())
 					}
 
 					dir := self.toDir(event.Name)
@@ -190,11 +190,16 @@ func (self *Watcher) sync() error {
 	self.lock.Lock()
 	defer self.lock.Unlock()
 
-	return filepath.WalkDir(self.state.RootDir, func(path string, entry fs.DirEntry, err error) error {
+	return filepath.WalkDir(self.state.RootDir, func(path string, dirEntry fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+
 		if util.IsFileHidden(path) {
 			return fs.SkipDir
 		}
-		if entry.IsDir() {
+
+		if dirEntry.IsDir() {
 			if err := self.watcher.Add(path); err == nil {
 				dir := NewDir(path)
 				watcherLog.Debugf("adding dir: %s", dir.String())
@@ -203,6 +208,7 @@ func (self *Watcher) sync() error {
 				return err
 			}
 		}
+
 		return nil
 	})
 }

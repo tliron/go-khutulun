@@ -140,17 +140,17 @@ func (self *Delegates) All() []delegatepkg.Delegate {
 func (self *Delegates) Fill(namespace string, coercedClout *cloutpkg.Clout) {
 	for _, vertex := range cloututil.GetToscaNodeTemplates(coercedClout, "") {
 		for _, relationship := range cloututil.GetToscaRelationships(vertex, "cloud.puccini.khutulun::Connection") {
-			if delegateName, ok := ard.NewNode(relationship).Get("attributes", "delegate").String(); ok {
+			if delegateName, ok := ard.With(relationship).Get("attributes", "delegate").String(); ok {
 				if _, err := self.Get(namespace, delegateName); err != nil {
-					delegateLog.Errorf("%s", err.Error())
+					delegateLog.Error(err.Error())
 				}
 			}
 		}
 
 		for _, capability := range cloututil.GetToscaCapabilities(vertex, "cloud.puccini.khutulun::Activity") {
-			if delegateName, ok := ard.NewNode(capability).Get("attributes", "delegate").String(); ok {
+			if delegateName, ok := ard.With(capability).Get("attributes", "delegate").String(); ok {
 				if _, err := self.Get(namespace, delegateName); err != nil {
-					delegateLog.Errorf("%s", err.Error())
+					delegateLog.Error(err.Error())
 				}
 			}
 		}

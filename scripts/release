@@ -33,13 +33,13 @@ git_version
 
 ARGS=
 if [ "$1" == -t ]; then
-	ARGS='--snapshot --skip-publish'
+	ARGS='--snapshot --skip=publish'
 fi
 
 VERSION=$VERSION REVISION=$REVISION TIMESTAMP=$TIMESTAMP \
 "$GOPATH/bin/goreleaser" \
 	--parallelism=$(nproc) \
-	--skip-validate $ARGS
+	--skip=validate $ARGS
 
 # Copy releases back here
 rm --recursive --force "$ROOT/dist/release"

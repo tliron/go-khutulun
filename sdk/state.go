@@ -28,12 +28,12 @@ type LockedReadCloser struct {
 	Lock       fslock.Handle
 }
 
-// io.Reader interface
+// ([io.Reader] interface)
 func (self *LockedReadCloser) Read(p []byte) (n int, err error) {
 	return self.ReadCloser.Read(p)
 }
 
-// io.Closer interface
+// ([io.Closer] interface)
 func (self *LockedReadCloser) Close() error {
 	commonlog.CallAndLogError(self.ReadCloser.Close, "close", stateLog)
 	return self.Lock.Unlock()
@@ -48,12 +48,12 @@ type LockedWriteCloser struct {
 	Lock        fslock.Handle
 }
 
-// io.Writer interface
+// ([io.Writer] interface)
 func (self *LockedWriteCloser) Write(p []byte) (n int, err error) {
 	return self.WriteCloser.Write(p)
 }
 
-// io.Closer interface
+// ([io.Closer] interface)
 func (self *LockedWriteCloser) Close() error {
 	commonlog.CallAndLogError(self.WriteCloser.Close, "close", stateLog)
 	return self.Lock.Unlock()

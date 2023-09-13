@@ -21,7 +21,7 @@ func (self *ServiceIdentifier) Equals(identifier *ServiceIdentifier) bool {
 	}
 }
 
-// fmt.Stringer interface
+// ([fmt.Stringer] interface)
 func (self *ServiceIdentifier) String() string {
 	return self.Namespace + "," + self.Name
 }
@@ -66,7 +66,7 @@ func (self *ServiceIdentifiers) Merge(identifiers *ServiceIdentifiers) bool {
 	}
 }
 
-// fmt.Stringer interface
+// ([fmt.Stringer] interface)
 func (self *ServiceIdentifiers) String() string {
 	var builder strings.Builder
 	last := len(self.List) - 1

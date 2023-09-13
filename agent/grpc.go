@@ -63,7 +63,7 @@ func (self *GRPC) Start() error {
 			grpcLog.Noticef("starting server on %s", listener.Addr().String())
 			go func() {
 				if err := self.grpcServer.Serve(listener); err != nil {
-					grpcLog.Errorf("%s", err.Error())
+					grpcLog.Error(err.Error())
 				}
 			}()
 			return nil
@@ -209,9 +209,7 @@ func (self *GRPC) GetPackageFiles(getPackageFiles *api.GetPackageFiles, server a
 					if count > 0 {
 						content := api.PackageContent{Bytes: buffer[:count]}
 						if err := server.Send(&content); err != nil {
-							if err := reader.Close(); err != nil {
-								grpcLog.Errorf("file close: %s", err.Error())
-							}
+							commonlog.CallAndLogWarning(reader.Close, "GRPC.GetPackageFiles", grpcLog)
 							return sdk.GRPCAborted(err)
 						}
 					}
@@ -219,9 +217,7 @@ func (self *GRPC) GetPackageFiles(getPackageFiles *api.GetPackageFiles, server a
 						if err == io.EOF {
 							break
 						} else {
-							if err := reader.Close(); err != nil {
-								grpcLog.Errorf("file close: %s", err.Error())
-							}
+							commonlog.CallAndLogWarning(reader.Close, "GRPC.GetPackageFiles", grpcLog)
 							return sdk.GRPCAborted(err)
 						}
 					}

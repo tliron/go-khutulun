@@ -76,7 +76,7 @@ func (self OCIImageReference) Validate() error {
 	return nil
 }
 
-// fmt.Stringer interface
+// ([fmt.Stringer] interface)
 func (self OCIImageReference) String() string {
 	// [host[:port]/][repository/]image[:tag][@digest-algorithm:digest-hex]
 

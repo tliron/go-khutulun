@@ -7,7 +7,6 @@ import (
 	"github.com/tliron/exturl"
 	"github.com/tliron/go-ard"
 	"github.com/tliron/khutulun/sdk"
-	"github.com/tliron/kutil/util"
 )
 
 type OnMessageFunc func(bytes []byte, broadcast bool)
@@ -41,9 +40,9 @@ func (self *Agent) Release() error {
 
 // OnMessageFunc signature
 func (self *Agent) onMessage(bytes []byte, broadcast bool) {
-	if message, _, err := ard.DecodeJSON(util.BytesToString(bytes), false); err == nil {
+	if message, err := ard.DecodeJSON(bytes, true); err == nil {
 		go self.handleCommand(contextpkg.TODO(), message, broadcast)
 	} else {
-		log.Errorf("%s", err.Error())
+		log.Error(err.Error())
 	}
 }

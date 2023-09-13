@@ -20,7 +20,7 @@ type grpcStatusError struct {
 	status *statuspkg.Status
 }
 
-// error interface
+// (error interface)
 func (self grpcStatusError) Error() string {
 	return fmt.Sprintf("%s: %s", self.status.Code().String(), self.status.Message())
 }

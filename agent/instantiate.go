@@ -14,15 +14,13 @@ func (self *Agent) Instantiate(clout *cloutpkg.Clout, coercedClout *cloutpkg.Clo
 	count := 1
 
 	for _, vertex := range cloututil.GetToscaNodeTemplates(clout, "cloud.puccini.khutulun::Instantiable") {
-		name, _ := ard.NewNode(vertex.Properties).Get("name").String()
+		name, _ := ard.With(vertex.Properties).Get("name").String()
 
 		for index := 0; index < count; index++ {
 			instanceName := fmt.Sprintf("%s-%d", name, index)
-			cloututil.Put(
-				"instances", cloututil.NewList("cloud.puccini.khutulun::Instance", ard.List{
-					cloututil.NewStringMap(ard.StringMap{"name": instanceName}, "string"),
-				}),
-				vertex.Properties, "attributes")
+			ard.With(vertex.Properties).Get("attributes", "instances").Set(cloututil.NewList("cloud.puccini.khutulun::Instance", ard.List{
+				cloututil.NewStringMap(ard.StringMap{"name": instanceName}, "string"),
+			}))
 		}
 	}
 

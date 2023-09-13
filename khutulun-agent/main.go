@@ -6,7 +6,7 @@ import (
 )
 
 func main() {
-	util.ExitOnSIGTERM()
+	util.ExitOnSignals()
 	commands.Execute()
 	util.Exit(0)
 }

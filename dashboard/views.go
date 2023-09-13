@@ -4,7 +4,7 @@ import (
 	"github.com/rivo/tview"
 )
 
-// UpdateTableFunc signature
+// ([UpdateTableFunc] signature)
 func (self *Application) updateServices(table *tview.Table, namespace *tview.DropDown) {
 	update := func() {
 		namespace_ := getNamespace(namespace)
@@ -33,7 +33,7 @@ func (self *Application) updateServices(table *tview.Table, namespace *tview.Dro
 	self.updateNamespaces(table, namespace, update)
 }
 
-// UpdateTableFunc signature
+// ([UpdateTableFunc] signature)
 func (self *Application) updateActivities(table *tview.Table, namespace *tview.DropDown) {
 	update := func() {
 		namespace_ := getNamespace(namespace)
@@ -66,7 +66,7 @@ func (self *Application) updateActivities(table *tview.Table, namespace *tview.D
 	self.updateNamespaces(table, namespace, update)
 }
 
-// UpdateTableFunc signature
+// ([UpdateTableFunc] signature)
 func (self *Application) updateConnections(table *tview.Table, namespace *tview.DropDown) {
 	update := func() {
 		namespace_ := getNamespace(namespace)
@@ -95,7 +95,7 @@ func (self *Application) updateConnections(table *tview.Table, namespace *tview.
 	self.updateNamespaces(table, namespace, update)
 }
 
-// UpdateTableFunc signature
+// ([UpdateTableFunc] signature)
 func (self *Application) updateDelegates(table *tview.Table, namespace *tview.DropDown) {
 	update := func() {
 		namespace_ := getNamespace(namespace)
@@ -124,7 +124,7 @@ func (self *Application) updateDelegates(table *tview.Table, namespace *tview.Dr
 	self.updateNamespaces(table, namespace, update)
 }
 
-// UpdateTableFunc signature
+// ([UpdateTableFunc] signature)
 func (self *Application) updateTemplates(table *tview.Table, namespace *tview.DropDown) {
 	update := func() {
 		namespace_ := getNamespace(namespace)
@@ -153,7 +153,7 @@ func (self *Application) updateTemplates(table *tview.Table, namespace *tview.Dr
 	self.updateNamespaces(table, namespace, update)
 }
 
-// UpdateTableFunc signature
+// ([UpdateTableFunc] signature)
 func (self *Application) updateProfiles(table *tview.Table, namespace *tview.DropDown) {
 	update := func() {
 		namespace_ := getNamespace(namespace)
@@ -182,7 +182,7 @@ func (self *Application) updateProfiles(table *tview.Table, namespace *tview.Dro
 	self.updateNamespaces(table, namespace, update)
 }
 
-// UpdateTableFunc signature
+// ([UpdateTableFunc] signature)
 func (self *Application) updateHosts(table *tview.Table, namespace *tview.DropDown) {
 	if services_, err := self.client.ListHosts(); err == nil {
 		table.Clear()

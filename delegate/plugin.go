@@ -21,14 +21,14 @@ type DelegatePlugin struct {
 	implementation Delegate // only for servers
 }
 
-// plugin.GRPCPlugin interface
+// ([plugin.GRPCPlugin] interface) ?
 func (self *DelegatePlugin) GRPCServer(broker *plugin.GRPCBroker, server *grpc.Server) error {
 	api.RegisterDelegateServer(server, NewDelegateGRPCServer(self.implementation))
 	return nil
 }
 
-// plugin.GRPCPlugin interface
-func (p *DelegatePlugin) GRPCClient(context contextpkg.Context, broker *plugin.GRPCBroker, client *grpc.ClientConn) (any, error) {
+// ([plugin.GRPCPlugin] interface) ?
+func (self *DelegatePlugin) GRPCClient(context contextpkg.Context, broker *plugin.GRPCBroker, client *grpc.ClientConn) (any, error) {
 	return NewDelegateGRPCClient(context, api.NewDelegateClient(client)), nil
 }
 
@@ -48,7 +48,7 @@ func NewDelegatePluginClient(name string, command string) *DelegatePluginClient 
 		Cmd:              exec.Command(command),
 		AllowedProtocols: []plugin.Protocol{plugin.ProtocolGRPC},
 		HandshakeConfig:  handshakeConfig,
-		Logger:           sink.NewHCLogger("khutulun.plugin."+name, nil),
+		Logger:           sink.NewHCLogger(nil, "khutulun", "plugin", name),
 	}
 
 	return &DelegatePluginClient{
@@ -94,7 +94,7 @@ func (self *DelegatePluginServer) Start() {
 		},
 		GRPCServer:      plugin.DefaultGRPCServer,
 		HandshakeConfig: handshakeConfig,
-		Logger:          sink.NewHCLogger("khutulun.plugin.server", nil),
+		Logger:          sink.NewHCLogger(nil, "khutulun", "plugin", "server"),
 	}
 
 	plugin.Serve(&config)

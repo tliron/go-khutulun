@@ -152,11 +152,11 @@ func (self *Client) SetPackageFiles(context contextpkg.Context, namespace string
 				break
 			}
 
-			path, executable, reader, err := stream.Open(context)
+			reader, path, executable, err := stream.Open(context)
 			if err != nil {
 				return err
 			}
-			reader = util.NewContextualReader(context, reader)
+			reader = util.NewContextualReadCloser(context, reader)
 
 			content := api.PackageContent{
 				File: &api.PackageFile{
@@ -179,7 +179,7 @@ func (self *Client) SetPackageFiles(context contextpkg.Context, namespace string
 				}
 				if err != nil {
 					if err == io.EOF {
-						if err := stream.Close(); err != nil {
+						if err := reader.Close(); err != nil {
 							return err
 						}
 						break

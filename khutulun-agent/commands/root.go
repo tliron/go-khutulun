@@ -1,8 +1,6 @@
 package commands
 
 import (
-	"strings"
-
 	"github.com/spf13/cobra"
 	"github.com/tliron/commonlog"
 	"github.com/tliron/commonlog/journal"
@@ -41,17 +39,4 @@ var rootCommand = &cobra.Command{
 func Execute() {
 	err := rootCommand.Execute()
 	util.FailOnError(err)
-}
-
-// simple.FormatFunc signature
-func SimpleFormat(message string, id []string, level commonlog.Level, colorize bool) string {
-	var builder strings.Builder
-
-	simple.FormatLevel(&builder, level, false)
-	builder.WriteRune(' ')
-	simple.FormatID(&builder, id)
-	builder.WriteRune(' ')
-	builder.WriteString(message)
-
-	return builder.String()
 }
