@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/tliron/khutulun/khutulun-agent/commands"
-	"github.com/tliron/kutil/util"
+	"github.com/tliron/go-khutulun/khutulun-agent/commands"
+	"github.com/tliron/go-kutil/util"
 )
 
 func main() {

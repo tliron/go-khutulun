@@ -1,11 +1,11 @@
-*This is an early release. Some features are not yet fully implemented.*
+**Notice: This repository is in maintenance mode. Development has moved to the Rust language and is proceeding in the [main repository](https://github.com/tliron/khutulun).**
 
 Khutulun
 ========
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Latest Release](https://img.shields.io/github/release/tliron/khutulun.svg)](https://github.com/tliron/khutulun/releases/latest)
-[![Go Report Card](https://goreportcard.com/badge/github.com/tliron/khutulun)](https://goreportcard.com/report/github.com/tliron/khutulun)
+[![Latest Release](https://img.shields.io/github/release/tliron/go-khutulun.svg)](https://github.com/tliron/go-khutulun/releases/latest)
+[![Go Report Card](https://goreportcard.com/badge/github.com/tliron/go-khutulun)](https://goreportcard.com/report/github.com/tliron/go-khutulun)
 
 A distributed declarative orchestrator for services that speaks
 [TOSCA](https://www.oasis-open.org/committees/tosca/).
@@ -82,7 +82,7 @@ Khutulun to manage services across many machines without having to conceptualize
 Get It
 ------
 
-[![Download](assets/media/download.png "Download")](https://github.com/tliron/khutulun/releases)
+[![Download](assets/media/download.png "Download")](https://github.com/tliron/go-khutulun/releases)
 
 FAQ
 ---

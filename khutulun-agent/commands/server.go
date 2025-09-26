@@ -4,9 +4,9 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
-	agentpkg "github.com/tliron/khutulun/agent"
-	cobrautil "github.com/tliron/kutil/cobra"
-	"github.com/tliron/kutil/util"
+	agentpkg "github.com/tliron/go-khutulun/agent"
+	cobrautil "github.com/tliron/go-kutil/cobra"
+	"github.com/tliron/go-kutil/util"
 )
 
 var statePath string

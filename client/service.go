@@ -1,8 +1,8 @@
 package client
 
 import (
-	"github.com/tliron/khutulun/api"
-	"github.com/tliron/khutulun/sdk"
+	"github.com/tliron/go-khutulun/api"
+	"github.com/tliron/go-khutulun/sdk"
 )
 
 func (self *Client) DeployService(serviceNamespace string, serviceName string, templateNamespace string, templateName string, inputs map[string]any, async bool) error {

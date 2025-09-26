@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/tliron/khutulun/api"
-	"github.com/tliron/khutulun/sdk"
-	"github.com/tliron/kutil/exec"
+	"github.com/tliron/go-khutulun/api"
+	"github.com/tliron/go-khutulun/sdk"
+	"github.com/tliron/go-kutil/exec"
 )
 
 func (self *Client) Interact(identifier []string, stdin io.Reader, stdout io.Writer, stderr io.Writer, terminal *exec.Terminal, environment map[string]string, command ...string) error {

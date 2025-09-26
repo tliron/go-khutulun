@@ -3,7 +3,7 @@ package sdk
 import (
 	"github.com/tliron/commonlog"
 	"github.com/tliron/go-ard"
-	"github.com/tliron/kutil/util"
+	"github.com/tliron/go-kutil/util"
 )
 
 var stateLog = commonlog.GetLogger("khutulun.state")

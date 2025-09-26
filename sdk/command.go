@@ -8,9 +8,9 @@ import (
 	execpkg "os/exec"
 
 	"github.com/tliron/commonlog"
-	"github.com/tliron/khutulun/api"
-	"github.com/tliron/kutil/exec"
-	"github.com/tliron/kutil/util"
+	"github.com/tliron/go-khutulun/api"
+	"github.com/tliron/go-kutil/exec"
+	"github.com/tliron/go-kutil/util"
 	"google.golang.org/grpc/codes"
 	statuspkg "google.golang.org/grpc/status"
 )

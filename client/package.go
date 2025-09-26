@@ -5,10 +5,10 @@ import (
 	"io"
 
 	"github.com/tliron/commonlog"
-	"github.com/tliron/khutulun/api"
-	"github.com/tliron/khutulun/sdk"
-	"github.com/tliron/kutil/streampackage"
-	"github.com/tliron/kutil/util"
+	"github.com/tliron/go-khutulun/api"
+	"github.com/tliron/go-khutulun/sdk"
+	"github.com/tliron/go-kutil/streampackage"
+	"github.com/tliron/go-kutil/util"
 )
 
 const BUFFER_SIZE = 65536

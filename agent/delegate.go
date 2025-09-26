@@ -7,9 +7,9 @@ import (
 	"github.com/danjacques/gofslock/fslock"
 	"github.com/tliron/commonlog"
 	"github.com/tliron/go-ard"
-	delegatepkg "github.com/tliron/khutulun/delegate"
-	cloutpkg "github.com/tliron/puccini/clout"
-	cloututil "github.com/tliron/puccini/clout/util"
+	delegatepkg "github.com/tliron/go-khutulun/delegate"
+	cloutpkg "github.com/tliron/go-puccini/clout"
+	cloututil "github.com/tliron/go-puccini/clout/util"
 )
 
 //

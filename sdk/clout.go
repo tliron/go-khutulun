@@ -7,8 +7,8 @@ import (
 	"github.com/danjacques/gofslock/fslock"
 	"github.com/tliron/commonlog"
 	"github.com/tliron/exturl"
+	cloutpkg "github.com/tliron/go-puccini/clout"
 	"github.com/tliron/go-transcribe"
-	cloutpkg "github.com/tliron/puccini/clout"
 )
 
 func (self *State) OpenServiceClout(context contextpkg.Context, namespace string, serviceName string, urlContext *exturl.Context) (fslock.Handle, *cloutpkg.Clout, error) {

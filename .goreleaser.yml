@@ -13,9 +13,9 @@ builds:
   - windows
   - js
   ldflags:
-  - -X 'github.com/tliron/kutil/version.GitVersion={{.Env.VERSION}}'
-  - -X 'github.com/tliron/kutil/version.GitRevision={{.Env.REVISION}}'
-  - -X 'github.com/tliron/kutil/version.Timestamp={{.Env.TIMESTAMP}}'
+  - -X 'github.com/tliron/go-kutil/version.GitVersion={{.Env.VERSION}}'
+  - -X 'github.com/tliron/go-kutil/version.GitRevision={{.Env.REVISION}}'
+  - -X 'github.com/tliron/go-kutil/version.Timestamp={{.Env.TIMESTAMP}}'
 
 - id: puccini-clout
   main: ./puccini-clout
@@ -29,16 +29,16 @@ builds:
   - windows
   - js
   ldflags:
-  - -X 'github.com/tliron/kutil/version.GitVersion={{.Env.VERSION}}'
-  - -X 'github.com/tliron/kutil/version.GitRevision={{.Env.REVISION}}'
-  - -X 'github.com/tliron/kutil/version.Timestamp={{.Env.TIMESTAMP}}'
+  - -X 'github.com/tliron/go-kutil/version.GitVersion={{.Env.VERSION}}'
+  - -X 'github.com/tliron/go-kutil/version.GitRevision={{.Env.REVISION}}'
+  - -X 'github.com/tliron/go-kutil/version.Timestamp={{.Env.TIMESTAMP}}'
 
 nfpms:
 
 - formats:
   - rpm
   - deb
-  homepage: https://github.com/tliron/puccini
+  homepage: https://github.com/tliron/go-puccini
   maintainer: Tal Liron <tal.liron@gmail.com>
   description: Deliberately stateless cloud topology management and deployment tools based on TOSCA.
   license: Apache 2.0
@@ -71,4 +71,4 @@ release:
 
   github:
     owner: tliron
-    name: puccini
+    name: go-puccini

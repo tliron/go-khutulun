@@ -7,9 +7,9 @@ import (
 	"strings"
 
 	"github.com/tliron/commonlog"
-	delegatepkg "github.com/tliron/khutulun/delegate"
-	"github.com/tliron/khutulun/sdk"
-	cloutpkg "github.com/tliron/puccini/clout"
+	delegatepkg "github.com/tliron/go-khutulun/delegate"
+	"github.com/tliron/go-khutulun/sdk"
+	cloutpkg "github.com/tliron/go-puccini/clout"
 )
 
 type ResourceIdentifier struct {

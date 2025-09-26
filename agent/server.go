@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"github.com/tliron/commonlog"
-	"github.com/tliron/khutulun/sdk"
-	"github.com/tliron/kutil/util"
+	"github.com/tliron/go-khutulun/sdk"
+	"github.com/tliron/go-kutil/util"
 )
 
 const TICKER_FREQUENCY = 30 * time.Second

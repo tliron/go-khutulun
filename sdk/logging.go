@@ -15,12 +15,12 @@ func ConfigureDelegateLogging(verbosity int) {
 }
 
 // ([simple.FormatFunc] signature)
-func format(message *commonlog.UnstructuredMessage, name []string, level commonlog.Level, colorize bool) string {
+func format(message *commonlog.LinearMessage, name []string, level commonlog.Level, colorize bool) string {
 	var builder strings.Builder
 
-	simple.FormatLevel(&builder, level, true)
+	builder.WriteString(simple.FormatLevel(level, true))
 	builder.WriteRune(' ')
-	simple.FormatName(&builder, name)
+	builder.WriteString(strings.Join(name, "."))
 	builder.WriteRune(' ')
 	builder.WriteString(message.Message)
 

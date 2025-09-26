@@ -6,10 +6,10 @@ import (
 	"strings"
 
 	"github.com/tliron/commonlog"
+	problemspkg "github.com/tliron/go-kutil/problems"
+	cloutpkg "github.com/tliron/go-puccini/clout"
+	"github.com/tliron/go-puccini/clout/js"
 	"github.com/tliron/go-transcribe"
-	problemspkg "github.com/tliron/kutil/problems"
-	cloutpkg "github.com/tliron/puccini/clout"
-	"github.com/tliron/puccini/clout/js"
 )
 
 func (self *Agent) CoerceClout(clout *cloutpkg.Clout, copy_ bool) (*cloutpkg.Clout, error) {

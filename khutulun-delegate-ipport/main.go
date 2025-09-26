@@ -3,9 +3,9 @@ package main
 import (
 	"os"
 
-	"github.com/tliron/khutulun/delegate"
-	"github.com/tliron/khutulun/sdk"
-	"github.com/tliron/kutil/util"
+	"github.com/tliron/go-khutulun/delegate"
+	"github.com/tliron/go-khutulun/sdk"
+	"github.com/tliron/go-kutil/util"
 )
 
 func main() {

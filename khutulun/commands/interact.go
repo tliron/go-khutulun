@@ -3,10 +3,10 @@ package commands
 import (
 	"os"
 
-	clientpkg "github.com/tliron/khutulun/client"
-	"github.com/tliron/khutulun/sdk"
-	"github.com/tliron/kutil/exec"
-	"github.com/tliron/kutil/util"
+	clientpkg "github.com/tliron/go-khutulun/client"
+	"github.com/tliron/go-khutulun/sdk"
+	"github.com/tliron/go-kutil/exec"
+	"github.com/tliron/go-kutil/util"
 )
 
 var forwardExitCode bool

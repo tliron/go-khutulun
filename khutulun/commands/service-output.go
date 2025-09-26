@@ -4,10 +4,10 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	clientpkg "github.com/tliron/khutulun/client"
-	"github.com/tliron/kutil/util"
-	cloutpkg "github.com/tliron/puccini/clout"
-	cloututil "github.com/tliron/puccini/clout/util"
+	clientpkg "github.com/tliron/go-khutulun/client"
+	"github.com/tliron/go-kutil/util"
+	cloutpkg "github.com/tliron/go-puccini/clout"
+	cloututil "github.com/tliron/go-puccini/clout/util"
 )
 
 func init() {

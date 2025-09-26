@@ -7,7 +7,7 @@ import (
 	"github.com/hashicorp/go-plugin"
 	"github.com/tliron/commonlog"
 	"github.com/tliron/commonlog/sink"
-	"github.com/tliron/khutulun/api"
+	"github.com/tliron/go-khutulun/api"
 	"google.golang.org/grpc"
 )
 

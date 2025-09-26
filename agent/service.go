@@ -4,8 +4,8 @@ import (
 	contextpkg "context"
 
 	"github.com/tliron/commonlog"
-	delegatepkg "github.com/tliron/khutulun/delegate"
-	cloutpkg "github.com/tliron/puccini/clout"
+	delegatepkg "github.com/tliron/go-khutulun/delegate"
+	cloutpkg "github.com/tliron/go-puccini/clout"
 )
 
 func (self *Agent) DeployService(context contextpkg.Context, templateNamespace string, templateName string, serviceNamespace string, serviceName string, async bool) error {

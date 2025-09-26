@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 
 	"github.com/tliron/commonlog"
-	"github.com/tliron/kutil/util"
+	"github.com/tliron/go-kutil/util"
 )
 
 const servicePrefix = "khutulun"

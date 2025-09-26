@@ -11,9 +11,9 @@ function build () {
 	pushd "$ROOT/$TOOL" > /dev/null
 	go install \
 		-ldflags " \
-			-X 'github.com/tliron/kutil/version.GitVersion=$VERSION' \
-			-X 'github.com/tliron/kutil/version.GitRevision=$REVISION' \
-			-X 'github.com/tliron/kutil/version.Timestamp=$TIMESTAMP'"
+			-X 'github.com/tliron/go-kutil/version.GitVersion=$VERSION' \
+			-X 'github.com/tliron/go-kutil/version.GitRevision=$REVISION' \
+			-X 'github.com/tliron/go-kutil/version.Timestamp=$TIMESTAMP'"
 	popd > /dev/null
 	m "built $GOPATH/bin/$TOOL"
 }

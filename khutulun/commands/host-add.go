@@ -2,8 +2,8 @@ package commands
 
 import (
 	"github.com/spf13/cobra"
-	clientpkg "github.com/tliron/khutulun/client"
-	"github.com/tliron/kutil/util"
+	clientpkg "github.com/tliron/go-khutulun/client"
+	"github.com/tliron/go-kutil/util"
 )
 
 func init() {

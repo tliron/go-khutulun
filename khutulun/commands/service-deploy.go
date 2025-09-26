@@ -6,8 +6,8 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/tliron/exturl"
 	"github.com/tliron/go-ard"
-	clientpkg "github.com/tliron/khutulun/client"
-	"github.com/tliron/kutil/util"
+	clientpkg "github.com/tliron/go-khutulun/client"
+	"github.com/tliron/go-kutil/util"
 	"github.com/tliron/yamlkeys"
 )
 

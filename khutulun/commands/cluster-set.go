@@ -4,8 +4,8 @@ import (
 	"strconv"
 
 	"github.com/spf13/cobra"
-	"github.com/tliron/khutulun/configuration"
-	"github.com/tliron/kutil/util"
+	"github.com/tliron/go-khutulun/configuration"
+	"github.com/tliron/go-kutil/util"
 )
 
 var setDefault bool

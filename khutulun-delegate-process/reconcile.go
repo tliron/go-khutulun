@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/tliron/khutulun/delegate"
-	"github.com/tliron/khutulun/sdk"
-	"github.com/tliron/kutil/util"
-	cloutpkg "github.com/tliron/puccini/clout"
+	"github.com/tliron/go-khutulun/delegate"
+	"github.com/tliron/go-khutulun/sdk"
+	"github.com/tliron/go-kutil/util"
+	cloutpkg "github.com/tliron/go-puccini/clout"
 )
 
 // systemctl --machine user@.host --user

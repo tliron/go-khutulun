@@ -6,11 +6,11 @@ import (
 	"strings"
 
 	"github.com/tliron/exturl"
+	clientpkg "github.com/tliron/go-khutulun/client"
+	"github.com/tliron/go-kutil/streampackage"
+	"github.com/tliron/go-kutil/terminal"
+	"github.com/tliron/go-kutil/util"
 	"github.com/tliron/go-transcribe"
-	clientpkg "github.com/tliron/khutulun/client"
-	"github.com/tliron/kutil/streampackage"
-	"github.com/tliron/kutil/terminal"
-	"github.com/tliron/kutil/util"
 )
 
 func listPackages(namespace string, type_ string) {

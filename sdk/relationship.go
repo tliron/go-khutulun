@@ -3,7 +3,7 @@ package sdk
 import (
 	"fmt"
 
-	cloutpkg "github.com/tliron/puccini/clout"
+	cloutpkg "github.com/tliron/go-puccini/clout"
 )
 
 //

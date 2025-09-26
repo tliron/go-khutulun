@@ -1,9 +1,9 @@
 package delegate
 
 import (
-	"github.com/tliron/khutulun/api"
-	"github.com/tliron/khutulun/sdk"
-	cloutpkg "github.com/tliron/puccini/clout"
+	"github.com/tliron/go-khutulun/api"
+	"github.com/tliron/go-khutulun/sdk"
+	cloutpkg "github.com/tliron/go-puccini/clout"
 )
 
 //

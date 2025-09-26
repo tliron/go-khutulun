@@ -3,8 +3,8 @@ package client
 import (
 	"io"
 
-	"github.com/tliron/khutulun/api"
-	"github.com/tliron/khutulun/sdk"
+	"github.com/tliron/go-khutulun/api"
+	"github.com/tliron/go-khutulun/sdk"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 

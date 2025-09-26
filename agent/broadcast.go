@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"net"
 
+	"github.com/tliron/go-kutil/util"
 	"github.com/tliron/go-transcribe"
-	"github.com/tliron/kutil/util"
 )
 
 const DEFAULT_MAX_MESSAGE_SIZE = 8192

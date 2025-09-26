@@ -7,9 +7,9 @@ import (
 	"time"
 
 	fspkg "github.com/rakyll/statik/fs"
+	_ "github.com/tliron/go-khutulun/web"
+	"github.com/tliron/go-kutil/util"
 	"github.com/tliron/go-transcribe"
-	_ "github.com/tliron/khutulun/web"
-	"github.com/tliron/kutil/util"
 )
 
 //

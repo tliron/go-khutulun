@@ -3,8 +3,8 @@ package sdk
 import (
 	"fmt"
 
-	cloutpkg "github.com/tliron/puccini/clout"
-	cloututil "github.com/tliron/puccini/clout/util"
+	cloutpkg "github.com/tliron/go-puccini/clout"
+	cloututil "github.com/tliron/go-puccini/clout/util"
 )
 
 //

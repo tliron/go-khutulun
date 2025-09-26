@@ -3,7 +3,7 @@ package dashboard
 import (
 	"time"
 
-	clientpkg "github.com/tliron/khutulun/client"
+	clientpkg "github.com/tliron/go-khutulun/client"
 )
 
 func Dashboard(client *clientpkg.Client) error {

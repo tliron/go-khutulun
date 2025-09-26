@@ -11,7 +11,7 @@ import (
 
 	"github.com/danjacques/gofslock/fslock"
 	"github.com/tliron/commonlog"
-	"github.com/tliron/kutil/util"
+	"github.com/tliron/go-kutil/util"
 )
 
 const LOCK_FILE = ".lock"

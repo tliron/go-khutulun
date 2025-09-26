@@ -4,7 +4,7 @@ import (
 	"io"
 
 	"github.com/tliron/commonlog"
-	"github.com/tliron/khutulun/api"
+	"github.com/tliron/go-khutulun/api"
 	"google.golang.org/grpc/codes"
 	statuspkg "google.golang.org/grpc/status"
 )

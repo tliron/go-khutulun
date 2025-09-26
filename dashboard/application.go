@@ -5,7 +5,7 @@ import (
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
-	clientpkg "github.com/tliron/khutulun/client"
+	clientpkg "github.com/tliron/go-khutulun/client"
 )
 
 type UpdateTableFunc func(*tview.Table, *tview.DropDown)

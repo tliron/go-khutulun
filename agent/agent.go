@@ -6,7 +6,7 @@ import (
 
 	"github.com/tliron/exturl"
 	"github.com/tliron/go-ard"
-	"github.com/tliron/khutulun/sdk"
+	"github.com/tliron/go-khutulun/sdk"
 )
 
 type OnMessageFunc func(bytes []byte, broadcast bool)

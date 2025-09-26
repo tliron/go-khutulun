@@ -1,9 +1,9 @@
 package main
 
 import (
-	"github.com/tliron/khutulun/delegate"
-	"github.com/tliron/khutulun/sdk"
-	cloutpkg "github.com/tliron/puccini/clout"
+	"github.com/tliron/go-khutulun/delegate"
+	"github.com/tliron/go-khutulun/sdk"
+	cloutpkg "github.com/tliron/go-puccini/clout"
 )
 
 func (self *Delegate) Schedule(namespace string, serviceName string, clout *cloutpkg.Clout, coercedClout *cloutpkg.Clout) (*cloutpkg.Clout, []delegate.Next, error) {

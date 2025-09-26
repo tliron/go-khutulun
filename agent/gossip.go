@@ -9,8 +9,8 @@ import (
 	"github.com/hashicorp/memberlist"
 	"github.com/tliron/commonlog"
 	"github.com/tliron/commonlog/sink"
+	"github.com/tliron/go-kutil/util"
 	"github.com/tliron/go-transcribe"
-	"github.com/tliron/kutil/util"
 )
 
 //

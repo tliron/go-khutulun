@@ -1,6 +1,6 @@
 package delegate
 
-import "github.com/tliron/khutulun/api"
+import "github.com/tliron/go-khutulun/api"
 
 //
 // Next

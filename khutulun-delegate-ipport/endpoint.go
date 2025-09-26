@@ -5,8 +5,8 @@ import (
 
 	"github.com/danjacques/gofslock/fslock"
 	"github.com/tliron/commonlog"
-	"github.com/tliron/khutulun/sdk"
-	"github.com/tliron/kutil/util"
+	"github.com/tliron/go-khutulun/sdk"
+	"github.com/tliron/go-kutil/util"
 	"gopkg.in/yaml.v2"
 )
 

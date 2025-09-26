@@ -5,11 +5,11 @@ import (
 
 	"github.com/tliron/commonlog"
 	"github.com/tliron/exturl"
-	problemspkg "github.com/tliron/kutil/problems"
-	cloutpkg "github.com/tliron/puccini/clout"
-	"github.com/tliron/puccini/clout/js"
-	"github.com/tliron/puccini/normal"
-	"github.com/tliron/puccini/tosca/parser"
+	problemspkg "github.com/tliron/go-kutil/problems"
+	cloutpkg "github.com/tliron/go-puccini/clout"
+	"github.com/tliron/go-puccini/clout/js"
+	"github.com/tliron/go-puccini/normal"
+	"github.com/tliron/go-puccini/tosca/parser"
 )
 
 var parser_ = parser.NewParser()

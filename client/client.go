@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/tliron/khutulun/api"
-	"github.com/tliron/khutulun/configuration"
-	"github.com/tliron/kutil/util"
+	"github.com/tliron/go-khutulun/api"
+	"github.com/tliron/go-khutulun/configuration"
+	"github.com/tliron/go-kutil/util"
 	"google.golang.org/grpc"
 )
 

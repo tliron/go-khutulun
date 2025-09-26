@@ -3,8 +3,8 @@ package main
 import (
 	"fmt"
 
-	"github.com/tliron/khutulun/delegate"
-	cloutpkg "github.com/tliron/puccini/clout"
+	"github.com/tliron/go-khutulun/delegate"
+	cloutpkg "github.com/tliron/go-puccini/clout"
 )
 
 //

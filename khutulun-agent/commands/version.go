@@ -1,7 +1,7 @@
 package commands
 
 import (
-	"github.com/tliron/kutil/cobra"
+	"github.com/tliron/go-kutil/cobra"
 )
 
 func init() {
